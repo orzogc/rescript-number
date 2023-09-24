@@ -1,0 +1,19 @@
+{
+  "name": "rescript-number",
+  "version": "0.1.0",
+  "keywords": [
+    "rescript",
+    "number"
+  ],
+  "license": "MIT",
+  "author": "orzogc",
+  "scripts": {
+    "build": "rescript",
+    "clean": "rescript clean",
+    "dev": "rescript build -w"
+  },
+  "type": "module",
+  "dependencies": {
+    "rescript": "^11.0.0-rc.3"
+  }
+}

@@ -1,0 +1,7 @@
+include ResNumber__Bitwise
+include ResNumber__Conversion
+include ResNumber__Float
+include ResNumber__Integer
+include ResNumber__Math
+include ResNumber__Number
+include ResNumber__Operation

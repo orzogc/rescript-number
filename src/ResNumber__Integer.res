@@ -14,6 +14,8 @@ module type Integer = {
   include NumberConversion with type t := t
 
   include Number with type t := t
+
+  include NumberIncDec with type t := t
 }
 
 module type IntegerSign = {
@@ -145,6 +147,32 @@ module MakeIntegerConversion = (IntRange: NumberRange with type t = float): (
     | Some(f) => f->fromFloatExn
     | None => invalid_arg(`the string is not a integer: ${s}`)
     }
+}
+
+module MakeNumberIncDec = (
+  M: {
+    type t
+
+    let one: t
+
+    include NumberAddition with type t := t
+
+    include NumberSubtraction with type t := t
+  },
+): (NumberIncDec with type t = M.t) => {
+  type t = M.t
+
+  let inc = n => n->M.add(M.one)
+
+  let incExn = n => n->M.addExn(M.one)
+
+  let incUnsafe = n => n->M.addUnsafe(M.one)
+
+  let dec = n => n->M.sub(M.one)
+
+  let decExn = n => n->M.subExn(M.one)
+
+  let decUnsafe = n => n->M.subUnsafe(M.one)
 }
 
 module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with type t = float) => {
@@ -288,6 +316,14 @@ module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with 
   let remExn = (a, b) => b !== zero ? remUnsafe(a, b) : raise(Division_by_zero)
 
   include (
+    MakeNumberSum({
+      type t = t
+
+      include Add
+    }): NumberSum with type t := t
+  )
+
+  include (
     MakeNumberIncDec({
       type t = t
 
@@ -297,14 +333,6 @@ module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with 
 
       include Sub
     }): NumberIncDec with type t := t
-  )
-
-  include (
-    MakeNumberSum({
-      type t = t
-
-      include Add
-    }): NumberSum with type t := t
   )
 }
 
@@ -460,7 +488,7 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
     }
   }
 
-  let minManyUnsafe = arr => arr->Math.minMany_int
+  let minManyUnsafe = arr => arr->Math.minMany_int->toInt32
 
   let max = (a: t, b: t) => PervasivesU.max(a, b)
 
@@ -480,7 +508,7 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
     }
   }
 
-  let maxManyUnsafe = arr => arr->Math.maxMany_int
+  let maxManyUnsafe = arr => arr->Math.maxMany_int->toInt32
 
   let fromFloatUncheckInteger = f =>
     f >= minValue->Int.toFloat && f <= maxValue->Int.toFloat ? Some(f->floatToIntUnsafe) : None
@@ -572,7 +600,15 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
 
   let rem = (a, b) => b !== zero ? Some(remUnsafe(a, b)) : None
 
-  let remExn = (a, b) => mod(a, b)
+  let remExn = (a, b) => mod(a, b)->toInt32
+
+  include (
+    MakeNumberSum({
+      type t = t
+
+      include Add
+    }): NumberSum with type t := t
+  )
 
   include (
     MakeNumberIncDec({
@@ -585,14 +621,41 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
       include Sub
     }): NumberIncDec with type t := t
   )
+}
 
-  include (
-    MakeNumberSum({
-      type t = t
+module MakeIntegerMath = (
+  M: {
+    type t
 
-      include Add
-    }): NumberSum with type t := t
-  )
+    include NumberFromFloat with type t := t
+
+    include NumberToFloat with type t := t
+
+    let clz: t => int
+
+    let imul: (t, t) => t
+  },
+): (IntegerMath with type t = M.t) => {
+  type t = M.t
+
+  let clz = M.clz
+
+  let imul = M.imul
+
+  let pow_ = (~base, ~exp) => Math.pow_float(~base=base->M.toFloat, ~exp=exp->M.toFloat)
+
+  let pow = (~base, ~exp) => pow_(~base, ~exp)->M.fromFloat
+
+  let powExn = (~base, ~exp) => pow_(~base, ~exp)->M.fromFloatExn
+
+  let powUnsafe = (~base, ~exp) => pow_(~base, ~exp)->M.fromFloatUnsafe
+
+  let random = (min, max) => {
+    let min_ = min->M.toFloat
+    let max_ = max->M.toFloat
+
+    (Math.random() *. (max_ -. min_) +. min_)->Math.floor_float->M.fromFloatClamped
+  }
 }
 
 module MakeFixedBitsInteger = (
@@ -623,7 +686,11 @@ module MakeFixedBitsInteger = (
   let isUnsigned = !isSigned
 
   if isSigned {
-    let n = minValue->toUint32
+    if minValue >= 0 {
+      invalid_arg(`minValue for signed integer must be less than 0: ${minValue->toString}`)
+    }
+
+    let n = minValue->Int.toFloat->Math.abs_float
 
     if n->Math.log2 !== (bits - 1)->Int.toFloat {
       invalid_arg(
@@ -652,7 +719,7 @@ module MakeFixedBitsInteger = (
 
   let is32Bits = bits === 32
 
-  let mask = (2.0 ** bits->Int.toFloat -. 1.0)->floatToIntUnsafe->toInt32
+  let mask = -1->lsr(32 - bits)
 
   let maskNot = mask->lnot
 
@@ -674,29 +741,45 @@ module MakeFixedBitsInteger = (
   let lsl = !is32Bits
     ? isSigned
         ? (i, n) => {
-            let v = i->P.lsl(n->modBits)
+            let m = n->modBits
 
-            v->P.land(highestBit) === 0 ? v->P.land(mask) : v->P.lor(maskNot)
+            if m !== 0 {
+              let v = i->P.lsl(m)
+
+              v->P.land(highestBit) === 0 ? v->P.land(mask) : v->P.lor(maskNot)
+            } else {
+              i
+            }
           }
-        : (i, n) => i->P.lsl(n->modBits)->P.land(mask)
+        : (i, n) => {
+            let m = n->modBits
+
+            m !== 0 ? i->P.lsl(m)->P.land(mask) : i
+          }
     : P.lsl
 
   let lsr = !is32Bits
-    ? isSigned ? (i, n) => i->P.land(mask)->P.lsr(n->modBits) : (i, n) => i->P.lsr(n->modBits)
+    ? isSigned
+        ? (i, n) => {
+            let m = n->modBits
+
+            m !== 0 ? i->P.land(mask)->P.lsr(m) : i
+          }
+        : (i, n) => i->P.lsr(n->modBits)
     : P.lsr
 
   let asr = !is32Bits ? (i, n) => i->P.asr(n->modBits) : P.asr
 
-  let rlsl = (i, n) => {
+  let rsl = (i, n) => {
     let m = n->modBits
 
-    i->lsl(m)->lor(i->lsr(bits - m))
+    m !== 0 ? i->lsl(m)->lor(i->lsr(bits - m)) : i
   }
 
-  let rlsr = (i, n) => {
+  let rsr = (i, n) => {
     let m = n->modBits
 
-    i->lsr(m)->lor(i->lsl(bits - m))
+    m !== 0 ? i->lsr(m)->lor(i->lsl(bits - m)) : i
   }
 
   include (
@@ -718,9 +801,9 @@ module MakeFixedBitsInteger = (
             ? (a, b) => {
                 let i = Math.imul(a, b)
 
-                i->land(highestBit) === 0 ? i->land(mask) : i->lor(maskNot)
+                i->P.land(highestBit) === 0 ? i->P.land(mask) : i->P.lor(maskNot)
               }
-            : (a, b) => Math.imul(a, b)->land(mask)
+            : (a, b) => Math.imul(a, b)->P.land(mask)
         : (a, b) => Math.imul(a, b)
     }): IntegerMath with type t := t
   )
@@ -862,6 +945,24 @@ module Uint32: UnsignedInteger with type t = float = {
     let fromIntUnsafe = i => i->toUint32
 
     let fromFloatUnsafe = f => f->floatToIntUnsafe->toUint32
+
+    let minManyUnsafe = arr => arr->Math.minMany_float->fromFloatUnsafe
+
+    let maxManyUnsafe = arr => arr->Math.maxMany_float->fromFloatUnsafe
+
+    let addUnsafe = (a, b) => (a +. b)->fromFloatUnsafe
+
+    let subUnsafe = (a, b) => (a -. b)->fromFloatUnsafe
+
+    let mulUnsafe = (a, b) => (a *. b)->fromFloatUnsafe
+
+    let divUnsafe = (a, b) => (a /. b)->fromFloatUnsafe
+
+    let sumUnsafe = arr => arr->sumUnsafe->fromFloatUnsafe
+
+    let incUnsafe = n => n->addUnsafe(one)
+
+    let decUnsafe = n => n->subUnsafe(one)
   }
 
   include (IntModule: Integer with type t := t)
@@ -892,16 +993,20 @@ module Uint32: UnsignedInteger with type t = float = {
   let modBits = n =>
     n < 0 || n >= bits ? n->toUint32->P.mod_float(bits->Int.toFloat)->floatToIntUnsafe : n
 
-  let rlsl = (i, n) => {
+  let rsl = (i, n) => {
     let m = n->modBits
 
-    i->floatToIntUnsafe->P.lsl(m)->P.lor(i->floatToIntUnsafe->P.lsr(bits - m))->toUint32
+    m !== 0
+      ? i->floatToIntUnsafe->P.lsl(m)->P.lor(i->floatToIntUnsafe->P.lsr(bits - m))->toUint32
+      : i
   }
 
-  let rlsr = (i, n) => {
+  let rsr = (i, n) => {
     let m = n->modBits
 
-    i->floatToIntUnsafe->P.lsr(m)->P.lor(i->floatToIntUnsafe->P.lsl(bits - m))->toUint32
+    m !== 0
+      ? i->floatToIntUnsafe->P.lsr(m)->P.lor(i->floatToIntUnsafe->P.lsl(bits - m))->toUint32
+      : i
   }
 
   include (

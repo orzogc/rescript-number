@@ -3,14 +3,9 @@
 import * as Js_int from "rescript/lib/es6/js_int.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
-import * as ResNumber__Math from "./ResNumber__Math.bs.mjs";
 import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 import * as ResNumber__Utils from "./ResNumber__Utils.bs.mjs";
 import * as ResNumber__Operation from "./ResNumber__Operation.bs.mjs";
-
-function toInt32(i) {
-  return i | 0;
-}
 
 function toUint32(i) {
   return (i >>> 0);
@@ -142,6 +137,35 @@ function MakeIntegerConversion(IntRange) {
           fromString: fromString,
           fromStringExn: fromStringExn,
           toString: toString
+        };
+}
+
+function MakeNumberIncDec(M) {
+  var inc = function (n) {
+    return M.add(n, M.one);
+  };
+  var incExn = function (n) {
+    return M.addExn(n, M.one);
+  };
+  var incUnsafe = function (n) {
+    return M.addUnsafe(n, M.one);
+  };
+  var dec = function (n) {
+    return M.sub(n, M.one);
+  };
+  var decExn = function (n) {
+    return M.subExn(n, M.one);
+  };
+  var decUnsafe = function (n) {
+    return M.subUnsafe(n, M.one);
+  };
+  return {
+          inc: inc,
+          incExn: incExn,
+          incUnsafe: incUnsafe,
+          dec: dec,
+          decExn: decExn,
+          decUnsafe: decUnsafe
         };
 }
 
@@ -441,23 +465,30 @@ function MakeInteger(IntRange) {
           Error: new Error()
         };
   };
-  var include = ResNumber__Operation.MakeNumberIncDec({
-        one: 1.0,
-        add: add,
-        addExn: addExn,
-        addClamped: addClamped,
-        addUnsafe: addUnsafe,
-        sub: sub,
-        subExn: subExn,
-        subClamped: subClamped,
-        subUnsafe: subUnsafe
-      });
-  var include$1 = ResNumber__Operation.MakeNumberSum({
+  var include = ResNumber__Operation.MakeNumberSum({
         add: add,
         addExn: addExn,
         addClamped: addClamped,
         addUnsafe: addUnsafe
       });
+  var inc = function (n) {
+    return add(n, 1.0);
+  };
+  var incExn = function (n) {
+    return addExn(n, 1.0);
+  };
+  var incUnsafe = function (n) {
+    return n + 1.0;
+  };
+  var dec = function (n) {
+    return sub(n, 1.0);
+  };
+  var decExn = function (n) {
+    return subExn(n, 1.0);
+  };
+  var decUnsafe = function (n) {
+    return n - 1.0;
+  };
   return {
           fromInt: fromInt,
           fromIntExn: fromIntExn,
@@ -513,15 +544,15 @@ function MakeInteger(IntRange) {
           rem: rem,
           remExn: remExn,
           remUnsafe: remUnsafe,
-          inc: include.inc,
-          incExn: include.incExn,
-          incUnsafe: include.incUnsafe,
-          dec: include.dec,
-          decExn: include.decExn,
-          decUnsafe: include.decUnsafe,
-          sum: include$1.sum,
-          sumExn: include$1.sumExn,
-          sumUnsafe: include$1.sumUnsafe
+          sum: include.sum,
+          sumExn: include.sumExn,
+          sumUnsafe: include.sumUnsafe,
+          inc: inc,
+          incExn: incExn,
+          incUnsafe: incUnsafe,
+          dec: dec,
+          decExn: decExn,
+          decUnsafe: decUnsafe
         };
 }
 
@@ -813,7 +844,7 @@ function MakeFixedBitsInt(IntRange) {
     }
   };
   var minManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.min, [arr]);
+    return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
   };
   var max = function (a, b) {
     if (a > b) {
@@ -842,7 +873,7 @@ function MakeFixedBitsInt(IntRange) {
     }
   };
   var maxManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.max, [arr]);
+    return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
@@ -942,24 +973,33 @@ function MakeFixedBitsInt(IntRange) {
     }
     
   };
-  var remExn = Caml_int32.mod_;
-  var include = ResNumber__Operation.MakeNumberIncDec({
-        one: 1,
-        add: add,
-        addExn: addExn,
-        addClamped: addClamped,
-        addUnsafe: addUnsafe,
-        sub: sub,
-        subExn: subExn,
-        subClamped: subClamped,
-        subUnsafe: subUnsafe
-      });
-  var include$1 = ResNumber__Operation.MakeNumberSum({
+  var remExn = function (a, b) {
+    return Caml_int32.mod_(a, b) | 0;
+  };
+  var include = ResNumber__Operation.MakeNumberSum({
         add: add,
         addExn: addExn,
         addClamped: addClamped,
         addUnsafe: addUnsafe
       });
+  var inc = function (n) {
+    return add(n, 1);
+  };
+  var incExn = function (n) {
+    return addExn(n, 1);
+  };
+  var incUnsafe = function (n) {
+    return n + 1 | 0;
+  };
+  var dec = function (n) {
+    return sub(n, 1);
+  };
+  var decExn = function (n) {
+    return subExn(n, 1);
+  };
+  var decUnsafe = function (n) {
+    return n - 1 | 0;
+  };
   return {
           fromInt: fromInt,
           fromIntExn: fromIntExn,
@@ -1015,15 +1055,43 @@ function MakeFixedBitsInt(IntRange) {
           rem: rem,
           remExn: remExn,
           remUnsafe: remUnsafe,
-          inc: include.inc,
-          incExn: include.incExn,
-          incUnsafe: include.incUnsafe,
-          dec: include.dec,
-          decExn: include.decExn,
-          decUnsafe: include.decUnsafe,
-          sum: include$1.sum,
-          sumExn: include$1.sumExn,
-          sumUnsafe: include$1.sumUnsafe
+          sum: include.sum,
+          sumExn: include.sumExn,
+          sumUnsafe: include.sumUnsafe,
+          inc: inc,
+          incExn: incExn,
+          incUnsafe: incUnsafe,
+          dec: dec,
+          decExn: decExn,
+          decUnsafe: decUnsafe
+        };
+}
+
+function MakeIntegerMath(M) {
+  var pow_ = function (base, exp) {
+    return Math.pow(M.toFloat(base), M.toFloat(exp));
+  };
+  var pow = function (base, exp) {
+    return M.fromFloat(pow_(base, exp));
+  };
+  var powExn = function (base, exp) {
+    return M.fromFloatExn(pow_(base, exp));
+  };
+  var powUnsafe = function (base, exp) {
+    return M.fromFloatUnsafe(pow_(base, exp));
+  };
+  var random = function (min, max) {
+    var min_ = M.toFloat(min);
+    var max_ = M.toFloat(max);
+    return M.fromFloatClamped(Math.floor(Math.random() * (max_ - min_) + min_));
+  };
+  return {
+          clz: M.clz,
+          imul: M.imul,
+          pow: pow,
+          powExn: powExn,
+          powUnsafe: powUnsafe,
+          random: random
         };
 }
 
@@ -1198,7 +1266,7 @@ function MakeFixedBitsInteger(M) {
     }
   };
   var minManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.min, [arr]);
+    return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
   };
   var max = function (a, b) {
     if (a > b) {
@@ -1227,7 +1295,7 @@ function MakeFixedBitsInteger(M) {
     }
   };
   var maxManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.max, [arr]);
+    return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
@@ -1327,24 +1395,33 @@ function MakeFixedBitsInteger(M) {
     }
     
   };
-  var remExn = Caml_int32.mod_;
-  var include = ResNumber__Operation.MakeNumberIncDec({
-        one: 1,
-        add: add,
-        addExn: addExn,
-        addClamped: addClamped,
-        addUnsafe: addUnsafe,
-        sub: sub,
-        subExn: subExn,
-        subClamped: subClamped,
-        subUnsafe: subUnsafe
-      });
-  var include$1 = ResNumber__Operation.MakeNumberSum({
+  var remExn = function (a, b) {
+    return Caml_int32.mod_(a, b) | 0;
+  };
+  var include = ResNumber__Operation.MakeNumberSum({
         add: add,
         addExn: addExn,
         addClamped: addClamped,
         addUnsafe: addUnsafe
       });
+  var inc = function (n) {
+    return add(n, 1);
+  };
+  var incExn = function (n) {
+    return addExn(n, 1);
+  };
+  var incUnsafe = function (n) {
+    return n + 1 | 0;
+  };
+  var dec = function (n) {
+    return sub(n, 1);
+  };
+  var decExn = function (n) {
+    return subExn(n, 1);
+  };
+  var decUnsafe = function (n) {
+    return n - 1 | 0;
+  };
   var bits = M.bits;
   if (bits <= 0 || bits > 32) {
     PervasivesU.invalid_arg("bits must not be less than 1 or greater than 32: " + bits.toString());
@@ -1352,7 +1429,10 @@ function MakeFixedBitsInteger(M) {
   var isSigned = M.isSigned;
   var isUnsigned = !isSigned;
   if (isSigned) {
-    var n = toUint32(minValue$1);
+    if (minValue$1 >= 0) {
+      PervasivesU.invalid_arg("minValue for signed integer must be less than 0: " + minValue$1.toString());
+    }
+    var n = Math.abs(minValue$1);
     if (Math.log2(n) !== (bits - 1 | 0)) {
       PervasivesU.invalid_arg("invalid minValue " + minValue$1.toString() + " for " + bits.toString() + " bits signed integer");
     }
@@ -1371,7 +1451,7 @@ function MakeFixedBitsInteger(M) {
     
   }
   var is32Bits = bits === 32;
-  var mask = Math.pow(2.0, bits) - 1.0 | 0;
+  var mask = (-1 >>> (32 - bits | 0)) | 0;
   var maskNot = PervasivesU.lnot(mask);
   var highestBit = (1 << (bits - 1 | 0));
   var lnot = isUnsigned ? (function (i) {
@@ -1397,21 +1477,35 @@ function MakeFixedBitsInteger(M) {
         return (prim0 << prim1);
       }) : (
       isSigned ? (function (i, n) {
-            var v = (i << modBits(n));
+            var m = modBits(n);
+            if (m === 0) {
+              return i;
+            }
+            var v = (i << m);
             if ((v & highestBit) === 0) {
               return v & mask;
             } else {
               return v | maskNot;
             }
           }) : (function (i, n) {
-            return (i << modBits(n)) & mask;
+            var m = modBits(n);
+            if (m !== 0) {
+              return (i << m) & mask;
+            } else {
+              return i;
+            }
           })
     );
   var lsr = is32Bits ? (function (prim0, prim1) {
         return (prim0 >>> prim1) | 0;
       }) : (
       isSigned ? (function (i, n) {
-            return ((i & mask) >>> modBits(n)) | 0;
+            var m = modBits(n);
+            if (m !== 0) {
+              return ((i & mask) >>> m) | 0;
+            } else {
+              return i;
+            }
           }) : (function (i, n) {
             return (i >>> modBits(n)) | 0;
           })
@@ -1421,13 +1515,21 @@ function MakeFixedBitsInteger(M) {
       }) : (function (i, n) {
         return (i >> modBits(n));
       });
-  var rlsl = function (i, n) {
+  var rsl = function (i, n) {
     var m = modBits(n);
-    return lsl(i, m) | lsr(i, bits - m | 0);
+    if (m !== 0) {
+      return lsl(i, m) | lsr(i, bits - m | 0);
+    } else {
+      return i;
+    }
   };
-  var rlsr = function (i, n) {
+  var rsr = function (i, n) {
     var m = modBits(n);
-    return lsr(i, m) | lsl(i, bits - m | 0);
+    if (m !== 0) {
+      return lsr(i, m) | lsl(i, bits - m | 0);
+    } else {
+      return i;
+    }
   };
   var clz = is32Bits ? (function (i) {
         return Math.clz32(i);
@@ -1453,15 +1555,23 @@ function MakeFixedBitsInteger(M) {
             return Math.imul(a, b) & mask;
           })
     );
-  var include$2 = ResNumber__Math.MakeIntegerMath({
-        fromFloat: fromFloat,
-        fromFloatExn: fromFloatExn,
-        fromFloatClamped: fromFloatClamped,
-        fromFloatUnsafe: fromFloatUnsafe,
-        toFloat: toFloat,
-        clz: clz,
-        imul: imul
-      });
+  var pow_ = function (base, exp) {
+    return Math.pow(base, exp);
+  };
+  var pow = function (base, exp) {
+    return fromFloat(pow_(base, exp));
+  };
+  var powExn = function (base, exp) {
+    return fromFloatExn(pow_(base, exp));
+  };
+  var powUnsafe = function (base, exp) {
+    return pow_(base, exp) | 0;
+  };
+  var random = function (min, max) {
+    var min_ = min;
+    var max_ = max;
+    return fromFloatClamped(Math.floor(Math.random() * (max_ - min_) + min_));
+  };
   return {
           isSigned: isSigned,
           isUnsigned: isUnsigned,
@@ -1520,15 +1630,15 @@ function MakeFixedBitsInteger(M) {
           rem: rem,
           remExn: remExn,
           remUnsafe: remUnsafe,
-          inc: include.inc,
-          incExn: include.incExn,
-          incUnsafe: include.incUnsafe,
-          dec: include.dec,
-          decExn: include.decExn,
-          decUnsafe: include.decUnsafe,
-          sum: include$1.sum,
-          sumExn: include$1.sumExn,
-          sumUnsafe: include$1.sumUnsafe,
+          sum: include.sum,
+          sumExn: include.sumExn,
+          sumUnsafe: include.sumUnsafe,
+          inc: inc,
+          incExn: incExn,
+          incUnsafe: incUnsafe,
+          dec: dec,
+          decExn: decExn,
+          decUnsafe: decUnsafe,
           lnot: lnot,
           land: land,
           lor: lor,
@@ -1536,14 +1646,14 @@ function MakeFixedBitsInteger(M) {
           lsl: lsl,
           lsr: lsr,
           asr: asr,
-          rlsl: rlsl,
-          rlsr: rlsr,
-          clz: include$2.clz,
-          imul: include$2.imul,
-          pow: include$2.pow,
-          powExn: include$2.powExn,
-          powUnsafe: include$2.powUnsafe,
-          random: include$2.random
+          rsl: rsl,
+          rsr: rsr,
+          clz: clz,
+          imul: imul,
+          pow: pow,
+          powExn: powExn,
+          powUnsafe: powUnsafe,
+          random: random
         };
 }
 
@@ -1715,7 +1825,7 @@ function MakeSignedInteger(M) {
     }
   };
   var minManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.min, [arr]);
+    return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
   };
   var max = function (a, b) {
     if (a > b) {
@@ -1744,7 +1854,7 @@ function MakeSignedInteger(M) {
     }
   };
   var maxManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.max, [arr]);
+    return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue && f <= maxValue) {
@@ -1844,29 +1954,41 @@ function MakeSignedInteger(M) {
     }
     
   };
-  var remExn = Caml_int32.mod_;
-  var include = ResNumber__Operation.MakeNumberIncDec({
-        one: 1,
-        add: add,
-        addExn: addExn,
-        addClamped: addClamped,
-        addUnsafe: addUnsafe,
-        sub: sub,
-        subExn: subExn,
-        subClamped: subClamped,
-        subUnsafe: subUnsafe
-      });
-  var include$1 = ResNumber__Operation.MakeNumberSum({
+  var remExn = function (a, b) {
+    return Caml_int32.mod_(a, b) | 0;
+  };
+  var include = ResNumber__Operation.MakeNumberSum({
         add: add,
         addExn: addExn,
         addClamped: addClamped,
         addUnsafe: addUnsafe
       });
+  var inc = function (n) {
+    return add(n, 1);
+  };
+  var incExn = function (n) {
+    return addExn(n, 1);
+  };
+  var incUnsafe = function (n) {
+    return n + 1 | 0;
+  };
+  var dec = function (n) {
+    return sub(n, 1);
+  };
+  var decExn = function (n) {
+    return subExn(n, 1);
+  };
+  var decUnsafe = function (n) {
+    return n - 1 | 0;
+  };
   if (bits <= 0 || bits > 32) {
     PervasivesU.invalid_arg("bits must not be less than 1 or greater than 32: " + bits.toString());
   }
   var isUnsigned = false;
-  var n = toUint32(minValue);
+  if (minValue >= 0) {
+    PervasivesU.invalid_arg("minValue for signed integer must be less than 0: " + minValue.toString());
+  }
+  var n = Math.abs(minValue);
   if (Math.log2(n) !== (bits - 1 | 0)) {
     PervasivesU.invalid_arg("invalid minValue " + minValue.toString() + " for " + bits.toString() + " bits signed integer");
   }
@@ -1883,7 +2005,7 @@ function MakeSignedInteger(M) {
     
   }
   var is32Bits = bits === 32;
-  var mask = Math.pow(2.0, bits) - 1.0 | 0;
+  var mask = (-1 >>> (32 - bits | 0)) | 0;
   var maskNot = PervasivesU.lnot(mask);
   var highestBit = (1 << (bits - 1 | 0));
   var lnot = isUnsigned ? (function (i) {
@@ -1908,7 +2030,11 @@ function MakeSignedInteger(M) {
   var lsl = is32Bits ? (function (prim0, prim1) {
         return (prim0 << prim1);
       }) : (function (i, n) {
-        var v = (i << modBits(n));
+        var m = modBits(n);
+        if (m === 0) {
+          return i;
+        }
+        var v = (i << m);
         if ((v & highestBit) === 0) {
           return v & mask;
         } else {
@@ -1918,20 +2044,33 @@ function MakeSignedInteger(M) {
   var lsr = is32Bits ? (function (prim0, prim1) {
         return (prim0 >>> prim1) | 0;
       }) : (function (i, n) {
-        return ((i & mask) >>> modBits(n)) | 0;
+        var m = modBits(n);
+        if (m !== 0) {
+          return ((i & mask) >>> m) | 0;
+        } else {
+          return i;
+        }
       });
   var asr = is32Bits ? (function (prim0, prim1) {
         return (prim0 >> prim1);
       }) : (function (i, n) {
         return (i >> modBits(n));
       });
-  var rlsl = function (i, n) {
+  var rsl = function (i, n) {
     var m = modBits(n);
-    return lsl(i, m) | lsr(i, bits - m | 0);
+    if (m !== 0) {
+      return lsl(i, m) | lsr(i, bits - m | 0);
+    } else {
+      return i;
+    }
   };
-  var rlsr = function (i, n) {
+  var rsr = function (i, n) {
     var m = modBits(n);
-    return lsr(i, m) | lsl(i, bits - m | 0);
+    if (m !== 0) {
+      return lsr(i, m) | lsl(i, bits - m | 0);
+    } else {
+      return i;
+    }
   };
   var clz = is32Bits ? (function (i) {
         return Math.clz32(i);
@@ -1953,15 +2092,23 @@ function MakeSignedInteger(M) {
           return i | maskNot;
         }
       });
-  var include$2 = ResNumber__Math.MakeIntegerMath({
-        fromFloat: fromFloat,
-        fromFloatExn: fromFloatExn,
-        fromFloatClamped: fromFloatClamped,
-        fromFloatUnsafe: fromFloatUnsafe,
-        toFloat: toFloat,
-        clz: clz,
-        imul: imul
-      });
+  var pow_ = function (base, exp) {
+    return Math.pow(base, exp);
+  };
+  var pow = function (base, exp) {
+    return fromFloat(pow_(base, exp));
+  };
+  var powExn = function (base, exp) {
+    return fromFloatExn(pow_(base, exp));
+  };
+  var powUnsafe = function (base, exp) {
+    return pow_(base, exp) | 0;
+  };
+  var random = function (min, max) {
+    var min_ = min;
+    var max_ = max;
+    return fromFloatClamped(Math.floor(Math.random() * (max_ - min_) + min_));
+  };
   var neg = function (i) {
     if (i !== minValue) {
       return -i | 0;
@@ -2079,15 +2226,15 @@ function MakeSignedInteger(M) {
           rem: rem,
           remExn: remExn,
           remUnsafe: remUnsafe,
-          inc: include.inc,
-          incExn: include.incExn,
-          incUnsafe: include.incUnsafe,
-          dec: include.dec,
-          decExn: include.decExn,
-          decUnsafe: include.decUnsafe,
-          sum: include$1.sum,
-          sumExn: include$1.sumExn,
-          sumUnsafe: include$1.sumUnsafe,
+          sum: include.sum,
+          sumExn: include.sumExn,
+          sumUnsafe: include.sumUnsafe,
+          inc: inc,
+          incExn: incExn,
+          incUnsafe: incUnsafe,
+          dec: dec,
+          decExn: decExn,
+          decUnsafe: decUnsafe,
           lnot: lnot,
           land: land,
           lor: lor,
@@ -2095,14 +2242,14 @@ function MakeSignedInteger(M) {
           lsl: lsl,
           lsr: lsr,
           asr: asr,
-          rlsl: rlsl,
-          rlsr: rlsr,
-          clz: include$2.clz,
-          imul: include$2.imul,
-          pow: include$2.pow,
-          powExn: include$2.powExn,
-          powUnsafe: include$2.powUnsafe,
-          random: include$2.random,
+          rsl: rsl,
+          rsr: rsr,
+          clz: clz,
+          imul: imul,
+          pow: pow,
+          powExn: powExn,
+          powUnsafe: powUnsafe,
+          random: random,
           neg: neg,
           negExn: negExn,
           negUnsafe: negUnsafe,
@@ -2283,7 +2430,7 @@ function MakeUnsignedInteger(M) {
     }
   };
   var minManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.min, [arr]);
+    return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
   };
   var max = function (a, b) {
     if (a > b) {
@@ -2312,7 +2459,7 @@ function MakeUnsignedInteger(M) {
     }
   };
   var maxManyUnsafe = function (arr) {
-    return Caml_splice_call.spliceApply(Math.max, [arr]);
+    return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue && f <= maxValue) {
@@ -2412,24 +2559,33 @@ function MakeUnsignedInteger(M) {
     }
     
   };
-  var remExn = Caml_int32.mod_;
-  var include = ResNumber__Operation.MakeNumberIncDec({
-        one: 1,
-        add: add,
-        addExn: addExn,
-        addClamped: addClamped,
-        addUnsafe: addUnsafe,
-        sub: sub,
-        subExn: subExn,
-        subClamped: subClamped,
-        subUnsafe: subUnsafe
-      });
-  var include$1 = ResNumber__Operation.MakeNumberSum({
+  var remExn = function (a, b) {
+    return Caml_int32.mod_(a, b) | 0;
+  };
+  var include = ResNumber__Operation.MakeNumberSum({
         add: add,
         addExn: addExn,
         addClamped: addClamped,
         addUnsafe: addUnsafe
       });
+  var inc = function (n) {
+    return add(n, 1);
+  };
+  var incExn = function (n) {
+    return addExn(n, 1);
+  };
+  var incUnsafe = function (n) {
+    return n + 1 | 0;
+  };
+  var dec = function (n) {
+    return sub(n, 1);
+  };
+  var decExn = function (n) {
+    return subExn(n, 1);
+  };
+  var decUnsafe = function (n) {
+    return n - 1 | 0;
+  };
   if (bits <= 0 || bits > 32) {
     PervasivesU.invalid_arg("bits must not be less than 1 or greater than 32: " + bits.toString());
   }
@@ -2444,7 +2600,7 @@ function MakeUnsignedInteger(M) {
     
   }
   var is32Bits = bits === 32;
-  var mask = Math.pow(2.0, bits) - 1.0 | 0;
+  var mask = (-1 >>> (32 - bits | 0)) | 0;
   PervasivesU.lnot(mask);
   var lnot = isUnsigned ? (function (i) {
         return PervasivesU.lnot(i) & mask;
@@ -2468,7 +2624,12 @@ function MakeUnsignedInteger(M) {
   var lsl = is32Bits ? (function (prim0, prim1) {
         return (prim0 << prim1);
       }) : (function (i, n) {
-        return (i << modBits(n)) & mask;
+        var m = modBits(n);
+        if (m !== 0) {
+          return (i << m) & mask;
+        } else {
+          return i;
+        }
       });
   var lsr = is32Bits ? (function (prim0, prim1) {
         return (prim0 >>> prim1) | 0;
@@ -2480,13 +2641,21 @@ function MakeUnsignedInteger(M) {
       }) : (function (i, n) {
         return (i >> modBits(n));
       });
-  var rlsl = function (i, n) {
+  var rsl = function (i, n) {
     var m = modBits(n);
-    return lsl(i, m) | lsr(i, bits - m | 0);
+    if (m !== 0) {
+      return lsl(i, m) | lsr(i, bits - m | 0);
+    } else {
+      return i;
+    }
   };
-  var rlsr = function (i, n) {
+  var rsr = function (i, n) {
     var m = modBits(n);
-    return lsr(i, m) | lsl(i, bits - m | 0);
+    if (m !== 0) {
+      return lsr(i, m) | lsl(i, bits - m | 0);
+    } else {
+      return i;
+    }
   };
   var clz = is32Bits ? (function (i) {
         return Math.clz32(i);
@@ -2503,15 +2672,23 @@ function MakeUnsignedInteger(M) {
       }) : (function (a, b) {
         return Math.imul(a, b) & mask;
       });
-  var include$2 = ResNumber__Math.MakeIntegerMath({
-        fromFloat: fromFloat,
-        fromFloatExn: fromFloatExn,
-        fromFloatClamped: fromFloatClamped,
-        fromFloatUnsafe: fromFloatUnsafe,
-        toFloat: toFloat,
-        clz: clz,
-        imul: imul
-      });
+  var pow_ = function (base, exp) {
+    return Math.pow(base, exp);
+  };
+  var pow = function (base, exp) {
+    return fromFloat(pow_(base, exp));
+  };
+  var powExn = function (base, exp) {
+    return fromFloatExn(pow_(base, exp));
+  };
+  var powUnsafe = function (base, exp) {
+    return pow_(base, exp) | 0;
+  };
+  var random = function (min, max) {
+    var min_ = min;
+    var max_ = max;
+    return fromFloatClamped(Math.floor(Math.random() * (max_ - min_) + min_));
+  };
   return {
           isSigned: false,
           isUnsigned: isUnsigned,
@@ -2570,15 +2747,15 @@ function MakeUnsignedInteger(M) {
           rem: rem,
           remExn: remExn,
           remUnsafe: remUnsafe,
-          inc: include.inc,
-          incExn: include.incExn,
-          incUnsafe: include.incUnsafe,
-          dec: include.dec,
-          decExn: include.decExn,
-          decUnsafe: include.decUnsafe,
-          sum: include$1.sum,
-          sumExn: include$1.sumExn,
-          sumUnsafe: include$1.sumUnsafe,
+          sum: include.sum,
+          sumExn: include.sumExn,
+          sumUnsafe: include.sumUnsafe,
+          inc: inc,
+          incExn: incExn,
+          incUnsafe: incUnsafe,
+          dec: dec,
+          decExn: decExn,
+          decUnsafe: decUnsafe,
           lnot: lnot,
           land: land,
           lor: lor,
@@ -2586,14 +2763,14 @@ function MakeUnsignedInteger(M) {
           lsl: lsl,
           lsr: lsr,
           asr: asr,
-          rlsl: rlsl,
-          rlsr: rlsr,
-          clz: include$2.clz,
-          imul: include$2.imul,
-          pow: include$2.pow,
-          powExn: include$2.powExn,
-          powUnsafe: include$2.powUnsafe,
-          random: include$2.random
+          rsl: rsl,
+          rsr: rsr,
+          clz: clz,
+          imul: imul,
+          pow: pow,
+          powExn: powExn,
+          powUnsafe: powUnsafe,
+          random: random
         };
 }
 
@@ -2785,7 +2962,7 @@ function minManyExn(arr) {
 }
 
 function minManyUnsafe(arr) {
-  return Caml_splice_call.spliceApply(Math.min, [arr]);
+  return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
 }
 
 function max(a, b) {
@@ -2818,7 +2995,7 @@ function maxManyExn(arr) {
 }
 
 function maxManyUnsafe(arr) {
-  return Caml_splice_call.spliceApply(Math.max, [arr]);
+  return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
 }
 
 function fromFloatUncheckInteger(f) {
@@ -2942,30 +3119,44 @@ function rem(a, b) {
   
 }
 
-var remExn = Caml_int32.mod_;
+function remExn(a, b) {
+  return Caml_int32.mod_(a, b) | 0;
+}
 
-var include = ResNumber__Operation.MakeNumberIncDec({
-      one: 1,
-      add: add,
-      addExn: addExn,
-      addClamped: addClamped,
-      addUnsafe: addUnsafe,
-      sub: sub,
-      subExn: subExn,
-      subClamped: subClamped,
-      subUnsafe: subUnsafe
-    });
-
-var include$1 = ResNumber__Operation.MakeNumberSum({
+var include = ResNumber__Operation.MakeNumberSum({
       add: add,
       addExn: addExn,
       addClamped: addClamped,
       addUnsafe: addUnsafe
     });
 
+function inc(n) {
+  return add(n, 1);
+}
+
+function incExn(n) {
+  return addExn(n, 1);
+}
+
+function incUnsafe(n) {
+  return n + 1 | 0;
+}
+
+function dec(n) {
+  return sub(n, 1);
+}
+
+function decExn(n) {
+  return subExn(n, 1);
+}
+
+function decUnsafe(n) {
+  return n - 1 | 0;
+}
+
 var isUnsigned = false;
 
-var n = toUint32(-128);
+var n = Math.abs(-128);
 
 if (Math.log2(n) !== 7) {
   PervasivesU.invalid_arg("invalid minValue " + (-128).toString() + " for " + (8).toString() + " bits signed integer");
@@ -2985,7 +3176,7 @@ if (isUnsigned) {
 
 var is32Bits = false;
 
-var mask = Math.pow(2.0, 8) - 1.0 | 0;
+var mask = 255;
 
 var maskNot = PervasivesU.lnot(mask);
 
@@ -3018,7 +3209,11 @@ function modBits(n) {
 var lsl = is32Bits ? (function (prim0, prim1) {
       return (prim0 << prim1);
     }) : (function (i, n) {
-      var v = (i << modBits(n));
+      var m = modBits(n);
+      if (m === 0) {
+        return i;
+      }
+      var v = (i << m);
       if ((v & highestBit) === 0) {
         return v & mask;
       } else {
@@ -3029,7 +3224,12 @@ var lsl = is32Bits ? (function (prim0, prim1) {
 var lsr = is32Bits ? (function (prim0, prim1) {
       return (prim0 >>> prim1) | 0;
     }) : (function (i, n) {
-      return ((i & mask) >>> modBits(n)) | 0;
+      var m = modBits(n);
+      if (m !== 0) {
+        return ((i & mask) >>> m) | 0;
+      } else {
+        return i;
+      }
     });
 
 var asr = is32Bits ? (function (prim0, prim1) {
@@ -3038,14 +3238,22 @@ var asr = is32Bits ? (function (prim0, prim1) {
       return (i >> modBits(n));
     });
 
-function rlsl(i, n) {
+function rsl(i, n) {
   var m = modBits(n);
-  return lsl(i, m) | lsr(i, 8 - m | 0);
+  if (m !== 0) {
+    return lsl(i, m) | lsr(i, 8 - m | 0);
+  } else {
+    return i;
+  }
 }
 
-function rlsr(i, n) {
+function rsr(i, n) {
   var m = modBits(n);
-  return lsr(i, m) | lsl(i, 8 - m | 0);
+  if (m !== 0) {
+    return lsr(i, m) | lsl(i, 8 - m | 0);
+  } else {
+    return i;
+  }
 }
 
 var clz = is32Bits ? (function (i) {
@@ -3070,15 +3278,27 @@ var imul = is32Bits ? (function (a, b) {
       }
     });
 
-var include$2 = ResNumber__Math.MakeIntegerMath({
-      fromFloat: fromFloat,
-      fromFloatExn: fromFloatExn,
-      fromFloatClamped: fromFloatClamped,
-      fromFloatUnsafe: fromFloatUnsafe,
-      toFloat: toFloat,
-      clz: clz,
-      imul: imul
-    });
+function pow_(base, exp) {
+  return Math.pow(base, exp);
+}
+
+function pow(base, exp) {
+  return fromFloat(pow_(base, exp));
+}
+
+function powExn(base, exp) {
+  return fromFloatExn(pow_(base, exp));
+}
+
+function powUnsafe(base, exp) {
+  return pow_(base, exp) | 0;
+}
+
+function random(min, max) {
+  var min_ = min;
+  var max_ = max;
+  return fromFloatClamped(Math.floor(Math.random() * (max_ - min_) + min_));
+}
 
 function neg(i) {
   if (i !== -128) {
@@ -3148,35 +3368,11 @@ function signRaw(i) {
   return Math.sign(i);
 }
 
-var Int8_inc = include.inc;
+var Int8_sum = include.sum;
 
-var Int8_incExn = include.incExn;
+var Int8_sumExn = include.sumExn;
 
-var Int8_incUnsafe = include.incUnsafe;
-
-var Int8_dec = include.dec;
-
-var Int8_decExn = include.decExn;
-
-var Int8_decUnsafe = include.decUnsafe;
-
-var Int8_sum = include$1.sum;
-
-var Int8_sumExn = include$1.sumExn;
-
-var Int8_sumUnsafe = include$1.sumUnsafe;
-
-var Int8_clz = include$2.clz;
-
-var Int8_imul = include$2.imul;
-
-var Int8_pow = include$2.pow;
-
-var Int8_powExn = include$2.powExn;
-
-var Int8_powUnsafe = include$2.powUnsafe;
-
-var Int8_random = include$2.random;
+var Int8_sumUnsafe = include.sumUnsafe;
 
 var Int8 = {
   isSigned: true,
@@ -3236,15 +3432,15 @@ var Int8 = {
   rem: rem,
   remExn: remExn,
   remUnsafe: remUnsafe,
-  inc: Int8_inc,
-  incExn: Int8_incExn,
-  incUnsafe: Int8_incUnsafe,
-  dec: Int8_dec,
-  decExn: Int8_decExn,
-  decUnsafe: Int8_decUnsafe,
   sum: Int8_sum,
   sumExn: Int8_sumExn,
   sumUnsafe: Int8_sumUnsafe,
+  inc: inc,
+  incExn: incExn,
+  incUnsafe: incUnsafe,
+  dec: dec,
+  decExn: decExn,
+  decUnsafe: decUnsafe,
   lnot: lnot,
   land: land,
   lor: lor,
@@ -3252,14 +3448,14 @@ var Int8 = {
   lsl: lsl,
   lsr: lsr,
   asr: asr,
-  rlsl: rlsl,
-  rlsr: rlsr,
-  clz: Int8_clz,
-  imul: Int8_imul,
-  pow: Int8_pow,
-  powExn: Int8_powExn,
-  powUnsafe: Int8_powUnsafe,
-  random: Int8_random,
+  rsl: rsl,
+  rsr: rsr,
+  clz: clz,
+  imul: imul,
+  pow: pow,
+  powExn: powExn,
+  powUnsafe: powUnsafe,
+  random: random,
   neg: neg,
   negExn: negExn,
   negUnsafe: negUnsafe,
@@ -3459,7 +3655,7 @@ function minManyExn$1(arr) {
 }
 
 function minManyUnsafe$1(arr) {
-  return Caml_splice_call.spliceApply(Math.min, [arr]);
+  return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
 }
 
 function max$1(a, b) {
@@ -3492,7 +3688,7 @@ function maxManyExn$1(arr) {
 }
 
 function maxManyUnsafe$1(arr) {
-  return Caml_splice_call.spliceApply(Math.max, [arr]);
+  return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
 }
 
 function fromFloatUncheckInteger$1(f) {
@@ -3616,26 +3812,40 @@ function rem$1(a, b) {
   
 }
 
-var remExn$1 = Caml_int32.mod_;
+function remExn$1(a, b) {
+  return Caml_int32.mod_(a, b) | 0;
+}
 
-var include$3 = ResNumber__Operation.MakeNumberIncDec({
-      one: 1,
-      add: add$1,
-      addExn: addExn$1,
-      addClamped: addClamped$1,
-      addUnsafe: addUnsafe$1,
-      sub: sub$1,
-      subExn: subExn$1,
-      subClamped: subClamped$1,
-      subUnsafe: subUnsafe$1
-    });
-
-var include$4 = ResNumber__Operation.MakeNumberSum({
+var include$1 = ResNumber__Operation.MakeNumberSum({
       add: add$1,
       addExn: addExn$1,
       addClamped: addClamped$1,
       addUnsafe: addUnsafe$1
     });
+
+function inc$1(n) {
+  return add$1(n, 1);
+}
+
+function incExn$1(n) {
+  return addExn$1(n, 1);
+}
+
+function incUnsafe$1(n) {
+  return n + 1 | 0;
+}
+
+function dec$1(n) {
+  return sub$1(n, 1);
+}
+
+function decExn$1(n) {
+  return subExn$1(n, 1);
+}
+
+function decUnsafe$1(n) {
+  return n - 1 | 0;
+}
 
 var isUnsigned$1 = true;
 
@@ -3645,7 +3855,7 @@ if (isUnsigned$1 && Math.pow(2.0, 8) - 1.0 !== 255) {
 
 var is32Bits$1 = false;
 
-var mask$1 = Math.pow(2.0, 8) - 1.0 | 0;
+var mask$1 = 255;
 
 PervasivesU.lnot(mask$1);
 
@@ -3676,7 +3886,12 @@ function modBits$1(n) {
 var lsl$1 = is32Bits$1 ? (function (prim0, prim1) {
       return (prim0 << prim1);
     }) : (function (i, n) {
-      return (i << modBits$1(n)) & mask$1;
+      var m = modBits$1(n);
+      if (m !== 0) {
+        return (i << m) & mask$1;
+      } else {
+        return i;
+      }
     });
 
 var lsr$1 = is32Bits$1 ? (function (prim0, prim1) {
@@ -3691,14 +3906,22 @@ var asr$1 = is32Bits$1 ? (function (prim0, prim1) {
       return (i >> modBits$1(n));
     });
 
-function rlsl$1(i, n) {
+function rsl$1(i, n) {
   var m = modBits$1(n);
-  return lsl$1(i, m) | lsr$1(i, 8 - m | 0);
+  if (m !== 0) {
+    return lsl$1(i, m) | lsr$1(i, 8 - m | 0);
+  } else {
+    return i;
+  }
 }
 
-function rlsr$1(i, n) {
+function rsr$1(i, n) {
   var m = modBits$1(n);
-  return lsr$1(i, m) | lsl$1(i, 8 - m | 0);
+  if (m !== 0) {
+    return lsr$1(i, m) | lsl$1(i, 8 - m | 0);
+  } else {
+    return i;
+  }
 }
 
 var clz$1 = is32Bits$1 ? (function (i) {
@@ -3718,45 +3941,33 @@ var imul$1 = is32Bits$1 ? (function (a, b) {
       return Math.imul(a, b) & mask$1;
     });
 
-var include$5 = ResNumber__Math.MakeIntegerMath({
-      fromFloat: fromFloat$1,
-      fromFloatExn: fromFloatExn$1,
-      fromFloatClamped: fromFloatClamped$1,
-      fromFloatUnsafe: fromFloatUnsafe$1,
-      toFloat: toFloat$1,
-      clz: clz$1,
-      imul: imul$1
-    });
+function pow_$1(base, exp) {
+  return Math.pow(base, exp);
+}
 
-var Uint8_inc = include$3.inc;
+function pow$1(base, exp) {
+  return fromFloat$1(pow_$1(base, exp));
+}
 
-var Uint8_incExn = include$3.incExn;
+function powExn$1(base, exp) {
+  return fromFloatExn$1(pow_$1(base, exp));
+}
 
-var Uint8_incUnsafe = include$3.incUnsafe;
+function powUnsafe$1(base, exp) {
+  return pow_$1(base, exp) | 0;
+}
 
-var Uint8_dec = include$3.dec;
+function random$1(min, max) {
+  var min_ = min;
+  var max_ = max;
+  return fromFloatClamped$1(Math.floor(Math.random() * (max_ - min_) + min_));
+}
 
-var Uint8_decExn = include$3.decExn;
+var Uint8_sum = include$1.sum;
 
-var Uint8_decUnsafe = include$3.decUnsafe;
+var Uint8_sumExn = include$1.sumExn;
 
-var Uint8_sum = include$4.sum;
-
-var Uint8_sumExn = include$4.sumExn;
-
-var Uint8_sumUnsafe = include$4.sumUnsafe;
-
-var Uint8_clz = include$5.clz;
-
-var Uint8_imul = include$5.imul;
-
-var Uint8_pow = include$5.pow;
-
-var Uint8_powExn = include$5.powExn;
-
-var Uint8_powUnsafe = include$5.powUnsafe;
-
-var Uint8_random = include$5.random;
+var Uint8_sumUnsafe = include$1.sumUnsafe;
 
 var Uint8 = {
   isSigned: false,
@@ -3816,15 +4027,15 @@ var Uint8 = {
   rem: rem$1,
   remExn: remExn$1,
   remUnsafe: remUnsafe$1,
-  inc: Uint8_inc,
-  incExn: Uint8_incExn,
-  incUnsafe: Uint8_incUnsafe,
-  dec: Uint8_dec,
-  decExn: Uint8_decExn,
-  decUnsafe: Uint8_decUnsafe,
   sum: Uint8_sum,
   sumExn: Uint8_sumExn,
   sumUnsafe: Uint8_sumUnsafe,
+  inc: inc$1,
+  incExn: incExn$1,
+  incUnsafe: incUnsafe$1,
+  dec: dec$1,
+  decExn: decExn$1,
+  decUnsafe: decUnsafe$1,
   lnot: lnot$1,
   land: land$1,
   lor: lor$1,
@@ -3832,14 +4043,14 @@ var Uint8 = {
   lsl: lsl$1,
   lsr: lsr$1,
   asr: asr$1,
-  rlsl: rlsl$1,
-  rlsr: rlsr$1,
-  clz: Uint8_clz,
-  imul: Uint8_imul,
-  pow: Uint8_pow,
-  powExn: Uint8_powExn,
-  powUnsafe: Uint8_powUnsafe,
-  random: Uint8_random
+  rsl: rsl$1,
+  rsr: rsr$1,
+  clz: clz$1,
+  imul: imul$1,
+  pow: pow$1,
+  powExn: powExn$1,
+  powUnsafe: powUnsafe$1,
+  random: random$1
 };
 
 var IntRange$2 = {
@@ -4030,7 +4241,7 @@ function minManyExn$2(arr) {
 }
 
 function minManyUnsafe$2(arr) {
-  return Caml_splice_call.spliceApply(Math.min, [arr]);
+  return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
 }
 
 function max$2(a, b) {
@@ -4063,7 +4274,7 @@ function maxManyExn$2(arr) {
 }
 
 function maxManyUnsafe$2(arr) {
-  return Caml_splice_call.spliceApply(Math.max, [arr]);
+  return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
 }
 
 function fromFloatUncheckInteger$2(f) {
@@ -4187,30 +4398,44 @@ function rem$2(a, b) {
   
 }
 
-var remExn$2 = Caml_int32.mod_;
+function remExn$2(a, b) {
+  return Caml_int32.mod_(a, b) | 0;
+}
 
-var include$6 = ResNumber__Operation.MakeNumberIncDec({
-      one: 1,
-      add: add$2,
-      addExn: addExn$2,
-      addClamped: addClamped$2,
-      addUnsafe: addUnsafe$2,
-      sub: sub$2,
-      subExn: subExn$2,
-      subClamped: subClamped$2,
-      subUnsafe: subUnsafe$2
-    });
-
-var include$7 = ResNumber__Operation.MakeNumberSum({
+var include$2 = ResNumber__Operation.MakeNumberSum({
       add: add$2,
       addExn: addExn$2,
       addClamped: addClamped$2,
       addUnsafe: addUnsafe$2
     });
 
+function inc$2(n) {
+  return add$2(n, 1);
+}
+
+function incExn$2(n) {
+  return addExn$2(n, 1);
+}
+
+function incUnsafe$2(n) {
+  return n + 1 | 0;
+}
+
+function dec$2(n) {
+  return sub$2(n, 1);
+}
+
+function decExn$2(n) {
+  return subExn$2(n, 1);
+}
+
+function decUnsafe$2(n) {
+  return n - 1 | 0;
+}
+
 var isUnsigned$2 = false;
 
-var n$1 = toUint32(-32768);
+var n$1 = Math.abs(-32768);
 
 if (Math.log2(n$1) !== 15) {
   PervasivesU.invalid_arg("invalid minValue " + (-32768).toString() + " for " + (16).toString() + " bits signed integer");
@@ -4230,7 +4455,7 @@ if (isUnsigned$2) {
 
 var is32Bits$2 = false;
 
-var mask$2 = Math.pow(2.0, 16) - 1.0 | 0;
+var mask$2 = 65535;
 
 var maskNot$1 = PervasivesU.lnot(mask$2);
 
@@ -4263,7 +4488,11 @@ function modBits$2(n) {
 var lsl$2 = is32Bits$2 ? (function (prim0, prim1) {
       return (prim0 << prim1);
     }) : (function (i, n) {
-      var v = (i << modBits$2(n));
+      var m = modBits$2(n);
+      if (m === 0) {
+        return i;
+      }
+      var v = (i << m);
       if ((v & highestBit$1) === 0) {
         return v & mask$2;
       } else {
@@ -4274,7 +4503,12 @@ var lsl$2 = is32Bits$2 ? (function (prim0, prim1) {
 var lsr$2 = is32Bits$2 ? (function (prim0, prim1) {
       return (prim0 >>> prim1) | 0;
     }) : (function (i, n) {
-      return ((i & mask$2) >>> modBits$2(n)) | 0;
+      var m = modBits$2(n);
+      if (m !== 0) {
+        return ((i & mask$2) >>> m) | 0;
+      } else {
+        return i;
+      }
     });
 
 var asr$2 = is32Bits$2 ? (function (prim0, prim1) {
@@ -4283,14 +4517,22 @@ var asr$2 = is32Bits$2 ? (function (prim0, prim1) {
       return (i >> modBits$2(n));
     });
 
-function rlsl$2(i, n) {
+function rsl$2(i, n) {
   var m = modBits$2(n);
-  return lsl$2(i, m) | lsr$2(i, 16 - m | 0);
+  if (m !== 0) {
+    return lsl$2(i, m) | lsr$2(i, 16 - m | 0);
+  } else {
+    return i;
+  }
 }
 
-function rlsr$2(i, n) {
+function rsr$2(i, n) {
   var m = modBits$2(n);
-  return lsr$2(i, m) | lsl$2(i, 16 - m | 0);
+  if (m !== 0) {
+    return lsr$2(i, m) | lsl$2(i, 16 - m | 0);
+  } else {
+    return i;
+  }
 }
 
 var clz$2 = is32Bits$2 ? (function (i) {
@@ -4315,15 +4557,27 @@ var imul$2 = is32Bits$2 ? (function (a, b) {
       }
     });
 
-var include$8 = ResNumber__Math.MakeIntegerMath({
-      fromFloat: fromFloat$2,
-      fromFloatExn: fromFloatExn$2,
-      fromFloatClamped: fromFloatClamped$2,
-      fromFloatUnsafe: fromFloatUnsafe$2,
-      toFloat: toFloat$2,
-      clz: clz$2,
-      imul: imul$2
-    });
+function pow_$2(base, exp) {
+  return Math.pow(base, exp);
+}
+
+function pow$2(base, exp) {
+  return fromFloat$2(pow_$2(base, exp));
+}
+
+function powExn$2(base, exp) {
+  return fromFloatExn$2(pow_$2(base, exp));
+}
+
+function powUnsafe$2(base, exp) {
+  return pow_$2(base, exp) | 0;
+}
+
+function random$2(min, max) {
+  var min_ = min;
+  var max_ = max;
+  return fromFloatClamped$2(Math.floor(Math.random() * (max_ - min_) + min_));
+}
 
 function neg$1(i) {
   if (i !== -32768) {
@@ -4393,35 +4647,11 @@ function signRaw$1(i) {
   return Math.sign(i);
 }
 
-var Int16_inc = include$6.inc;
+var Int16_sum = include$2.sum;
 
-var Int16_incExn = include$6.incExn;
+var Int16_sumExn = include$2.sumExn;
 
-var Int16_incUnsafe = include$6.incUnsafe;
-
-var Int16_dec = include$6.dec;
-
-var Int16_decExn = include$6.decExn;
-
-var Int16_decUnsafe = include$6.decUnsafe;
-
-var Int16_sum = include$7.sum;
-
-var Int16_sumExn = include$7.sumExn;
-
-var Int16_sumUnsafe = include$7.sumUnsafe;
-
-var Int16_clz = include$8.clz;
-
-var Int16_imul = include$8.imul;
-
-var Int16_pow = include$8.pow;
-
-var Int16_powExn = include$8.powExn;
-
-var Int16_powUnsafe = include$8.powUnsafe;
-
-var Int16_random = include$8.random;
+var Int16_sumUnsafe = include$2.sumUnsafe;
 
 var Int16 = {
   isSigned: true,
@@ -4481,15 +4711,15 @@ var Int16 = {
   rem: rem$2,
   remExn: remExn$2,
   remUnsafe: remUnsafe$2,
-  inc: Int16_inc,
-  incExn: Int16_incExn,
-  incUnsafe: Int16_incUnsafe,
-  dec: Int16_dec,
-  decExn: Int16_decExn,
-  decUnsafe: Int16_decUnsafe,
   sum: Int16_sum,
   sumExn: Int16_sumExn,
   sumUnsafe: Int16_sumUnsafe,
+  inc: inc$2,
+  incExn: incExn$2,
+  incUnsafe: incUnsafe$2,
+  dec: dec$2,
+  decExn: decExn$2,
+  decUnsafe: decUnsafe$2,
   lnot: lnot$2,
   land: land$2,
   lor: lor$2,
@@ -4497,14 +4727,14 @@ var Int16 = {
   lsl: lsl$2,
   lsr: lsr$2,
   asr: asr$2,
-  rlsl: rlsl$2,
-  rlsr: rlsr$2,
-  clz: Int16_clz,
-  imul: Int16_imul,
-  pow: Int16_pow,
-  powExn: Int16_powExn,
-  powUnsafe: Int16_powUnsafe,
-  random: Int16_random,
+  rsl: rsl$2,
+  rsr: rsr$2,
+  clz: clz$2,
+  imul: imul$2,
+  pow: pow$2,
+  powExn: powExn$2,
+  powUnsafe: powUnsafe$2,
+  random: random$2,
   neg: neg$1,
   negExn: negExn$1,
   negUnsafe: negUnsafe$1,
@@ -4704,7 +4934,7 @@ function minManyExn$3(arr) {
 }
 
 function minManyUnsafe$3(arr) {
-  return Caml_splice_call.spliceApply(Math.min, [arr]);
+  return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
 }
 
 function max$3(a, b) {
@@ -4737,7 +4967,7 @@ function maxManyExn$3(arr) {
 }
 
 function maxManyUnsafe$3(arr) {
-  return Caml_splice_call.spliceApply(Math.max, [arr]);
+  return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
 }
 
 function fromFloatUncheckInteger$3(f) {
@@ -4861,26 +5091,40 @@ function rem$3(a, b) {
   
 }
 
-var remExn$3 = Caml_int32.mod_;
+function remExn$3(a, b) {
+  return Caml_int32.mod_(a, b) | 0;
+}
 
-var include$9 = ResNumber__Operation.MakeNumberIncDec({
-      one: 1,
-      add: add$3,
-      addExn: addExn$3,
-      addClamped: addClamped$3,
-      addUnsafe: addUnsafe$3,
-      sub: sub$3,
-      subExn: subExn$3,
-      subClamped: subClamped$3,
-      subUnsafe: subUnsafe$3
-    });
-
-var include$10 = ResNumber__Operation.MakeNumberSum({
+var include$3 = ResNumber__Operation.MakeNumberSum({
       add: add$3,
       addExn: addExn$3,
       addClamped: addClamped$3,
       addUnsafe: addUnsafe$3
     });
+
+function inc$3(n) {
+  return add$3(n, 1);
+}
+
+function incExn$3(n) {
+  return addExn$3(n, 1);
+}
+
+function incUnsafe$3(n) {
+  return n + 1 | 0;
+}
+
+function dec$3(n) {
+  return sub$3(n, 1);
+}
+
+function decExn$3(n) {
+  return subExn$3(n, 1);
+}
+
+function decUnsafe$3(n) {
+  return n - 1 | 0;
+}
 
 var isUnsigned$3 = true;
 
@@ -4890,7 +5134,7 @@ if (isUnsigned$3 && Math.pow(2.0, 16) - 1.0 !== 65535) {
 
 var is32Bits$3 = false;
 
-var mask$3 = Math.pow(2.0, 16) - 1.0 | 0;
+var mask$3 = 65535;
 
 PervasivesU.lnot(mask$3);
 
@@ -4921,7 +5165,12 @@ function modBits$3(n) {
 var lsl$3 = is32Bits$3 ? (function (prim0, prim1) {
       return (prim0 << prim1);
     }) : (function (i, n) {
-      return (i << modBits$3(n)) & mask$3;
+      var m = modBits$3(n);
+      if (m !== 0) {
+        return (i << m) & mask$3;
+      } else {
+        return i;
+      }
     });
 
 var lsr$3 = is32Bits$3 ? (function (prim0, prim1) {
@@ -4936,14 +5185,22 @@ var asr$3 = is32Bits$3 ? (function (prim0, prim1) {
       return (i >> modBits$3(n));
     });
 
-function rlsl$3(i, n) {
+function rsl$3(i, n) {
   var m = modBits$3(n);
-  return lsl$3(i, m) | lsr$3(i, 16 - m | 0);
+  if (m !== 0) {
+    return lsl$3(i, m) | lsr$3(i, 16 - m | 0);
+  } else {
+    return i;
+  }
 }
 
-function rlsr$3(i, n) {
+function rsr$3(i, n) {
   var m = modBits$3(n);
-  return lsr$3(i, m) | lsl$3(i, 16 - m | 0);
+  if (m !== 0) {
+    return lsr$3(i, m) | lsl$3(i, 16 - m | 0);
+  } else {
+    return i;
+  }
 }
 
 var clz$3 = is32Bits$3 ? (function (i) {
@@ -4963,45 +5220,33 @@ var imul$3 = is32Bits$3 ? (function (a, b) {
       return Math.imul(a, b) & mask$3;
     });
 
-var include$11 = ResNumber__Math.MakeIntegerMath({
-      fromFloat: fromFloat$3,
-      fromFloatExn: fromFloatExn$3,
-      fromFloatClamped: fromFloatClamped$3,
-      fromFloatUnsafe: fromFloatUnsafe$3,
-      toFloat: toFloat$3,
-      clz: clz$3,
-      imul: imul$3
-    });
+function pow_$3(base, exp) {
+  return Math.pow(base, exp);
+}
 
-var Uint16_inc = include$9.inc;
+function pow$3(base, exp) {
+  return fromFloat$3(pow_$3(base, exp));
+}
 
-var Uint16_incExn = include$9.incExn;
+function powExn$3(base, exp) {
+  return fromFloatExn$3(pow_$3(base, exp));
+}
 
-var Uint16_incUnsafe = include$9.incUnsafe;
+function powUnsafe$3(base, exp) {
+  return pow_$3(base, exp) | 0;
+}
 
-var Uint16_dec = include$9.dec;
+function random$3(min, max) {
+  var min_ = min;
+  var max_ = max;
+  return fromFloatClamped$3(Math.floor(Math.random() * (max_ - min_) + min_));
+}
 
-var Uint16_decExn = include$9.decExn;
+var Uint16_sum = include$3.sum;
 
-var Uint16_decUnsafe = include$9.decUnsafe;
+var Uint16_sumExn = include$3.sumExn;
 
-var Uint16_sum = include$10.sum;
-
-var Uint16_sumExn = include$10.sumExn;
-
-var Uint16_sumUnsafe = include$10.sumUnsafe;
-
-var Uint16_clz = include$11.clz;
-
-var Uint16_imul = include$11.imul;
-
-var Uint16_pow = include$11.pow;
-
-var Uint16_powExn = include$11.powExn;
-
-var Uint16_powUnsafe = include$11.powUnsafe;
-
-var Uint16_random = include$11.random;
+var Uint16_sumUnsafe = include$3.sumUnsafe;
 
 var Uint16 = {
   isSigned: false,
@@ -5061,15 +5306,15 @@ var Uint16 = {
   rem: rem$3,
   remExn: remExn$3,
   remUnsafe: remUnsafe$3,
-  inc: Uint16_inc,
-  incExn: Uint16_incExn,
-  incUnsafe: Uint16_incUnsafe,
-  dec: Uint16_dec,
-  decExn: Uint16_decExn,
-  decUnsafe: Uint16_decUnsafe,
   sum: Uint16_sum,
   sumExn: Uint16_sumExn,
   sumUnsafe: Uint16_sumUnsafe,
+  inc: inc$3,
+  incExn: incExn$3,
+  incUnsafe: incUnsafe$3,
+  dec: dec$3,
+  decExn: decExn$3,
+  decUnsafe: decUnsafe$3,
   lnot: lnot$3,
   land: land$3,
   lor: lor$3,
@@ -5077,14 +5322,14 @@ var Uint16 = {
   lsl: lsl$3,
   lsr: lsr$3,
   asr: asr$3,
-  rlsl: rlsl$3,
-  rlsr: rlsr$3,
-  clz: Uint16_clz,
-  imul: Uint16_imul,
-  pow: Uint16_pow,
-  powExn: Uint16_powExn,
-  powUnsafe: Uint16_powUnsafe,
-  random: Uint16_random
+  rsl: rsl$3,
+  rsr: rsr$3,
+  clz: clz$3,
+  imul: imul$3,
+  pow: pow$3,
+  powExn: powExn$3,
+  powUnsafe: powUnsafe$3,
+  random: random$3
 };
 
 var IntRange$4 = {
@@ -5283,7 +5528,7 @@ function minManyExn$4(arr) {
 }
 
 function minManyUnsafe$4(arr) {
-  return Caml_splice_call.spliceApply(Math.min, [arr]);
+  return Caml_splice_call.spliceApply(Math.min, [arr]) | 0;
 }
 
 function max$4(a, b) {
@@ -5316,7 +5561,7 @@ function maxManyExn$4(arr) {
 }
 
 function maxManyUnsafe$4(arr) {
-  return Caml_splice_call.spliceApply(Math.max, [arr]);
+  return Caml_splice_call.spliceApply(Math.max, [arr]) | 0;
 }
 
 function fromFloatUncheckInteger$4(f) {
@@ -5440,30 +5685,48 @@ function rem$4(a, b) {
   
 }
 
-var remExn$4 = Caml_int32.mod_;
+function remExn$4(a, b) {
+  return Caml_int32.mod_(a, b) | 0;
+}
 
-var include$12 = ResNumber__Operation.MakeNumberIncDec({
-      one: 1,
-      add: add$4,
-      addExn: addExn$4,
-      addClamped: addClamped$4,
-      addUnsafe: addUnsafe$4,
-      sub: sub$4,
-      subExn: subExn$4,
-      subClamped: subClamped$4,
-      subUnsafe: subUnsafe$4
-    });
-
-var include$13 = ResNumber__Operation.MakeNumberSum({
+var include$4 = ResNumber__Operation.MakeNumberSum({
       add: add$4,
       addExn: addExn$4,
       addClamped: addClamped$4,
       addUnsafe: addUnsafe$4
     });
 
+function inc$4(n) {
+  return add$4(n, 1);
+}
+
+function incExn$4(n) {
+  return addExn$4(n, 1);
+}
+
+function incUnsafe$4(n) {
+  return n + 1 | 0;
+}
+
+function dec$4(n) {
+  return sub$4(n, 1);
+}
+
+function decExn$4(n) {
+  return subExn$4(n, 1);
+}
+
+function decUnsafe$4(n) {
+  return n - 1 | 0;
+}
+
 var isUnsigned$4 = false;
 
-var n$2 = toUint32(Js_int.min);
+if (Js_int.min >= 0) {
+  PervasivesU.invalid_arg("minValue for signed integer must be less than 0: " + Js_int.min.toString());
+}
+
+var n$2 = Math.abs(Js_int.min);
 
 if (Math.log2(n$2) !== 31) {
   PervasivesU.invalid_arg("invalid minValue " + Js_int.min.toString() + " for " + (32).toString() + " bits signed integer");
@@ -5485,7 +5748,7 @@ if (isUnsigned$4) {
 
 var is32Bits$4 = true;
 
-var mask$4 = Math.pow(2.0, 32) - 1.0 | 0;
+var mask$4 = -1;
 
 var maskNot$2 = PervasivesU.lnot(mask$4);
 
@@ -5518,7 +5781,11 @@ function modBits$4(n) {
 var lsl$4 = is32Bits$4 ? (function (prim0, prim1) {
       return (prim0 << prim1);
     }) : (function (i, n) {
-      var v = (i << modBits$4(n));
+      var m = modBits$4(n);
+      if (m === 0) {
+        return i;
+      }
+      var v = (i << m);
       if ((v & highestBit$2) === 0) {
         return v & mask$4;
       } else {
@@ -5529,7 +5796,12 @@ var lsl$4 = is32Bits$4 ? (function (prim0, prim1) {
 var lsr$4 = is32Bits$4 ? (function (prim0, prim1) {
       return (prim0 >>> prim1) | 0;
     }) : (function (i, n) {
-      return ((i & mask$4) >>> modBits$4(n)) | 0;
+      var m = modBits$4(n);
+      if (m !== 0) {
+        return ((i & mask$4) >>> m) | 0;
+      } else {
+        return i;
+      }
     });
 
 var asr$4 = is32Bits$4 ? (function (prim0, prim1) {
@@ -5538,14 +5810,22 @@ var asr$4 = is32Bits$4 ? (function (prim0, prim1) {
       return (i >> modBits$4(n));
     });
 
-function rlsl$4(i, n) {
+function rsl$4(i, n) {
   var m = modBits$4(n);
-  return lsl$4(i, m) | lsr$4(i, 32 - m | 0);
+  if (m !== 0) {
+    return lsl$4(i, m) | lsr$4(i, 32 - m | 0);
+  } else {
+    return i;
+  }
 }
 
-function rlsr$4(i, n) {
+function rsr$4(i, n) {
   var m = modBits$4(n);
-  return lsr$4(i, m) | lsl$4(i, 32 - m | 0);
+  if (m !== 0) {
+    return lsr$4(i, m) | lsl$4(i, 32 - m | 0);
+  } else {
+    return i;
+  }
 }
 
 var clz$4 = is32Bits$4 ? (function (i) {
@@ -5570,15 +5850,27 @@ var imul$4 = is32Bits$4 ? (function (a, b) {
       }
     });
 
-var include$14 = ResNumber__Math.MakeIntegerMath({
-      fromFloat: fromFloat$4,
-      fromFloatExn: fromFloatExn$4,
-      fromFloatClamped: fromFloatClamped$4,
-      fromFloatUnsafe: fromFloatUnsafe$4,
-      toFloat: toFloat$4,
-      clz: clz$4,
-      imul: imul$4
-    });
+function pow_$4(base, exp) {
+  return Math.pow(base, exp);
+}
+
+function pow$4(base, exp) {
+  return fromFloat$4(pow_$4(base, exp));
+}
+
+function powExn$4(base, exp) {
+  return fromFloatExn$4(pow_$4(base, exp));
+}
+
+function powUnsafe$4(base, exp) {
+  return pow_$4(base, exp) | 0;
+}
+
+function random$4(min, max) {
+  var min_ = min;
+  var max_ = max;
+  return fromFloatClamped$4(Math.floor(Math.random() * (max_ - min_) + min_));
+}
 
 function neg$2(i) {
   if (i !== Js_int.min) {
@@ -5648,35 +5940,11 @@ function signRaw$2(i) {
   return Math.sign(i);
 }
 
-var Int32_inc = include$12.inc;
+var Int32_sum = include$4.sum;
 
-var Int32_incExn = include$12.incExn;
+var Int32_sumExn = include$4.sumExn;
 
-var Int32_incUnsafe = include$12.incUnsafe;
-
-var Int32_dec = include$12.dec;
-
-var Int32_decExn = include$12.decExn;
-
-var Int32_decUnsafe = include$12.decUnsafe;
-
-var Int32_sum = include$13.sum;
-
-var Int32_sumExn = include$13.sumExn;
-
-var Int32_sumUnsafe = include$13.sumUnsafe;
-
-var Int32_clz = include$14.clz;
-
-var Int32_imul = include$14.imul;
-
-var Int32_pow = include$14.pow;
-
-var Int32_powExn = include$14.powExn;
-
-var Int32_powUnsafe = include$14.powUnsafe;
-
-var Int32_random = include$14.random;
+var Int32_sumUnsafe = include$4.sumUnsafe;
 
 var Int32 = {
   isSigned: true,
@@ -5736,15 +6004,15 @@ var Int32 = {
   rem: rem$4,
   remExn: remExn$4,
   remUnsafe: remUnsafe$4,
-  inc: Int32_inc,
-  incExn: Int32_incExn,
-  incUnsafe: Int32_incUnsafe,
-  dec: Int32_dec,
-  decExn: Int32_decExn,
-  decUnsafe: Int32_decUnsafe,
   sum: Int32_sum,
   sumExn: Int32_sumExn,
   sumUnsafe: Int32_sumUnsafe,
+  inc: inc$4,
+  incExn: incExn$4,
+  incUnsafe: incUnsafe$4,
+  dec: dec$4,
+  decExn: decExn$4,
+  decUnsafe: decUnsafe$4,
   lnot: lnot$4,
   land: land$4,
   lor: lor$4,
@@ -5752,14 +6020,14 @@ var Int32 = {
   lsl: lsl$4,
   lsr: lsr$4,
   asr: asr$4,
-  rlsl: rlsl$4,
-  rlsr: rlsr$4,
-  clz: Int32_clz,
-  imul: Int32_imul,
-  pow: Int32_pow,
-  powExn: Int32_powExn,
-  powUnsafe: Int32_powUnsafe,
-  random: Int32_random,
+  rsl: rsl$4,
+  rsr: rsr$4,
+  clz: clz$4,
+  imul: imul$4,
+  pow: pow$4,
+  powExn: powExn$4,
+  powUnsafe: powUnsafe$4,
+  random: random$4,
   neg: neg$2,
   negExn: negExn$2,
   negUnsafe: negUnsafe$2,
@@ -5955,10 +6223,6 @@ function minManyExn$5(arr) {
   }
 }
 
-function minManyUnsafe$5(arr) {
-  return Caml_splice_call.spliceApply(Math.min, [arr]);
-}
-
 function max$5(a, b) {
   if (a > b) {
     return a;
@@ -5986,10 +6250,6 @@ function maxManyExn$5(arr) {
   } else {
     return ResNumber__Utils.raiseEmptyArray(undefined);
   }
-}
-
-function maxManyUnsafe$5(arr) {
-  return Caml_splice_call.spliceApply(Math.max, [arr]);
 }
 
 function fromFloatUncheckInteger$5(f) {
@@ -6033,10 +6293,6 @@ function addClamped$5(a, b) {
   return fromFloatUncheckIntegerClamped$5(a + b);
 }
 
-function subUnsafe$5(a, b) {
-  return a - b;
-}
-
 function sub$5(a, b) {
   return fromFloatUncheckInteger$5(a - b);
 }
@@ -6047,10 +6303,6 @@ function subExn$5(a, b) {
 
 function subClamped$5(a, b) {
   return fromFloatUncheckIntegerClamped$5(a - b);
-}
-
-function mulUnsafe$5(a, b) {
-  return a * b;
 }
 
 function mul$5(a, b) {
@@ -6107,24 +6359,30 @@ function remExn$5(a, b) {
       };
 }
 
-var include$15 = ResNumber__Operation.MakeNumberIncDec({
-      one: 1.0,
-      add: add$5,
-      addExn: addExn$5,
-      addClamped: addClamped$5,
-      addUnsafe: addUnsafe$5,
-      sub: sub$5,
-      subExn: subExn$5,
-      subClamped: subClamped$5,
-      subUnsafe: subUnsafe$5
-    });
-
-var include$16 = ResNumber__Operation.MakeNumberSum({
+var include$5 = ResNumber__Operation.MakeNumberSum({
       add: add$5,
       addExn: addExn$5,
       addClamped: addClamped$5,
       addUnsafe: addUnsafe$5
     });
+
+var sumUnsafe = include$5.sumUnsafe;
+
+function inc$5(n) {
+  return add$5(n, 1.0);
+}
+
+function incExn$5(n) {
+  return addExn$5(n, 1.0);
+}
+
+function dec$5(n) {
+  return sub$5(n, 1.0);
+}
+
+function decExn$5(n) {
+  return subExn$5(n, 1.0);
+}
 
 function fromIntUnsafe$5(i) {
   return toUint32(i);
@@ -6132,6 +6390,42 @@ function fromIntUnsafe$5(i) {
 
 function fromFloatUnsafe$5(f) {
   return toUint32(f);
+}
+
+function minManyUnsafe$5(arr) {
+  return toUint32(Caml_splice_call.spliceApply(Math.min, [arr]));
+}
+
+function maxManyUnsafe$5(arr) {
+  return toUint32(Caml_splice_call.spliceApply(Math.max, [arr]));
+}
+
+function addUnsafe$6(a, b) {
+  return toUint32(a + b);
+}
+
+function subUnsafe$5(a, b) {
+  return toUint32(a - b);
+}
+
+function mulUnsafe$5(a, b) {
+  return toUint32(a * b);
+}
+
+function divUnsafe$6(a, b) {
+  return toUint32(a / b);
+}
+
+function sumUnsafe$1(arr) {
+  return toUint32(sumUnsafe(arr));
+}
+
+function incUnsafe$5(n) {
+  return addUnsafe$6(n, 1.0);
+}
+
+function decUnsafe$5(n) {
+  return subUnsafe$5(n, 1.0);
 }
 
 function lnot$5(i) {
@@ -6166,14 +6460,22 @@ function modBits$5(n) {
   }
 }
 
-function rlsl$5(i, n) {
+function rsl$5(i, n) {
   var m = modBits$5(n);
-  return toUint32((i << m) | (i >>> (32 - m | 0)) | 0);
+  if (m !== 0) {
+    return toUint32((i << m) | (i >>> (32 - m | 0)) | 0);
+  } else {
+    return i;
+  }
 }
 
-function rlsr$5(i, n) {
+function rsr$5(i, n) {
   var m = modBits$5(n);
-  return toUint32((i >>> m) | 0 | (i << (32 - m | 0)));
+  if (m !== 0) {
+    return toUint32((i >>> m) | 0 | (i << (32 - m | 0)));
+  } else {
+    return i;
+  }
 }
 
 function clz$5(i) {
@@ -6184,45 +6486,29 @@ function imul$5(a, b) {
   return toUint32(Math.imul(a, b));
 }
 
-var include$17 = ResNumber__Math.MakeIntegerMath({
-      fromFloat: fromFloat$5,
-      fromFloatExn: fromFloatExn$5,
-      fromFloatClamped: fromFloatClamped$5,
-      fromFloatUnsafe: fromFloatUnsafe$5,
-      toFloat: toFloat$5,
-      clz: clz$5,
-      imul: imul$5
-    });
+function pow_$5(base, exp) {
+  return Math.pow(base, exp);
+}
 
-var Uint32_inc = include$15.inc;
+function pow$5(base, exp) {
+  return fromFloat$5(pow_$5(base, exp));
+}
 
-var Uint32_incExn = include$15.incExn;
+function powExn$5(base, exp) {
+  return fromFloatExn$5(pow_$5(base, exp));
+}
 
-var Uint32_incUnsafe = include$15.incUnsafe;
+function powUnsafe$5(base, exp) {
+  return toUint32(pow_$5(base, exp));
+}
 
-var Uint32_dec = include$15.dec;
+function random$5(min, max) {
+  return fromFloatClamped$5(Math.floor(Math.random() * (max - min) + min));
+}
 
-var Uint32_decExn = include$15.decExn;
+var Uint32_sum = include$5.sum;
 
-var Uint32_decUnsafe = include$15.decUnsafe;
-
-var Uint32_sum = include$16.sum;
-
-var Uint32_sumExn = include$16.sumExn;
-
-var Uint32_sumUnsafe = include$16.sumUnsafe;
-
-var Uint32_clz = include$17.clz;
-
-var Uint32_imul = include$17.imul;
-
-var Uint32_pow = include$17.pow;
-
-var Uint32_powExn = include$17.powExn;
-
-var Uint32_powUnsafe = include$17.powUnsafe;
-
-var Uint32_random = include$17.random;
+var Uint32_sumExn = include$5.sumExn;
 
 var Uint32 = {
   isSigned: false,
@@ -6267,7 +6553,7 @@ var Uint32 = {
   add: add$5,
   addExn: addExn$5,
   addClamped: addClamped$5,
-  addUnsafe: addUnsafe$5,
+  addUnsafe: addUnsafe$6,
   sub: sub$5,
   subExn: subExn$5,
   subClamped: subClamped$5,
@@ -6278,19 +6564,19 @@ var Uint32 = {
   mulUnsafe: mulUnsafe$5,
   div: div$5,
   divExn: divExn$5,
-  divUnsafe: divUnsafe$5,
+  divUnsafe: divUnsafe$6,
   rem: rem$5,
   remExn: remExn$5,
   remUnsafe: remUnsafe$5,
-  inc: Uint32_inc,
-  incExn: Uint32_incExn,
-  incUnsafe: Uint32_incUnsafe,
-  dec: Uint32_dec,
-  decExn: Uint32_decExn,
-  decUnsafe: Uint32_decUnsafe,
   sum: Uint32_sum,
   sumExn: Uint32_sumExn,
-  sumUnsafe: Uint32_sumUnsafe,
+  sumUnsafe: sumUnsafe$1,
+  inc: inc$5,
+  incExn: incExn$5,
+  incUnsafe: incUnsafe$5,
+  dec: dec$5,
+  decExn: decExn$5,
+  decUnsafe: decUnsafe$5,
   lnot: lnot$5,
   land: land$5,
   lor: lor$5,
@@ -6298,23 +6584,23 @@ var Uint32 = {
   lsl: lsl$5,
   lsr: lsr$5,
   asr: lsr$5,
-  rlsl: rlsl$5,
-  rlsr: rlsr$5,
-  clz: Uint32_clz,
-  imul: Uint32_imul,
-  pow: Uint32_pow,
-  powExn: Uint32_powExn,
-  powUnsafe: Uint32_powUnsafe,
-  random: Uint32_random
+  rsl: rsl$5,
+  rsr: rsr$5,
+  clz: clz$5,
+  imul: imul$5,
+  pow: pow$5,
+  powExn: powExn$5,
+  powUnsafe: powUnsafe$5,
+  random: random$5
 };
 
 export {
-  toInt32 ,
-  toUint32 ,
   MakeIntegerConversion ,
+  MakeNumberIncDec ,
   MakeInteger ,
   MakeFixedBitsIntegerConversion ,
   MakeFixedBitsInt ,
+  MakeIntegerMath ,
   MakeFixedBitsInteger ,
   MakeSignedInteger ,
   MakeUnsignedInteger ,

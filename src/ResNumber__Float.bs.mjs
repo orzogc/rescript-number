@@ -7,14 +7,6 @@ import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 import * as ResNumber__Utils from "./ResNumber__Utils.bs.mjs";
 import * as ResNumber__Operation from "./ResNumber__Operation.bs.mjs";
 
-function toInt32(f) {
-  return f | 0;
-}
-
-function raiseNaN() {
-  return PervasivesU.invalid_arg("NaN");
-}
-
 function raiseOperationNaN(a, b, s) {
   return PervasivesU.invalid_arg(a.toString() + " " + s + " " + b.toString() + " = Nan");
 }
@@ -371,19 +363,7 @@ function remExn(a, b) {
       };
 }
 
-var include = ResNumber__Operation.MakeNumberIncDec({
-      one: 1.0,
-      add: add,
-      addExn: addExn,
-      addClamped: addClamped,
-      addUnsafe: addUnsafe,
-      sub: sub,
-      subExn: subExn,
-      subClamped: subClamped,
-      subUnsafe: subUnsafe
-    });
-
-var include$1 = ResNumber__Operation.MakeNumberSum({
+var include = ResNumber__Operation.MakeNumberSum({
       add: add,
       addExn: addExn,
       addClamped: addClamped,
@@ -696,23 +676,11 @@ function truncIntUnsafe(f) {
   return Math.trunc(f) | 0;
 }
 
-var Float64_inc = include.inc;
+var Float64_sum = include.sum;
 
-var Float64_incExn = include.incExn;
+var Float64_sumExn = include.sumExn;
 
-var Float64_incUnsafe = include.incUnsafe;
-
-var Float64_dec = include.dec;
-
-var Float64_decExn = include.decExn;
-
-var Float64_decUnsafe = include.decUnsafe;
-
-var Float64_sum = include$1.sum;
-
-var Float64_sumExn = include$1.sumExn;
-
-var Float64_sumUnsafe = include$1.sumUnsafe;
+var Float64_sumUnsafe = include.sumUnsafe;
 
 var Float64 = {
   fromInt: fromInt,
@@ -769,12 +737,6 @@ var Float64 = {
   rem: rem,
   remExn: remExn,
   remUnsafe: remUnsafe,
-  inc: Float64_inc,
-  incExn: Float64_incExn,
-  incUnsafe: Float64_incUnsafe,
-  dec: Float64_dec,
-  decExn: Float64_decExn,
-  decUnsafe: Float64_decUnsafe,
   sum: Float64_sum,
   sumExn: Float64_sumExn,
   sumUnsafe: Float64_sumUnsafe,
@@ -837,9 +799,6 @@ var Float64 = {
 };
 
 export {
-  toInt32 ,
-  raiseNaN ,
-  raiseOperationNaN ,
   Float64 ,
 }
 /* include Not a pure module */

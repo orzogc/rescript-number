@@ -293,18 +293,6 @@ module Float64: Float with type t = float = {
     }
 
   include (
-    MakeNumberIncDec({
-      type t = t
-
-      let one = one
-
-      include Add
-
-      include Sub
-    }): NumberIncDec with type t := t
-  )
-
-  include (
     MakeNumberSum({
       type t = t
 

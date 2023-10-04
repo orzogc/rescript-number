@@ -10,10 +10,20 @@
   "scripts": {
     "build": "rescript",
     "clean": "rescript clean",
-    "dev": "rescript build -w"
+    "dev": "rescript build -w",
+    "test": "ava"
   },
   "type": "module",
+  "ava": {
+    "files": [
+      "tests/**/*Test.bs.mjs"
+    ]
+  },
   "dependencies": {
     "rescript": "^11.0.0-rc.3"
+  },
+  "devDependencies": {
+    "@dzakh/rescript-ava": "^2.3.0",
+    "ava": "5.2.0"
   }
 }

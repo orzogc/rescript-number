@@ -1,12 +1,21 @@
 {
   "name": "rescript-number",
-  "sources": {
-    "dir": "src",
-    "subdirs": true
-  },
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true,
+      "public": ["Number", "NumberModules"]
+    },
+    {
+      "dir": "tests",
+      "type": "dev",
+      "subdirs": true
+    }
+  ],
   "package-specs": {
     "module": "es6",
     "in-source": true
   },
-  "suffix": ".bs.mjs"
+  "suffix": ".bs.mjs",
+  "bs-dev-dependencies": ["@dzakh/rescript-ava"]
 }

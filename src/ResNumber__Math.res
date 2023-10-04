@@ -135,38 +135,3 @@ module type FloatMath = {
 
   let truncIntUnsafe: t => int
 }
-
-module MakeIntegerMath = (
-  M: {
-    type t
-
-    include ResNumber__Conversion.NumberFromFloat with type t := t
-
-    include ResNumber__Conversion.NumberToFloat with type t := t
-
-    let clz: t => int
-
-    let imul: (t, t) => t
-  },
-): (IntegerMath with type t = M.t) => {
-  type t = M.t
-
-  let clz = M.clz
-
-  let imul = M.imul
-
-  let pow_ = (~base, ~exp) => base->M.toFloat ** exp->M.toFloat
-
-  let pow = (~base, ~exp) => pow_(~base, ~exp)->M.fromFloat
-
-  let powExn = (~base, ~exp) => pow_(~base, ~exp)->M.fromFloatExn
-
-  let powUnsafe = (~base, ~exp) => pow_(~base, ~exp)->M.fromFloatUnsafe
-
-  let random = (min, max) => {
-    let min_ = min->M.toFloat
-    let max_ = max->M.toFloat
-
-    (Js.Math.random() *. (max_ -. min_) +. min_)->M.fromFloatClamped
-  }
-}

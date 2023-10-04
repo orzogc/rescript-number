@@ -54,6 +54,32 @@ module type NumberRemainder = {
   let remUnsafe: (t, t) => t
 }
 
+module type NumberSum = {
+  type t
+
+  let sum: array<t> => option<t>
+
+  let sumExn: array<t> => t
+
+  let sumUnsafe: array<t> => t
+}
+
+module type NumberOperation = {
+  type t
+
+  include NumberAddition with type t := t
+
+  include NumberSubtraction with type t := t
+
+  include NumberMultiplication with type t := t
+
+  include NumberDivision with type t := t
+
+  include NumberRemainder with type t := t
+
+  include NumberSum with type t := t
+}
+
 module type NumberIncDec = {
   type t
 
@@ -68,66 +94,6 @@ module type NumberIncDec = {
   let decExn: t => t
 
   let decUnsafe: t => t
-}
-
-module type NumberSum = {
-  type t
-
-  let sum: array<t> => option<t>
-
-  let sumExn: array<t> => t
-
-  let sumUnsafe: array<t> => t
-}
-
-module type NumberBaseOperation = {
-  type t
-
-  include NumberAddition with type t := t
-
-  include NumberSubtraction with type t := t
-
-  include NumberMultiplication with type t := t
-
-  include NumberDivision with type t := t
-
-  include NumberRemainder with type t := t
-}
-
-module type NumberOperation = {
-  type t
-
-  include NumberBaseOperation with type t := t
-
-  include NumberIncDec with type t := t
-
-  include NumberSum with type t := t
-}
-
-module MakeNumberIncDec = (
-  M: {
-    type t
-
-    let one: t
-
-    include NumberAddition with type t := t
-
-    include NumberSubtraction with type t := t
-  },
-): (NumberIncDec with type t = M.t) => {
-  type t = M.t
-
-  let inc = n => n->M.add(M.one)
-
-  let incExn = n => n->M.addExn(M.one)
-
-  let incUnsafe = n => n->M.addUnsafe(M.one)
-
-  let dec = n => n->M.sub(M.one)
-
-  let decExn = n => n->M.subExn(M.one)
-
-  let decUnsafe = n => n->M.subUnsafe(M.one)
 }
 
 module MakeNumberSum = (Add: NumberAddition): (NumberSum with type t = Add.t) => {

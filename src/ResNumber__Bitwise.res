@@ -19,7 +19,7 @@ module type NumberBitwise = {
 
   let asr: (t, int) => t
 
-  let rlsl: (t, int) => t
+  let rsl: (t, int) => t
 
-  let rlsr: (t, int) => t
+  let rsr: (t, int) => t
 }

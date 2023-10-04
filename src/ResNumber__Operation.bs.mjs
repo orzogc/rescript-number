@@ -4,35 +4,6 @@ import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
 
-function MakeNumberIncDec(M) {
-  var inc = function (n) {
-    return M.add(n, M.one);
-  };
-  var incExn = function (n) {
-    return M.addExn(n, M.one);
-  };
-  var incUnsafe = function (n) {
-    return M.addUnsafe(n, M.one);
-  };
-  var dec = function (n) {
-    return M.sub(n, M.one);
-  };
-  var decExn = function (n) {
-    return M.subExn(n, M.one);
-  };
-  var decUnsafe = function (n) {
-    return M.subUnsafe(n, M.one);
-  };
-  return {
-          inc: inc,
-          incExn: incExn,
-          incUnsafe: incUnsafe,
-          dec: dec,
-          decExn: decExn,
-          decUnsafe: decUnsafe
-        };
-}
-
 function MakeNumberSum(Add) {
   var sum = function (arr) {
     if (arr.length !== 0) {
@@ -82,7 +53,6 @@ function MakeNumberSum(Add) {
 }
 
 export {
-  MakeNumberIncDec ,
   MakeNumberSum ,
 }
 /* No side effect */

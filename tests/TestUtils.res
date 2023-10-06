@@ -1,5 +1,17 @@
 open Ava
 
+let minSafeInteger = ResNumber__Utils.minSafeInteger
+
+let maxSafeInteger = ResNumber__Utils.maxSafeInteger
+
+let assertException = (t, f) =>
+  try {
+    f()->ignore
+    t->Assert.fail("it should raise an exception")
+  } catch {
+  | _ => t->Assert.pass()
+  }
+
 let assertOverflow = (t, f) =>
   try {
     f()->ignore
@@ -32,6 +44,8 @@ let loopFn = (f, n) =>
 let loop100Fn = f => loopFn(f, 100)
 
 let randomFloat = (min, max) => Js.Math.random() *. (max -. min) +. min
+
+let randomInt = (min, max) => randomFloat(min, max)->Js.Math.floor_int
 
 @warning("-27")
 let toUint32 = (i: int): float => %raw(`i >>> 0`)

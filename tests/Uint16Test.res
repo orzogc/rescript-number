@@ -3,37 +3,71 @@ open Belt
 
 open TestUtils
 
-module IntModule = Number.Int8
+module IntModule = Number.Uint16
 
-let name = "Int8"
+let name = "Uint16"
 
-let isSigned = true
+let isSigned = false
 
 let is32Bits = false
 
-let bits = 8
+let bits = 16
 
-let minValue = -128
+let minValue = 0
 
-let maxValue = 127
+let maxValue = 65535
 
-let value = 100
+let value = 10000
 
-let valueNot = -101
+let valueNot = 55535
 
-let valueShiftLeft = [value, -56, -112, 32, 64, -128, 0, 0]
+let valueShiftLeft = [
+  value,
+  20000,
+  40000,
+  14464,
+  28928,
+  57856,
+  50176,
+  34816,
+  4096,
+  8192,
+  16384,
+  32768,
+  0,
+  0,
+  0,
+  0,
+]
 
-let valueRotateShiftLeft = [value, -56, -111, 35, 70, -116, 25, 50]
+let valueRotateShiftLeft = [
+  value,
+  20000,
+  40000,
+  14465,
+  28930,
+  57860,
+  50185,
+  34835,
+  4135,
+  8270,
+  16540,
+  33080,
+  625,
+  1250,
+  2500,
+  5000,
+]
 
-let min = -7
+let min = 73
 
-let max = 18
+let max = 382
 
-let minMaxAnd = 16
+let minMaxAnd = 72
 
-let minMaxOr = -5
+let minMaxOr = 383
 
-let minMaxXor = -21
+let minMaxXor = 311
 
 let randomValue = () => randomInt(minValue->Int.toFloat, maxValue->Int.toFloat)
 
@@ -1295,100 +1329,4 @@ test(`test ${name} integer math`, t => {
       )
     }
   })
-})
-
-test(`test ${name} signed math`, t => {
-  let testNegInRange = i => {
-    let a = IntModule.fromIntExn(i)
-    let b = IntModule.fromIntExn(-i)
-    t->Assert.deepEqual(a->IntModule.neg, Some(b), ())
-    t->Assert.deepEqual(a->IntModule.negExn, b, ())
-    t->Assert.deepEqual(a->IntModule.negUnsafe, b, ())
-    t->Assert.deepEqual(b->IntModule.neg, Some(a), ())
-    t->Assert.deepEqual(b->IntModule.negExn, a, ())
-    t->Assert.deepEqual(b->IntModule.negUnsafe, a, ())
-  }
-
-  testNegInRange(0)
-  testNegInRange(1)
-  testNegInRange(value)
-  testNegInRange(minValue + 1)
-  testNegInRange(maxValue)
-  testNegInRange(maxValue - 1)
-
-  let testNegOutOfRange = i => {
-    let n = IntModule.fromIntExn(i)
-    t->Assert.deepEqual(n->IntModule.neg, None, ())
-    t->assertOverflow(() => n->IntModule.negExn)
-  }
-
-  testNegOutOfRange(minValue)
-
-  loop100Fn(() => {
-    let i = randomValue()
-    i !== minValue ? testNegInRange(i) : testNegOutOfRange(i)
-  })
-
-  let testAbsInRange = i => {
-    let a = IntModule.fromIntExn(i)
-    let b = IntModule.fromIntExn(i < 0 ? -i : i)
-    t->Assert.deepEqual(a->IntModule.abs, Some(b), ())
-    t->Assert.deepEqual(a->IntModule.absExn, b, ())
-    t->Assert.deepEqual(a->IntModule.absUnsafe, b, ())
-    t->Assert.deepEqual(b->IntModule.abs, Some(b), ())
-    t->Assert.deepEqual(b->IntModule.absExn, b, ())
-    t->Assert.deepEqual(b->IntModule.absUnsafe, b, ())
-  }
-
-  testAbsInRange(0)
-  testAbsInRange(-1)
-  testAbsInRange(-value)
-  testAbsInRange(-maxValue)
-  testAbsInRange(-maxValue + 1)
-
-  let testAbsOutOfRange = i => {
-    let n = IntModule.fromIntExn(i)
-    t->Assert.deepEqual(n->IntModule.abs, None, ())
-    t->assertOverflow(() => n->IntModule.absExn)
-  }
-
-  testAbsOutOfRange(minValue)
-
-  loop100Fn(() => {
-    let i = randomValue()
-    i !== minValue ? testAbsInRange(i) : testAbsOutOfRange(i)
-  })
-
-  let testSign = i => {
-    let n = IntModule.fromIntExn(i)
-    let result = if i < 0 {
-      Number.Negative
-    } else if i > 0 {
-      Number.Positive
-    } else {
-      Number.Zero
-    }
-    let raw = if i < 0 {
-      -1.0
-    } else if i > 0 {
-      1.0
-    } else {
-      0.0
-    }
-    t->Assert.deepEqual(n->IntModule.sign, Some(result), ())
-    t->Assert.deepEqual(n->IntModule.signExn, result, ())
-    t->Assert.deepEqual(n->IntModule.signRaw, raw, ())
-  }
-
-  testSign(0)
-  testSign(1)
-  testSign(-1)
-  testSign(value)
-  testSign(-value)
-  testSign(minValue)
-  testSign(minValue + 1)
-  testSign(maxValue)
-  testSign(maxValue - 1)
-  testSign(-maxValue)
-  loop100Fn(() => testSign(randomValue()))
 })

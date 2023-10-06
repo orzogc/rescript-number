@@ -3,15 +3,10 @@
 import Ava from "ava";
 import * as Js_int from "rescript/lib/es6/js_int.js";
 import * as $$Number from "../src/Number.bs.mjs";
-import * as Js_math from "rescript/lib/es6/js_math.js";
 import * as TestUtils from "./TestUtils.bs.mjs";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
-
-var minSafeInteger = Number.MIN_SAFE_INTEGER;
-
-var maxSafeInteger = Number.MAX_SAFE_INTEGER;
 
 var name = "Int8";
 
@@ -38,27 +33,27 @@ var valueRotateShiftLeft = [
 ];
 
 function randomValue() {
-  return Js_math.floor_int(TestUtils.randomFloat(-128, 127));
+  return TestUtils.randomInt(-128, 127);
 }
 
 function randomPositiveSmallValue() {
-  return Js_math.floor_int(TestUtils.randomFloat(0.0, 16.0));
+  return TestUtils.randomInt(0.0, 16.0);
 }
 
 function randomLargerInt() {
-  return Js_math.floor_int(TestUtils.randomFloat(127 + 1.0, Js_int.max));
+  return TestUtils.randomInt(127 + 1.0, Js_int.max);
 }
 
 function randomSmallerInt() {
-  return Js_math.floor_int(TestUtils.randomFloat(Js_int.min, -128));
+  return TestUtils.randomInt(Js_int.min, -128);
 }
 
 function randomLargerFloat() {
-  return Math.floor(TestUtils.randomFloat(127 + 1.0, maxSafeInteger));
+  return Math.floor(TestUtils.randomFloat(127 + 1.0, TestUtils.maxSafeInteger));
 }
 
 function randomSmallerFloat() {
-  return Math.floor(TestUtils.randomFloat(minSafeInteger, -128 - 1.0));
+  return Math.floor(TestUtils.randomFloat(TestUtils.minSafeInteger, -128 - 1.0));
 }
 
 Ava("test " + name + " sign", (function (t) {
@@ -86,7 +81,7 @@ Ava("test " + name + " from int", (function (t) {
         testInRange(-127);
         testInRange(126);
         TestUtils.loop100Fn(function () {
-              testInRange(randomValue(undefined));
+              testInRange(TestUtils.randomInt(-128, 127));
             });
         testInRange(-1);
         testInRange(-100);
@@ -107,7 +102,7 @@ Ava("test " + name + " from int", (function (t) {
               testOutOfRange(randomLargerInt(undefined), 127);
             });
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomSmallerInt(undefined), -128);
+              testOutOfRange(TestUtils.randomInt(Js_int.min, -128), -128);
             });
       }));
 
@@ -127,7 +122,7 @@ Ava("test " + name + " to int", (function (t) {
         testToInt(-127);
         testToInt(126);
         TestUtils.loop100Fn(function () {
-              testToInt(randomValue(undefined));
+              testToInt(TestUtils.randomInt(-128, 127));
             });
         testToInt(-1);
         testToInt(-100);
@@ -151,7 +146,7 @@ Ava("test " + name + " from float", (function (t) {
         testIsIntegerAndInRange(-127);
         testIsIntegerAndInRange(126);
         TestUtils.loop100Fn(function () {
-              testIsIntegerAndInRange(randomValue(undefined));
+              testIsIntegerAndInRange(TestUtils.randomInt(-128, 127));
             });
         testIsIntegerAndInRange(-1);
         testIsIntegerAndInRange(-100);
@@ -199,7 +194,7 @@ Ava("test " + name + " to float", (function (t) {
         };
         testToFloat(100);
         TestUtils.loop100Fn(function () {
-              testToFloat(randomValue(undefined));
+              testToFloat(TestUtils.randomInt(-128, 127));
             });
       }));
 
@@ -218,11 +213,11 @@ Ava("test " + name + " from string", (function (t) {
         testInRange(-127, String(-127));
         testInRange(126, String(126));
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = TestUtils.randomInt(-128, 127);
               testInRange(value, String(value));
             });
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = TestUtils.randomInt(-128, 127);
               testInRange(value, String(value));
             });
         testInRange(-100, String(-100));
@@ -232,7 +227,7 @@ Ava("test " + name + " from string", (function (t) {
         var testOutOfRange = function (f) {
           var s = String(f);
           t.deepEqual($$Number.Int8.fromString(s), undefined, undefined);
-          TestUtils.assertOverflow(t, (function () {
+          TestUtils.assertException(t, (function () {
                   return $$Number.Int8.fromStringExn(s);
                 }));
         };
@@ -244,7 +239,7 @@ Ava("test " + name + " from string", (function (t) {
               testOutOfRange(randomLargerInt(undefined));
             });
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomSmallerInt(undefined));
+              testOutOfRange(TestUtils.randomInt(Js_int.min, -128));
             });
         var s = "foo";
         t.deepEqual($$Number.Int8.fromString(s), undefined, undefined);
@@ -260,7 +255,7 @@ Ava("test " + name + " to string", (function (t) {
         };
         testToString(100);
         TestUtils.loop100Fn(function () {
-              testToString(randomValue(undefined));
+              testToString(TestUtils.randomInt(-128, 127));
             });
       }));
 
@@ -423,10 +418,17 @@ Ava("test " + name + " comparison", (function (t) {
         };
         testCompare(-7, 18);
         TestUtils.loop100Fn(function () {
-              var min = randomValue(undefined);
-              var max = Js_math.random_int(min + 1 | 0, 128);
+              var min = TestUtils.randomInt(-128, 127);
+              var max = TestUtils.randomInt(min + 1.0, 127 + 1.0);
               testCompare(min, max);
             });
+        var zero = $$Number.Int8.fromIntExn(0);
+        var negZero = $$Number.Int8.fromIntExn(-0);
+        t.true($$Number.Int8.eq(zero, negZero), undefined);
+        t.true($$Number.Int8.le(zero, negZero), undefined);
+        t.true($$Number.Int8.ge(zero, negZero), undefined);
+        t.false($$Number.Int8.lt(zero, negZero), undefined);
+        t.false($$Number.Int8.gt(zero, negZero), undefined);
         t.deepEqual($$Number.Int8.minMany([]), undefined, undefined);
         TestUtils.assertInvalidArgument(t, (function () {
                 return $$Number.Int8.minManyExn([]);
@@ -476,9 +478,9 @@ Ava("test " + name + " addition", (function (t) {
         testOutOfRange(127, 1, 127);
         testOutOfRange(127, 100, 127);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
-              var result = a + b | 0;
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
+              var result = a + b;
               if (result < -128) {
                 testOutOfRange(a, b, -128);
               } else if (result > 127) {
@@ -532,9 +534,9 @@ Ava("test " + name + " subtraction", (function (t) {
         testOutOfRange(127, -1, 127);
         testOutOfRange(127, -100, 127);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
-              var result = a - b | 0;
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
+              var result = a - b;
               if (result < -128) {
                 testOutOfRange(a, b, -128);
               } else if (result > 127) {
@@ -542,7 +544,7 @@ Ava("test " + name + " subtraction", (function (t) {
               } else {
                 testInRange(a, b);
               }
-              var result$1 = b - a | 0;
+              var result$1 = b - a;
               if (result$1 < -128) {
                 return testOutOfRange(b, a, -128);
               } else if (result$1 > 127) {
@@ -600,9 +602,9 @@ Ava("test " + name + " multiplication", (function (t) {
         testOutOfRange(-128, -100, 127);
         testOutOfRange(127, -100, -128);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
-              var result = Math.imul(a, b);
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
+              var result = a * b;
               if (result < -128) {
                 testOutOfRange(a, b, -128);
               } else if (result > 127) {
@@ -700,8 +702,8 @@ Ava("test " + name + " division", (function (t) {
         testDividedByZero(-127);
         testDividedByZero(126);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
               testNotDividedByZero(a, b);
               testDividedByZero(a);
               testDividedByZero(b);
@@ -791,8 +793,8 @@ Ava("test " + name + " remainder", (function (t) {
         testDividedByZero(-127);
         testDividedByZero(126);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
               testNotDividedByZero(a, b);
               testDividedByZero(a);
               testDividedByZero(b);
@@ -890,11 +892,11 @@ Ava("test " + name + " sum", (function (t) {
               -100
             ]);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
               testInRange([a]);
               testInRange([b]);
-              var result = a + b | 0;
+              var result = a + b;
               if (result >= -128 && result <= 127) {
                 testInRange([
                       a,
@@ -932,7 +934,7 @@ Ava("test " + name + " increase and decrease", (function (t) {
         testIncInRange(-127);
         testIncInRange(126);
         TestUtils.loop100Fn(function () {
-              testIncInRange(randomValue(undefined));
+              testIncInRange(TestUtils.randomInt(-128, 127));
             });
         testIncInRange(-100);
         testIncInRange(-127);
@@ -953,7 +955,7 @@ Ava("test " + name + " increase and decrease", (function (t) {
         testDecInRange(127);
         testDecInRange(126);
         TestUtils.loop100Fn(function () {
-              testDecInRange(Js_math.random_int(-127, 127));
+              testDecInRange(TestUtils.randomInt(-128 + 1.0, 127));
             });
         testDecInRange(0);
         testDecInRange(-100);
@@ -985,7 +987,7 @@ Ava("test " + name + " bitwise", (function (t) {
         assertNot2(-128);
         assertNot2(127);
         TestUtils.loop100Fn(function () {
-              assertNot2(randomValue(undefined));
+              assertNot2(TestUtils.randomInt(-128, 127));
             });
         assertNot2(-1);
         assertNot2(-127);
@@ -1007,7 +1009,7 @@ Ava("test " + name + " bitwise", (function (t) {
         assertAnd(-127, 126, 0);
         assertAnd(-7, 18, 16);
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = TestUtils.randomInt(-128, 127);
               assertAnd(value, value, value);
             });
         assertAnd(0, -1, 0);
@@ -1027,7 +1029,7 @@ Ava("test " + name + " bitwise", (function (t) {
         };
         assertOr(-7, 18, -5);
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = TestUtils.randomInt(-128, 127);
               assertOr(value, value, value);
             });
         assertOr(100, -101, -1);
@@ -1050,7 +1052,7 @@ Ava("test " + name + " bitwise", (function (t) {
         };
         assertXor(-7, 18, -21);
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = TestUtils.randomInt(-128, 127);
               assertXor(value, value, 0);
             });
         assertXor(100, -101, -1);
@@ -1077,7 +1079,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testUnsignedShiftRight(100);
         testUnsignedShiftRight(-101);
         TestUtils.loop100Fn(function () {
-              testUnsignedShiftRight(randomValue(undefined));
+              testUnsignedShiftRight(TestUtils.randomInt(-128, 127));
             });
         var testShiftRight = function (value) {
           var n = $$Number.Int8.fromIntExn(value);
@@ -1089,7 +1091,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testShiftRight(100);
         testShiftRight(-101);
         TestUtils.loop100Fn(function () {
-              testShiftRight(randomValue(undefined));
+              testShiftRight(TestUtils.randomInt(-128, 127));
             });
         var value$1 = $$Number.Int8.fromIntExn(100);
         for(var i$1 = -8; i$1 <= 16; ++i$1){
@@ -1104,7 +1106,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testRotateShiftLeft(100);
         testRotateShiftLeft(-101);
         TestUtils.loop100Fn(function () {
-              testRotateShiftLeft(randomValue(undefined));
+              testRotateShiftLeft(TestUtils.randomInt(-128, 127));
             });
         var testRotateShiftRight = function (value) {
           var n = $$Number.Int8.fromIntExn(value);
@@ -1116,7 +1118,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testRotateShiftRight(100);
         testRotateShiftRight(-101);
         TestUtils.loop100Fn(function () {
-              testRotateShiftRight(randomValue(undefined));
+              testRotateShiftRight(TestUtils.randomInt(-128, 127));
             });
       }));
 
@@ -1135,15 +1137,16 @@ Ava("test " + name + " integer math", (function (t) {
         var mask = 255;
         var j = Math.pow(2.0, 8);
         var k = Math.pow(2.0, 7);
-        var toMask = function (i) {
-          return TestUtils.toUint32(i) & mask;
+        var toU32 = function (i) {
+          return TestUtils.toUint32(i & mask);
         };
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
-              var m = toMask(a) * toMask(b) % j;
-              var result = m >= k ? m - j : m;
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(-128, 127);
+              var m = toU32(a) * toU32(b) % j;
+              var result = true && m >= k ? m - j : m;
               t.deepEqual($$Number.Int8.imul($$Number.Int8.fromIntExn(a), $$Number.Int8.fromIntExn(b)), $$Number.Int8.fromFloatExn(result), undefined);
+              t.deepEqual($$Number.Int8.imul($$Number.Int8.fromIntExn(b), $$Number.Int8.fromIntExn(a)), $$Number.Int8.fromFloatExn(result), undefined);
             });
         var testPowInRange = function (a, b) {
           var result = $$Number.Int8.fromFloatExn(Math.pow(a, b));
@@ -1179,11 +1182,10 @@ Ava("test " + name + " integer math", (function (t) {
                 }));
         };
         testPowOutOfRange(127, 2);
-        testPowOutOfRange(2, 127);
         testPowOutOfRange(-128, 2);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomPositiveSmallValue(undefined);
+              var a = TestUtils.randomInt(-128, 127);
+              var b = TestUtils.randomInt(0.0, 16.0);
               var result = Math.pow(a, b);
               if (result >= -128 && result <= 127) {
                 return testPowInRange(a, b);
@@ -1203,17 +1205,109 @@ Ava("test " + name + " integer math", (function (t) {
         testPowNotInteger(-128, -1);
         testPowNotInteger(127, -1);
         TestUtils.loop100Fn(function () {
-              var m = randomValue(undefined);
-              var n = randomValue(undefined);
+              var m = TestUtils.randomInt(-128, 127);
+              var n = TestUtils.randomInt(-128, 127);
               var min = $$Number.Int8.fromIntExn(m < n ? m : n);
               var max = $$Number.Int8.fromIntExn(m > n ? m : n);
               if (min !== max) {
                 return TestUtils.loopFn((function () {
                               var i = $$Number.Int8.random(min, max);
-                              t.true($$Number.Int8.ge(i, min) && $$Number.Int8.lt(i, max), undefined);
+                              t.true($$Number.Int8.ge(i, min), undefined);
+                              t.true($$Number.Int8.lt(i, max), undefined);
                             }), 10);
               }
               
+            });
+      }));
+
+Ava("test " + name + " signed math", (function (t) {
+        var testNegInRange = function (i) {
+          var a = $$Number.Int8.fromIntExn(i);
+          var b = $$Number.Int8.fromIntExn(-i | 0);
+          t.deepEqual($$Number.Int8.neg(a), Caml_option.some(b), undefined);
+          t.deepEqual($$Number.Int8.negExn(a), b, undefined);
+          t.deepEqual($$Number.Int8.negUnsafe(a), b, undefined);
+          t.deepEqual($$Number.Int8.neg(b), Caml_option.some(a), undefined);
+          t.deepEqual($$Number.Int8.negExn(b), a, undefined);
+          t.deepEqual($$Number.Int8.negUnsafe(b), a, undefined);
+        };
+        testNegInRange(0);
+        testNegInRange(1);
+        testNegInRange(100);
+        testNegInRange(-127);
+        testNegInRange(127);
+        testNegInRange(126);
+        var testNegOutOfRange = function (i) {
+          var n = $$Number.Int8.fromIntExn(i);
+          t.deepEqual($$Number.Int8.neg(n), undefined, undefined);
+          TestUtils.assertOverflow(t, (function () {
+                  return $$Number.Int8.negExn(n);
+                }));
+        };
+        testNegOutOfRange(-128);
+        TestUtils.loop100Fn(function () {
+              var i = TestUtils.randomInt(-128, 127);
+              if (i !== -128) {
+                return testNegInRange(i);
+              } else {
+                return testNegOutOfRange(i);
+              }
+            });
+        var testAbsInRange = function (i) {
+          var a = $$Number.Int8.fromIntExn(i);
+          var b = $$Number.Int8.fromIntExn(i < 0 ? -i | 0 : i);
+          t.deepEqual($$Number.Int8.abs(a), Caml_option.some(b), undefined);
+          t.deepEqual($$Number.Int8.absExn(a), b, undefined);
+          t.deepEqual($$Number.Int8.absUnsafe(a), b, undefined);
+          t.deepEqual($$Number.Int8.abs(b), Caml_option.some(b), undefined);
+          t.deepEqual($$Number.Int8.absExn(b), b, undefined);
+          t.deepEqual($$Number.Int8.absUnsafe(b), b, undefined);
+        };
+        testAbsInRange(0);
+        testAbsInRange(-1);
+        testAbsInRange(-100);
+        testAbsInRange(-127);
+        testAbsInRange(-126);
+        var testAbsOutOfRange = function (i) {
+          var n = $$Number.Int8.fromIntExn(i);
+          t.deepEqual($$Number.Int8.abs(n), undefined, undefined);
+          TestUtils.assertOverflow(t, (function () {
+                  return $$Number.Int8.absExn(n);
+                }));
+        };
+        testAbsOutOfRange(-128);
+        TestUtils.loop100Fn(function () {
+              var i = TestUtils.randomInt(-128, 127);
+              if (i !== -128) {
+                return testAbsInRange(i);
+              } else {
+                return testAbsOutOfRange(i);
+              }
+            });
+        var testSign = function (i) {
+          var n = $$Number.Int8.fromIntExn(i);
+          var result = i < 0 ? -1 : (
+              i > 0 ? 1 : 0
+            );
+          var raw = i < 0 ? -1.0 : (
+              i > 0 ? 1.0 : 0.0
+            );
+          t.deepEqual($$Number.Int8.sign(n), result, undefined);
+          t.deepEqual($$Number.Int8.signExn(n), result, undefined);
+          t.deepEqual($$Number.Int8.signRaw(n), raw, undefined);
+        };
+        testSign(0);
+        testSign(1);
+        testSign(-1);
+        testSign(100);
+        testSign(-100);
+        testSign(-128);
+        testSign(-127);
+        testSign(127);
+        testSign(126);
+        testSign(-127);
+        TestUtils.loop100Fn(function () {
+              testSign(TestUtils.randomInt(-128, 127));
             });
       }));
 
@@ -1245,8 +1339,6 @@ var minMaxXor = -21;
 
 export {
   IntModule ,
-  minSafeInteger ,
-  maxSafeInteger ,
   name ,
   isSigned ,
   is32Bits ,
@@ -1269,4 +1361,4 @@ export {
   randomLargerFloat ,
   randomSmallerFloat ,
 }
-/* minSafeInteger Not a pure module */
+/*  Not a pure module */

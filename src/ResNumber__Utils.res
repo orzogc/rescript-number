@@ -33,7 +33,7 @@ let inInt32Range = f => f >= Int.min->Int.toFloat && f <= Int.max->Int.toFloat
 let stringToInt = s => {
   let i = s->parseInt
 
-  !(i->isNaN) && i->inInt32Range ? Some(i->floatToIntUnsafe) : None
+  !(i->isNaN) && i->inInt32Range ? Some(i->floatToIntUnsafe->lor(0)) : None
 }
 
 let stringToFloat = s => {

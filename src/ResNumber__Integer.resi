@@ -48,8 +48,17 @@ module type UnsignedInteger = {
   include FixedBitsInteger with type t := t
 }
 
-module MakeIntegerConversion: (IntRange: NumberRange with type t = float) =>
-(NumberConversion with type t = float)
+module MakeIntegerConversion: (
+  IntModule: {
+    type t = float
+
+    include NumberRange with type t := t
+
+    let fromIntUnsafe: int => t
+
+    let fromFloatUnsafe: float => t
+  },
+) => (NumberConversion with type t = float)
 
 module MakeNumberIncDec: (
   M: {
@@ -63,7 +72,17 @@ module MakeNumberIncDec: (
   },
 ) => (NumberIncDec with type t = M.t)
 
-module MakeInteger: (IntRange: NumberRange with type t = float) => (Integer with type t = float)
+module MakeInteger: (
+  IntModule: {
+    type t = float
+
+    include NumberRange with type t := t
+
+    let fromIntUnsafe: int => t
+
+    let fromFloatUnsafe: float => t
+  },
+) => (Integer with type t = float)
 
 module MakeFixedBitsIntegerConversion: (IntRange: NumberRange with type t = int) =>
 (NumberConversion with type t = int)

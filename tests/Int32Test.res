@@ -3,37 +3,103 @@ open Belt
 
 open TestUtils
 
-module IntModule = Number.Int8
+module IntModule = Number.Int32
 
-let name = "Int8"
+let name = "Int32"
 
 let isSigned = true
 
-let is32Bits = false
+let is32Bits = true
 
-let bits = 8
+let bits = 32
 
-let minValue = -128
+let minValue = Js.Int.min
 
-let maxValue = 127
+let maxValue = Js.Int.max
 
-let value = 100
+let value = 1000000000
 
-let valueNot = -101
+let valueNot = -1000000001
 
-let valueShiftLeft = [value, -56, -112, 32, 64, -128, 0, 0]
+let valueShiftLeft = [
+  value,
+  2000000000,
+  -294967296,
+  -589934592,
+  -1179869184,
+  1935228928,
+  -424509440,
+  -849018880,
+  -1698037760,
+  898891776,
+  1797783552,
+  -699400192,
+  -1398800384,
+  1497366528,
+  -1300234240,
+  1694498816,
+  -905969664,
+  -1811939328,
+  671088640,
+  1342177280,
+  -1610612736,
+  1073741824,
+  -2147483648,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+]
 
-let valueRotateShiftLeft = [value, -56, -111, 35, 70, -116, 25, 50]
+let valueRotateShiftLeft = [
+  value,
+  2000000000,
+  -294967296,
+  -589934591,
+  -1179869181,
+  1935228935,
+  -424509426,
+  -849018851,
+  -1698037701,
+  898891895,
+  1797783790,
+  -699399716,
+  -1398799431,
+  1497368435,
+  -1300230426,
+  1694506445,
+  -905954406,
+  -1811908811,
+  671149675,
+  1342299350,
+  -1610368596,
+  1074230105,
+  -2146507086,
+  1953125,
+  3906250,
+  7812500,
+  15625000,
+  31250000,
+  62500000,
+  125000000,
+  250000000,
+  500000000,
+]
 
-let min = -7
+let min = -27852
 
-let max = 18
+let max = 56331
 
-let minMaxAnd = 16
+let minMaxAnd = 36864
 
-let minMaxOr = -5
+let minMaxOr = -8385
 
-let minMaxXor = -21
+let minMaxXor = -45249
 
 let randomValue = () => randomInt(minValue->Int.toFloat, maxValue->Int.toFloat)
 

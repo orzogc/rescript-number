@@ -3,37 +3,71 @@ open Belt
 
 open TestUtils
 
-module IntModule = Number.Int8
+module IntModule = Number.Int16
 
-let name = "Int8"
+let name = "Int16"
 
 let isSigned = true
 
 let is32Bits = false
 
-let bits = 8
+let bits = 16
 
-let minValue = -128
+let minValue = -32768
 
-let maxValue = 127
+let maxValue = 32767
 
-let value = 100
+let value = 10000
 
-let valueNot = -101
+let valueNot = -10001
 
-let valueShiftLeft = [value, -56, -112, 32, 64, -128, 0, 0]
+let valueShiftLeft = [
+  value,
+  20000,
+  -25536,
+  14464,
+  28928,
+  -7680,
+  -15360,
+  -30720,
+  4096,
+  8192,
+  16384,
+  -32768,
+  0,
+  0,
+  0,
+  0,
+]
 
-let valueRotateShiftLeft = [value, -56, -111, 35, 70, -116, 25, 50]
+let valueRotateShiftLeft = [
+  value,
+  20000,
+  -25536,
+  14465,
+  28930,
+  -7676,
+  -15351,
+  -30701,
+  4135,
+  8270,
+  16540,
+  -32456,
+  625,
+  1250,
+  2500,
+  5000,
+]
 
-let min = -7
+let min = -73
 
-let max = 18
+let max = 382
 
-let minMaxAnd = 16
+let minMaxAnd = 310
 
-let minMaxOr = -5
+let minMaxOr = -1
 
-let minMaxXor = -21
+let minMaxXor = -311
 
 let randomValue = () => randomInt(minValue->Int.toFloat, maxValue->Int.toFloat)
 

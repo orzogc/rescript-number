@@ -20,7 +20,7 @@ function inInt32Range(f) {
 function stringToInt(s) {
   var i = parseInt(s);
   if (!Number.isNaN(i) && inInt32Range(i)) {
-    return i;
+    return i | 0;
   }
   
 }

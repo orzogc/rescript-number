@@ -57,14 +57,22 @@ let toInt32 = i => i->lor(0)
 @warning("-27")
 let toUint32 = (i: int): float => %raw(`i >>> 0`)
 
-module MakeIntegerConversion = (IntRange: NumberRange with type t = float): (
-  NumberConversion with type t = float
-) => {
-  type t = IntRange.t
+module MakeIntegerConversion = (
+  IntModule: {
+    type t = float
 
-  let minValue = IntRange.minValue
+    include NumberRange with type t := t
 
-  let maxValue = IntRange.maxValue
+    let fromIntUnsafe: int => t
+
+    let fromFloatUnsafe: float => t
+  },
+): (NumberConversion with type t = float) => {
+  type t = IntModule.t
+
+  let minValue = IntModule.minValue
+
+  let maxValue = IntModule.maxValue
 
   let toString = i => i->Float.toString
 
@@ -84,7 +92,7 @@ module MakeIntegerConversion = (IntRange: NumberRange with type t = float): (
   let fromIntExn = i =>
     i->Int.toFloat >= minValue && i->Int.toFloat <= maxValue
       ? i->Int.toFloat
-      : raiseOverflow(i, module(IntRange))
+      : raiseOverflow(i, module(IntModule))
 
   let fromIntClamped = i =>
     if i->Int.toFloat < minValue {
@@ -95,7 +103,7 @@ module MakeIntegerConversion = (IntRange: NumberRange with type t = float): (
       i->Int.toFloat
     }
 
-  let fromIntUnsafe = i => i->Int.toFloat
+  let fromIntUnsafe = IntModule.fromIntUnsafe
 
   let toInt = i => i->inInt32Range ? Some(i->floatToIntUnsafe) : None
 
@@ -112,18 +120,19 @@ module MakeIntegerConversion = (IntRange: NumberRange with type t = float): (
 
   let toIntUnsafe = i => i->floatToIntUnsafe->toInt32
 
-  let fromFloat = f => f->isInteger && f >= minValue && f <= maxValue ? Some(f) : None
+  let fromFloatUnsafe = IntModule.fromFloatUnsafe
+
+  let fromFloat = f =>
+    f->isInteger && f >= minValue && f <= maxValue ? Some(f->fromFloatUnsafe) : None
 
   let fromFloatExn = f =>
     if !(f->isInteger) {
       invalid_arg(`float number ${f->toString} is not a integer`)
     } else if f < minValue || f > maxValue {
-      raiseOverflow(f, module(IntRange))
+      raiseOverflow(f, module(IntModule))
     } else {
-      f
+      f->fromFloatUnsafe
     }
-
-  let fromFloatUnsafe = f => f->Math.trunc
 
   let fromFloatClamped = f =>
     if f < minValue {
@@ -175,18 +184,28 @@ module MakeNumberIncDec = (
   let decUnsafe = n => n->M.subUnsafe(M.one)
 }
 
-module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with type t = float) => {
-  type t = IntRange.t
+module MakeInteger = (
+  IntModule: {
+    type t = float
 
-  include (MakeIntegerConversion(IntRange): NumberConversion with type t := t)
+    include NumberRange with type t := t
+
+    let fromIntUnsafe: int => t
+
+    let fromFloatUnsafe: float => t
+  },
+): (Integer with type t = float) => {
+  type t = IntModule.t
+
+  include (MakeIntegerConversion(IntModule): NumberConversion with type t := t)
 
   let zero = 0.0
 
   let one = 1.0
 
-  let minValue = IntRange.minValue
+  let minValue = IntModule.minValue
 
-  let maxValue = IntRange.maxValue
+  let maxValue = IntModule.maxValue
 
   if minValue > zero || maxValue < one {
     invalid_arg(
@@ -235,7 +254,7 @@ module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with 
     }
   }
 
-  let minManyUnsafe = arr => arr->Math.minMany_float
+  let minManyUnsafe = arr => arr->Math.minMany_float->fromFloatUnsafe
 
   let max = (a: t, b: t) => PervasivesU.max(a, b)
 
@@ -255,12 +274,12 @@ module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with 
     }
   }
 
-  let maxManyUnsafe = arr => arr->Math.maxMany_float
+  let maxManyUnsafe = arr => arr->Math.maxMany_float->fromFloatUnsafe
 
   let fromFloatUncheckInteger = f => f >= minValue && f <= maxValue ? Some(f) : None
 
   let fromFloatUncheckIntegerExn = f =>
-    f >= minValue && f <= maxValue ? f : raiseOverflow(f, module(IntRange))
+    f >= minValue && f <= maxValue ? f : raiseOverflow(f, module(IntModule))
 
   let fromFloatUncheckIntegerClamped = f =>
     if f < minValue {
@@ -272,36 +291,51 @@ module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with 
     }
 
   module Add = {
-    let addUnsafe = (a, b) => a +. b
+    let add = (a, b) => (a +. b)->fromFloatUncheckInteger
 
-    let add = (a, b) => addUnsafe(a, b)->fromFloatUncheckInteger
+    let addExn = (a, b) => (a +. b)->fromFloatUncheckIntegerExn
 
-    let addExn = (a, b) => addUnsafe(a, b)->fromFloatUncheckIntegerExn
+    let addClamped = (a, b) => (a +. b)->fromFloatUncheckIntegerClamped
 
-    let addClamped = (a, b) => addUnsafe(a, b)->fromFloatUncheckIntegerClamped
+    let addUnsafe = (a, b) => (a +. b)->fromFloatUnsafe
   }
 
   include Add
 
   module Sub = {
-    let subUnsafe = (a, b) => a -. b
+    let sub = (a, b) => (a -. b)->fromFloatUncheckInteger
 
-    let sub = (a, b) => subUnsafe(a, b)->fromFloatUncheckInteger
+    let subExn = (a, b) => (a -. b)->fromFloatUncheckIntegerExn
 
-    let subExn = (a, b) => subUnsafe(a, b)->fromFloatUncheckIntegerExn
+    let subClamped = (a, b) => (a -. b)->fromFloatUncheckIntegerClamped
 
-    let subClamped = (a, b) => subUnsafe(a, b)->fromFloatUncheckIntegerClamped
+    let subUnsafe = (a, b) => (a -. b)->fromFloatUnsafe
   }
 
   include Sub
 
-  let mulUnsafe = (a, b) => a *. b
+  let fromFloatUncheckInteger_ = f =>
+    f >= minValue && f <= maxValue ? Some(f->fromFloatUnsafe) : None
 
-  let mul = (a, b) => mulUnsafe(a, b)->fromFloatUncheckInteger
+  let fromFloatUncheckIntegerExn_ = f =>
+    f >= minValue && f <= maxValue ? f->fromFloatUnsafe : raiseOverflow(f, module(IntModule))
 
-  let mulExn = (a, b) => mulUnsafe(a, b)->fromFloatUncheckIntegerExn
+  let fromFloatUncheckIntegerClamped_ = f =>
+    if f < minValue {
+      minValue
+    } else if f > maxValue {
+      maxValue
+    } else {
+      f->fromFloatUnsafe
+    }
 
-  let mulClamped = (a, b) => mulUnsafe(a, b)->fromFloatUncheckIntegerClamped
+  let mul = (a, b) => (a *. b)->fromFloatUncheckInteger_
+
+  let mulExn = (a, b) => (a *. b)->fromFloatUncheckIntegerExn_
+
+  let mulClamped = (a, b) => (a *. b)->fromFloatUncheckIntegerClamped_
+
+  let mulUnsafe = (a, b) => (a *. b)->fromFloatUnsafe
 
   let divUnsafe = (a, b) => (a /. b)->fromFloatUnsafe
 
@@ -309,7 +343,7 @@ module MakeInteger = (IntRange: NumberRange with type t = float): (Integer with 
 
   let divExn = (a, b) => b !== zero ? divUnsafe(a, b) : raise(Division_by_zero)
 
-  let remUnsafe = (a, b) => mod_float(a, b)
+  let remUnsafe = (a, b) => mod_float(a, b)->fromFloatUnsafe
 
   let rem = (a, b) => b !== zero ? Some(remUnsafe(a, b)) : None
 
@@ -386,9 +420,11 @@ module MakeFixedBitsIntegerConversion = (IntRange: NumberRange with type t = int
 
   let toIntUnsafe = i => i
 
+  let fromFloatUnsafe = f => f->floatToIntUnsafe->toInt32
+
   let fromFloat = f =>
     f->isInteger && f >= minValue->Int.toFloat && f <= maxValue->Int.toFloat
-      ? Some(f->floatToIntUnsafe)
+      ? Some(f->fromFloatUnsafe)
       : None
 
   let fromFloatExn = f =>
@@ -397,10 +433,8 @@ module MakeFixedBitsIntegerConversion = (IntRange: NumberRange with type t = int
     } else if f < minValue->Int.toFloat || f > maxValue->Int.toFloat {
       raiseOverflow(f, module(IntRange))
     } else {
-      f->floatToIntUnsafe
+      f->fromFloatUnsafe
     }
-
-  let fromFloatUnsafe = f => f->floatToIntUnsafe->toInt32
 
   let fromFloatClamped = f =>
     if f < minValue->Int.toFloat {
@@ -422,7 +456,7 @@ module MakeFixedBitsIntegerConversion = (IntRange: NumberRange with type t = int
   let fromStringExn = s =>
     switch s->stringToInt {
     | Some(i) => i->fromIntExn
-    | None => invalid_arg(`the string is not a integer: ${s}`)
+    | None => invalid_arg(`the string is not a 32 bits signed integer: ${s}`)
     }
 }
 
@@ -571,6 +605,23 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
 
   include Sub
 
+  let fromFloatUncheckInteger_ = f =>
+    f >= minValue->Int.toFloat && f <= maxValue->Int.toFloat ? Some(f->fromFloatUnsafe) : None
+
+  let fromFloatUncheckIntegerExn_ = f =>
+    f >= minValue->Int.toFloat && f <= maxValue->Int.toFloat
+      ? f->fromFloatUnsafe
+      : raiseOverflow(f, module(IntRange))
+
+  let fromFloatUncheckIntegerClamped_ = f =>
+    if f < minValue->Int.toFloat {
+      minValue
+    } else if f > maxValue->Int.toFloat {
+      maxValue
+    } else {
+      f->fromFloatUnsafe
+    }
+
   let isMulMaybeOverflow =
     minValue->Int.toFloat *. maxValue->Int.toFloat < Int.min->Int.toFloat ||
     minValue->Int.toFloat *. minValue->Int.toFloat > Int.max->Int.toFloat ||
@@ -579,15 +630,15 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
   let mulUnsafe = (a, b) => a * b
 
   let mul = isMulMaybeOverflow
-    ? (a, b) => (a->Int.toFloat *. b->Int.toFloat)->fromFloatUncheckInteger
+    ? (a, b) => (a->Int.toFloat *. b->Int.toFloat)->fromFloatUncheckInteger_
     : (a, b) => mulUnsafe(a, b)->fromInt
 
   let mulExn = isMulMaybeOverflow
-    ? (a, b) => (a->Int.toFloat *. b->Int.toFloat)->fromFloatUncheckIntegerExn
+    ? (a, b) => (a->Int.toFloat *. b->Int.toFloat)->fromFloatUncheckIntegerExn_
     : (a, b) => mulUnsafe(a, b)->fromIntExn
 
   let mulClamped = isMulMaybeOverflow
-    ? (a, b) => (a->Int.toFloat *. b->Int.toFloat)->fromFloatUncheckIntegerClamped
+    ? (a, b) => (a->Int.toFloat *. b->Int.toFloat)->fromFloatUncheckIntegerClamped_
     : (a, b) => mulUnsafe(a, b)->fromIntClamped
 
   let divUnsafe = (a, b) => (a->Int.toFloat /. b->Int.toFloat)->fromFloatUnsafe
@@ -925,9 +976,9 @@ module Int32 = MakeSignedInteger({
 
   let bits = 32
 
-  let minValue = Js.Int.min
+  let minValue = Int.min
 
-  let maxValue = Js.Int.max
+  let maxValue = Int.max
 })
 
 module Uint32: UnsignedInteger with type t = float = {
@@ -940,29 +991,11 @@ module Uint32: UnsignedInteger with type t = float = {
       let minValue = 0.0
 
       let maxValue = 4294967295.0
+
+      let fromIntUnsafe = i => i->toUint32
+
+      let fromFloatUnsafe = f => f->floatToIntUnsafe->toUint32
     })
-
-    let fromIntUnsafe = i => i->toUint32
-
-    let fromFloatUnsafe = f => f->floatToIntUnsafe->toUint32
-
-    let minManyUnsafe = arr => arr->Math.minMany_float->fromFloatUnsafe
-
-    let maxManyUnsafe = arr => arr->Math.maxMany_float->fromFloatUnsafe
-
-    let addUnsafe = (a, b) => (a +. b)->fromFloatUnsafe
-
-    let subUnsafe = (a, b) => (a -. b)->fromFloatUnsafe
-
-    let mulUnsafe = (a, b) => (a *. b)->fromFloatUnsafe
-
-    let divUnsafe = (a, b) => (a /. b)->fromFloatUnsafe
-
-    let sumUnsafe = arr => arr->sumUnsafe->fromFloatUnsafe
-
-    let incUnsafe = n => n->addUnsafe(one)
-
-    let decUnsafe = n => n->subUnsafe(one)
   }
 
   include (IntModule: Integer with type t := t)

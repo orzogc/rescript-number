@@ -52,24 +52,12 @@ function randomValue() {
   return TestUtils.randomInt(0, 65535);
 }
 
-function randomPositiveSmallValue() {
-  return TestUtils.randomInt(0.0, 16.0);
-}
-
 function randomLargerInt() {
   return TestUtils.randomInt(65535 + 1.0, Js_int.max);
 }
 
 function randomSmallerInt() {
   return TestUtils.randomInt(Js_int.min, 0);
-}
-
-function randomLargerFloat() {
-  return Math.floor(TestUtils.randomFloat(65535 + 1.0, TestUtils.maxSafeInteger));
-}
-
-function randomSmallerFloat() {
-  return Math.floor(TestUtils.randomFloat(TestUtils.minSafeInteger, -1.0));
 }
 
 Ava("test " + name + " sign", (function (t) {
@@ -168,10 +156,10 @@ Ava("test " + name + " from float", (function (t) {
         testOutOfRange(-10000, 0);
         testOutOfRange(75535, 65535);
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomLargerFloat(undefined), 65535);
+              testOutOfRange(Math.floor(TestUtils.randomFloat(65535 + 1.0, TestUtils.maxSafeInteger)), 65535);
             });
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomSmallerFloat(undefined), 0);
+              testOutOfRange(Math.floor(TestUtils.randomFloat(TestUtils.minSafeInteger, -1.0)), 0);
             });
         var testIsNotInteger = function (f, value) {
           t.deepEqual($$Number.Uint16.fromFloat(f), undefined, undefined);
@@ -218,10 +206,6 @@ Ava("test " + name + " from string", (function (t) {
               var value = TestUtils.randomInt(0, 65535);
               testInRange(value, String(value));
             });
-        TestUtils.loop100Fn(function () {
-              var value = TestUtils.randomInt(0, 65535);
-              testInRange(value, String(value));
-            });
         var testOutOfRange = function (f) {
           var s = String(f);
           t.deepEqual($$Number.Uint16.fromString(s), undefined, undefined);
@@ -259,15 +243,20 @@ Ava("test " + name + " to string", (function (t) {
 
 Ava("test " + name + " zero", (function (t) {
         t.deepEqual($$Number.Uint16.zero, $$Number.Uint16.fromIntExn(0), undefined);
+        t.deepEqual($$Number.Uint16.zero, $$Number.Uint16.fromFloatExn(0.0), undefined);
+        t.deepEqual($$Number.Uint16.zero, $$Number.Uint16.fromFloatExn(-0.0), undefined);
       }));
 
 Ava("test " + name + " one", (function (t) {
         t.deepEqual($$Number.Uint16.one, $$Number.Uint16.fromIntExn(1), undefined);
+        t.deepEqual($$Number.Uint16.one, $$Number.Uint16.fromFloatExn(1.0), undefined);
       }));
 
 Ava("test " + name + " range", (function (t) {
         t.deepEqual($$Number.Uint16.minValue, $$Number.Uint16.fromIntExn(0), undefined);
+        t.deepEqual($$Number.Uint16.minValue, $$Number.Uint16.fromFloatExn(0), undefined);
         t.deepEqual($$Number.Uint16.maxValue, $$Number.Uint16.fromIntExn(65535), undefined);
+        t.deepEqual($$Number.Uint16.maxValue, $$Number.Uint16.fromFloatExn(65535), undefined);
       }));
 
 Ava("test " + name + " comparison", (function (t) {
@@ -450,6 +439,22 @@ Ava("test " + name + " addition", (function (t) {
           t.deepEqual($$Number.Uint16.addClamped(a$1, b$1), $$Number.Uint16.addClamped(b$1, a$1), undefined);
           t.deepEqual($$Number.Uint16.addUnsafe(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint16.addUnsafe(a$1, b$1), $$Number.Uint16.addUnsafe(b$1, a$1), undefined);
+          t.deepEqual($$Number.Uint16.add(a$1, $$Number.Uint16.zero), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint16.add(a$1, $$Number.Uint16.zero), $$Number.Uint16.add($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.addExn(a$1, $$Number.Uint16.zero), a$1, undefined);
+          t.deepEqual($$Number.Uint16.addExn(a$1, $$Number.Uint16.zero), $$Number.Uint16.addExn($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.addClamped(a$1, $$Number.Uint16.zero), a$1, undefined);
+          t.deepEqual($$Number.Uint16.addClamped(a$1, $$Number.Uint16.zero), $$Number.Uint16.addClamped($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.addUnsafe(a$1, $$Number.Uint16.zero), a$1, undefined);
+          t.deepEqual($$Number.Uint16.addUnsafe(a$1, $$Number.Uint16.zero), $$Number.Uint16.addUnsafe($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.add(b$1, $$Number.Uint16.zero), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint16.add(b$1, $$Number.Uint16.zero), $$Number.Uint16.add($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.addExn(b$1, $$Number.Uint16.zero), b$1, undefined);
+          t.deepEqual($$Number.Uint16.addExn(b$1, $$Number.Uint16.zero), $$Number.Uint16.addExn($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.addClamped(b$1, $$Number.Uint16.zero), b$1, undefined);
+          t.deepEqual($$Number.Uint16.addClamped(b$1, $$Number.Uint16.zero), $$Number.Uint16.addClamped($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.addUnsafe(b$1, $$Number.Uint16.zero), b$1, undefined);
+          t.deepEqual($$Number.Uint16.addUnsafe(b$1, $$Number.Uint16.zero), $$Number.Uint16.addUnsafe($$Number.Uint16.zero, b$1), undefined);
         };
         testInRange(73, 382);
         testInRange(0, 0);
@@ -483,8 +488,6 @@ Ava("test " + name + " addition", (function (t) {
               } else {
                 testInRange(a, b);
               }
-              testInRange(a, 0);
-              testInRange(b, 0);
               testInRange(a, 1);
               testInRange(b, 1);
             });
@@ -499,14 +502,26 @@ Ava("test " + name + " subtraction", (function (t) {
           t.deepEqual($$Number.Uint16.subExn(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint16.subClamped(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint16.subUnsafe(a$1, b$1), result, undefined);
+          t.deepEqual($$Number.Uint16.sub(a$1, result), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint16.subExn(a$1, result), b$1, undefined);
+          t.deepEqual($$Number.Uint16.subClamped(a$1, result), b$1, undefined);
+          t.deepEqual($$Number.Uint16.subUnsafe(a$1, result), b$1, undefined);
           t.deepEqual($$Number.Uint16.sub(a$1, a$1), Caml_option.some($$Number.Uint16.zero), undefined);
           t.deepEqual($$Number.Uint16.subExn(a$1, a$1), $$Number.Uint16.zero, undefined);
           t.deepEqual($$Number.Uint16.subClamped(a$1, a$1), $$Number.Uint16.zero, undefined);
           t.deepEqual($$Number.Uint16.subUnsafe(a$1, a$1), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.sub(a$1, $$Number.Uint16.zero), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint16.subExn(a$1, $$Number.Uint16.zero), a$1, undefined);
+          t.deepEqual($$Number.Uint16.subClamped(a$1, $$Number.Uint16.zero), a$1, undefined);
+          t.deepEqual($$Number.Uint16.subUnsafe(a$1, $$Number.Uint16.zero), a$1, undefined);
           t.deepEqual($$Number.Uint16.sub(b$1, b$1), Caml_option.some($$Number.Uint16.zero), undefined);
           t.deepEqual($$Number.Uint16.subExn(b$1, b$1), $$Number.Uint16.zero, undefined);
           t.deepEqual($$Number.Uint16.subClamped(b$1, b$1), $$Number.Uint16.zero, undefined);
           t.deepEqual($$Number.Uint16.subUnsafe(b$1, b$1), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.sub(b$1, $$Number.Uint16.zero), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint16.subExn(b$1, $$Number.Uint16.zero), b$1, undefined);
+          t.deepEqual($$Number.Uint16.subClamped(b$1, $$Number.Uint16.zero), b$1, undefined);
+          t.deepEqual($$Number.Uint16.subUnsafe(b$1, $$Number.Uint16.zero), b$1, undefined);
         };
         testInRange(382, 73);
         testInRange(0, 0);
@@ -558,6 +573,38 @@ Ava("test " + name + " multiplication", (function (t) {
           t.deepEqual($$Number.Uint16.mulClamped(a$1, b$1), $$Number.Uint16.mulClamped(b$1, a$1), undefined);
           t.deepEqual($$Number.Uint16.mulUnsafe(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint16.mulUnsafe(a$1, b$1), $$Number.Uint16.mulUnsafe(b$1, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mul(a$1, $$Number.Uint16.zero), Caml_option.some($$Number.Uint16.zero), undefined);
+          t.deepEqual($$Number.Uint16.mul(a$1, $$Number.Uint16.zero), $$Number.Uint16.mul($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mulExn(a$1, $$Number.Uint16.zero), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.mulExn(a$1, $$Number.Uint16.zero), $$Number.Uint16.mulExn($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(a$1, $$Number.Uint16.zero), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(a$1, $$Number.Uint16.zero), $$Number.Uint16.mulClamped($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(a$1, $$Number.Uint16.zero), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(a$1, $$Number.Uint16.zero), $$Number.Uint16.mulUnsafe($$Number.Uint16.zero, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mul(a$1, $$Number.Uint16.one), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint16.mul(a$1, $$Number.Uint16.one), $$Number.Uint16.mul($$Number.Uint16.one, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mulExn(a$1, $$Number.Uint16.one), a$1, undefined);
+          t.deepEqual($$Number.Uint16.mulExn(a$1, $$Number.Uint16.one), $$Number.Uint16.mulExn($$Number.Uint16.one, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(a$1, $$Number.Uint16.one), a$1, undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(a$1, $$Number.Uint16.one), $$Number.Uint16.mulClamped($$Number.Uint16.one, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(a$1, $$Number.Uint16.one), a$1, undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(a$1, $$Number.Uint16.one), $$Number.Uint16.mulUnsafe($$Number.Uint16.one, a$1), undefined);
+          t.deepEqual($$Number.Uint16.mul(b$1, $$Number.Uint16.zero), Caml_option.some($$Number.Uint16.zero), undefined);
+          t.deepEqual($$Number.Uint16.mul(b$1, $$Number.Uint16.zero), $$Number.Uint16.mul($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mulExn(b$1, $$Number.Uint16.zero), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.mulExn(b$1, $$Number.Uint16.zero), $$Number.Uint16.mulExn($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(b$1, $$Number.Uint16.zero), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(b$1, $$Number.Uint16.zero), $$Number.Uint16.mulClamped($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(b$1, $$Number.Uint16.zero), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(b$1, $$Number.Uint16.zero), $$Number.Uint16.mulUnsafe($$Number.Uint16.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mul(b$1, $$Number.Uint16.one), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint16.mul(b$1, $$Number.Uint16.one), $$Number.Uint16.mul($$Number.Uint16.one, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mulExn(b$1, $$Number.Uint16.one), b$1, undefined);
+          t.deepEqual($$Number.Uint16.mulExn(b$1, $$Number.Uint16.one), $$Number.Uint16.mulExn($$Number.Uint16.one, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(b$1, $$Number.Uint16.one), b$1, undefined);
+          t.deepEqual($$Number.Uint16.mulClamped(b$1, $$Number.Uint16.one), $$Number.Uint16.mulClamped($$Number.Uint16.one, b$1), undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(b$1, $$Number.Uint16.one), b$1, undefined);
+          t.deepEqual($$Number.Uint16.mulUnsafe(b$1, $$Number.Uint16.one), $$Number.Uint16.mulUnsafe($$Number.Uint16.one, b$1), undefined);
         };
         testInRange(73, 382);
         testInRange(0, 0);
@@ -588,16 +635,12 @@ Ava("test " + name + " multiplication", (function (t) {
               var b = TestUtils.randomInt(0, 65535);
               var result = a * b;
               if (result < 0) {
-                testOutOfRange(a, b, 0);
+                return testOutOfRange(a, b, 0);
               } else if (result > 65535) {
-                testOutOfRange(a, b, 65535);
+                return testOutOfRange(a, b, 65535);
               } else {
-                testInRange(a, b);
+                return testInRange(a, b);
               }
-              testInRange(a, 0);
-              testInRange(b, 0);
-              testInRange(a, 1);
-              testInRange(b, 1);
             });
       }));
 
@@ -610,40 +653,41 @@ Ava("test " + name + " division", (function (t) {
             t.deepEqual($$Number.Uint16.div(b$1, a$1), Caml_option.some(result), undefined);
             t.deepEqual($$Number.Uint16.divExn(b$1, a$1), result, undefined);
             t.deepEqual($$Number.Uint16.divUnsafe(b$1, a$1), result, undefined);
+            t.deepEqual($$Number.Uint16.div($$Number.Uint16.zero, a$1), Caml_option.some($$Number.Uint16.zero), undefined);
+            t.deepEqual($$Number.Uint16.divExn($$Number.Uint16.zero, a$1), $$Number.Uint16.zero, undefined);
+            t.deepEqual($$Number.Uint16.divUnsafe($$Number.Uint16.zero, a$1), $$Number.Uint16.zero, undefined);
           }
-          if (b === 0) {
-            return ;
+          if (b !== 0) {
+            var result$1 = $$Number.Uint16.fromIntExn(Caml_int32.div(a, b));
+            var a$2 = $$Number.Uint16.fromIntExn(a);
+            var b$2 = $$Number.Uint16.fromIntExn(b);
+            t.deepEqual($$Number.Uint16.div(a$2, b$2), Caml_option.some(result$1), undefined);
+            t.deepEqual($$Number.Uint16.divExn(a$2, b$2), result$1, undefined);
+            t.deepEqual($$Number.Uint16.divUnsafe(a$2, b$2), result$1, undefined);
+            t.deepEqual($$Number.Uint16.div($$Number.Uint16.zero, b$2), Caml_option.some($$Number.Uint16.zero), undefined);
+            t.deepEqual($$Number.Uint16.divExn($$Number.Uint16.zero, b$2), $$Number.Uint16.zero, undefined);
+            t.deepEqual($$Number.Uint16.divUnsafe($$Number.Uint16.zero, b$2), $$Number.Uint16.zero, undefined);
           }
-          var result$1 = $$Number.Uint16.fromIntExn(Caml_int32.div(a, b));
-          var a$2 = $$Number.Uint16.fromIntExn(a);
-          var b$2 = $$Number.Uint16.fromIntExn(b);
-          t.deepEqual($$Number.Uint16.div(a$2, b$2), Caml_option.some(result$1), undefined);
-          t.deepEqual($$Number.Uint16.divExn(a$2, b$2), result$1, undefined);
-          t.deepEqual($$Number.Uint16.divUnsafe(a$2, b$2), result$1, undefined);
+          var a$3 = $$Number.Uint16.fromIntExn(a);
+          var b$3 = $$Number.Uint16.fromIntExn(b);
+          t.deepEqual($$Number.Uint16.div(a$3, $$Number.Uint16.one), Caml_option.some(a$3), undefined);
+          t.deepEqual($$Number.Uint16.divExn(a$3, $$Number.Uint16.one), a$3, undefined);
+          t.deepEqual($$Number.Uint16.divUnsafe(a$3, $$Number.Uint16.one), a$3, undefined);
+          t.deepEqual($$Number.Uint16.div(b$3, $$Number.Uint16.one), Caml_option.some(b$3), undefined);
+          t.deepEqual($$Number.Uint16.divExn(b$3, $$Number.Uint16.one), b$3, undefined);
+          t.deepEqual($$Number.Uint16.divUnsafe(b$3, $$Number.Uint16.one), b$3, undefined);
         };
         testNotDividedByZero(73, 382);
         testNotDividedByZero(0, 73);
         testNotDividedByZero(0, 382);
         testNotDividedByZero(65535, 73);
         testNotDividedByZero(65535, 382);
-        testNotDividedByZero(73, 1);
-        testNotDividedByZero(382, 1);
-        testNotDividedByZero(0, 1);
-        testNotDividedByZero(65535, 1);
-        testNotDividedByZero(1, 1);
-        testNotDividedByZero(65534, 1);
         testNotDividedByZero(73, 2);
         testNotDividedByZero(382, 2);
         testNotDividedByZero(0, 2);
         testNotDividedByZero(65535, 2);
         testNotDividedByZero(1, 2);
         testNotDividedByZero(65534, 2);
-        testNotDividedByZero(0, 73);
-        testNotDividedByZero(0, 382);
-        testNotDividedByZero(0, 0);
-        testNotDividedByZero(0, 65535);
-        testNotDividedByZero(0, 1);
-        testNotDividedByZero(0, 65534);
         var testDividedByZero = function (a) {
           var a$1 = $$Number.Uint16.fromIntExn(a);
           t.deepEqual($$Number.Uint16.div(a$1, $$Number.Uint16.zero), undefined, undefined);
@@ -670,7 +714,7 @@ Ava("test " + name + " division", (function (t) {
       }));
 
 Ava("test " + name + " remainder", (function (t) {
-        var testNotDividedByZero = function (a, b) {
+        var testNotModByZero = function (a, b) {
           if (a !== 0) {
             var result = $$Number.Uint16.fromIntExn(Caml_int32.mod_(b, a) | 0);
             var a$1 = $$Number.Uint16.fromIntExn(a);
@@ -678,62 +722,63 @@ Ava("test " + name + " remainder", (function (t) {
             t.deepEqual($$Number.Uint16.rem(b$1, a$1), Caml_option.some(result), undefined);
             t.deepEqual($$Number.Uint16.remExn(b$1, a$1), result, undefined);
             t.deepEqual($$Number.Uint16.remUnsafe(b$1, a$1), result, undefined);
+            t.deepEqual($$Number.Uint16.rem($$Number.Uint16.zero, a$1), Caml_option.some($$Number.Uint16.zero), undefined);
+            t.deepEqual($$Number.Uint16.remExn($$Number.Uint16.zero, a$1), $$Number.Uint16.zero, undefined);
+            t.deepEqual($$Number.Uint16.remUnsafe($$Number.Uint16.zero, a$1), $$Number.Uint16.zero, undefined);
           }
-          if (b === 0) {
-            return ;
+          if (b !== 0) {
+            var result$1 = $$Number.Uint16.fromIntExn(Caml_int32.mod_(a, b) | 0);
+            var a$2 = $$Number.Uint16.fromIntExn(a);
+            var b$2 = $$Number.Uint16.fromIntExn(b);
+            t.deepEqual($$Number.Uint16.rem(a$2, b$2), Caml_option.some(result$1), undefined);
+            t.deepEqual($$Number.Uint16.remExn(a$2, b$2), result$1, undefined);
+            t.deepEqual($$Number.Uint16.remUnsafe(a$2, b$2), result$1, undefined);
+            t.deepEqual($$Number.Uint16.rem($$Number.Uint16.zero, b$2), Caml_option.some($$Number.Uint16.zero), undefined);
+            t.deepEqual($$Number.Uint16.remExn($$Number.Uint16.zero, b$2), $$Number.Uint16.zero, undefined);
+            t.deepEqual($$Number.Uint16.remUnsafe($$Number.Uint16.zero, b$2), $$Number.Uint16.zero, undefined);
           }
-          var result$1 = $$Number.Uint16.fromIntExn(Caml_int32.mod_(a, b) | 0);
-          var a$2 = $$Number.Uint16.fromIntExn(a);
-          var b$2 = $$Number.Uint16.fromIntExn(b);
-          t.deepEqual($$Number.Uint16.rem(a$2, b$2), Caml_option.some(result$1), undefined);
-          t.deepEqual($$Number.Uint16.remExn(a$2, b$2), result$1, undefined);
-          t.deepEqual($$Number.Uint16.remUnsafe(a$2, b$2), result$1, undefined);
+          var a$3 = $$Number.Uint16.fromIntExn(a);
+          var b$3 = $$Number.Uint16.fromIntExn(b);
+          t.deepEqual($$Number.Uint16.rem(a$3, $$Number.Uint16.one), Caml_option.some($$Number.Uint16.zero), undefined);
+          t.deepEqual($$Number.Uint16.remExn(a$3, $$Number.Uint16.one), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.remUnsafe(a$3, $$Number.Uint16.one), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.rem(b$3, $$Number.Uint16.one), Caml_option.some($$Number.Uint16.zero), undefined);
+          t.deepEqual($$Number.Uint16.remExn(b$3, $$Number.Uint16.one), $$Number.Uint16.zero, undefined);
+          t.deepEqual($$Number.Uint16.remUnsafe(b$3, $$Number.Uint16.one), $$Number.Uint16.zero, undefined);
         };
-        testNotDividedByZero(73, 382);
-        testNotDividedByZero(0, 73);
-        testNotDividedByZero(0, 382);
-        testNotDividedByZero(65535, 73);
-        testNotDividedByZero(65535, 382);
-        testNotDividedByZero(73, 1);
-        testNotDividedByZero(382, 1);
-        testNotDividedByZero(0, 1);
-        testNotDividedByZero(65535, 1);
-        testNotDividedByZero(1, 1);
-        testNotDividedByZero(65534, 1);
-        testNotDividedByZero(73, 2);
-        testNotDividedByZero(382, 2);
-        testNotDividedByZero(0, 2);
-        testNotDividedByZero(65535, 2);
-        testNotDividedByZero(1, 2);
-        testNotDividedByZero(65534, 2);
-        testNotDividedByZero(0, 73);
-        testNotDividedByZero(0, 382);
-        testNotDividedByZero(0, 0);
-        testNotDividedByZero(0, 65535);
-        testNotDividedByZero(0, 1);
-        testNotDividedByZero(0, 65534);
-        var testDividedByZero = function (a) {
+        testNotModByZero(73, 382);
+        testNotModByZero(0, 73);
+        testNotModByZero(0, 382);
+        testNotModByZero(65535, 73);
+        testNotModByZero(65535, 382);
+        testNotModByZero(73, 2);
+        testNotModByZero(382, 2);
+        testNotModByZero(0, 2);
+        testNotModByZero(65535, 2);
+        testNotModByZero(1, 2);
+        testNotModByZero(65534, 2);
+        var testModByZero = function (a) {
           var a$1 = $$Number.Uint16.fromIntExn(a);
           t.deepEqual($$Number.Uint16.rem(a$1, $$Number.Uint16.zero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
                   return $$Number.Uint16.remExn(a$1, $$Number.Uint16.zero);
                 }));
         };
-        testDividedByZero(0);
-        testDividedByZero(1);
-        testDividedByZero(73);
-        testDividedByZero(382);
-        testDividedByZero(10000);
-        testDividedByZero(0);
-        testDividedByZero(65535);
-        testDividedByZero(1);
-        testDividedByZero(65534);
+        testModByZero(0);
+        testModByZero(1);
+        testModByZero(73);
+        testModByZero(382);
+        testModByZero(10000);
+        testModByZero(0);
+        testModByZero(65535);
+        testModByZero(1);
+        testModByZero(65534);
         TestUtils.loop100Fn(function () {
               var a = TestUtils.randomInt(0, 65535);
               var b = TestUtils.randomInt(0, 65535);
-              testNotDividedByZero(a, b);
-              testDividedByZero(a);
-              testDividedByZero(b);
+              testNotModByZero(a, b);
+              testModByZero(a);
+              testModByZero(b);
             });
       }));
 
@@ -1033,14 +1078,14 @@ Ava("test " + name + " integer math", (function (t) {
         testClz($$Number.Uint16.minValue, 16);
         testClz($$Number.Uint16.maxValue, 0);
         for(var i = 0; i <= 15; ++i){
-          testClz($$Number.Uint16.lsl($$Number.Uint16.fromIntExn(1), i), (16 - i | 0) - 1 | 0);
+          testClz($$Number.Uint16.lsl($$Number.Uint16.one, i), (16 - i | 0) - 1 | 0);
         }
         t.deepEqual($$Number.Uint16.imul($$Number.Uint16.fromIntExn(73), $$Number.Uint16.fromIntExn(382)), $$Number.Uint16.fromIntExn(27886), undefined);
         var mask = 65535;
         var j = Math.pow(2.0, 16);
         var k = Math.pow(2.0, 15);
         var toU32 = function (i) {
-          return TestUtils.toUint32(i & mask);
+          return TestUtils.intToUint32(i & mask);
         };
         TestUtils.loop100Fn(function () {
               var a = TestUtils.randomInt(0, 65535);
@@ -1084,9 +1129,10 @@ Ava("test " + name + " integer math", (function (t) {
                 }));
         };
         testPowOutOfRange(65535, 2);
+        testPowInRange(0, 10000);
         TestUtils.loop100Fn(function () {
               var a = TestUtils.randomInt(0, 65535);
-              var b = TestUtils.randomInt(0.0, 16.0);
+              var b = TestUtils.randomPositiveSmallInt(undefined);
               var result = Math.pow(a, b);
               if (result >= 0 && result <= 65535) {
                 return testPowInRange(a, b);
@@ -1154,10 +1200,7 @@ export {
   minMaxOr ,
   minMaxXor ,
   randomValue ,
-  randomPositiveSmallValue ,
   randomLargerInt ,
   randomSmallerInt ,
-  randomLargerFloat ,
-  randomSmallerFloat ,
 }
 /*  Not a pure module */

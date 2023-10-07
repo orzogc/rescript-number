@@ -103,17 +103,9 @@ let minMaxXor = -45249
 
 let randomValue = () => randomInt(minValue->Int.toFloat, maxValue->Int.toFloat)
 
-let randomPositiveSmallValue = () => randomInt(0.0, 16.0)
-
 let randomLargerInt = () => randomInt(maxValue->Int.toFloat +. 1.0, Js.Int.max->Int.toFloat)
 
 let randomSmallerInt = () => randomInt(Js.Int.min->Int.toFloat, minValue->Int.toFloat)
-
-let randomLargerFloat = () =>
-  randomFloat(maxValue->Int.toFloat +. 1.0, maxSafeInteger)->Js.Math.floor_float
-
-let randomSmallerFloat = () =>
-  randomFloat(minSafeInteger, minValue->Int.toFloat -. 1.0)->Js.Math.floor_float
 
 test(`test ${name} sign`, t => {
   t->Assert.deepEqual(IntModule.isSigned, isSigned, ())
@@ -234,8 +226,18 @@ test(`test ${name} from float`, t => {
   testOutOfRange(maxValue->Int.toFloat +. 1.0, maxValue)
   testOutOfRange(minValue->Int.toFloat -. value->Int.toFloat, minValue)
   testOutOfRange(maxValue->Int.toFloat +. value->Int.toFloat, maxValue)
-  loop100Fn(() => testOutOfRange(randomLargerFloat(), maxValue))
-  loop100Fn(() => testOutOfRange(randomSmallerFloat(), minValue))
+  loop100Fn(() =>
+    testOutOfRange(
+      randomFloat(maxValue->Int.toFloat +. 1.0, maxSafeInteger)->Js.Math.floor_float,
+      maxValue,
+    )
+  )
+  loop100Fn(() =>
+    testOutOfRange(
+      randomFloat(minSafeInteger, minValue->Int.toFloat -. 1.0)->Js.Math.floor_float,
+      minValue,
+    )
+  )
 
   let testIsNotInteger = (f, value) => {
     t->Assert.deepEqual(IntModule.fromFloat(f), None, ())
@@ -290,10 +292,6 @@ test(`test ${name} from string`, t => {
     let value = randomValue()
     testInRange(value, value->Int.toString)
   })
-  loop100Fn(() => {
-    let value = randomValue()
-    testInRange(value, value->Int.toString)
-  })
 
   if isSigned {
     testInRange(-value, -value->Int.toString)
@@ -336,13 +334,22 @@ test(`test ${name} to string`, t => {
   loop100Fn(() => testToString(randomValue()))
 })
 
-test(`test ${name} zero`, t => t->Assert.deepEqual(IntModule.zero, IntModule.fromIntExn(0), ()))
+test(`test ${name} zero`, t => {
+  t->Assert.deepEqual(IntModule.zero, IntModule.fromIntExn(0), ())
+  t->Assert.deepEqual(IntModule.zero, IntModule.fromFloatExn(0.0), ())
+  t->Assert.deepEqual(IntModule.zero, IntModule.fromFloatExn(-0.0), ())
+})
 
-test(`test ${name} one`, t => t->Assert.deepEqual(IntModule.one, IntModule.fromIntExn(1), ()))
+test(`test ${name} one`, t => {
+  t->Assert.deepEqual(IntModule.one, IntModule.fromIntExn(1), ())
+  t->Assert.deepEqual(IntModule.one, IntModule.fromFloatExn(1.0), ())
+})
 
 test(`test ${name} range`, t => {
   t->Assert.deepEqual(IntModule.minValue, IntModule.fromIntExn(minValue), ())
+  t->Assert.deepEqual(IntModule.minValue, IntModule.fromFloatExn(minValue->Int.toFloat), ())
   t->Assert.deepEqual(IntModule.maxValue, IntModule.fromIntExn(maxValue), ())
+  t->Assert.deepEqual(IntModule.maxValue, IntModule.fromFloatExn(maxValue->Int.toFloat), ())
 })
 
 test(`test ${name} comparison`, t => {
@@ -470,6 +477,34 @@ test(`test ${name} comparison`, t => {
 
 test(`test ${name} addition`, t => {
   let testInRange = (a, b) => {
+    if isSigned {
+      if a !== minValue {
+        let negA = IntModule.fromIntExn(-a)
+        let a = IntModule.fromIntExn(a)
+        t->Assert.deepEqual(a->IntModule.add(negA), Some(IntModule.zero), ())
+        t->Assert.deepEqual(a->IntModule.add(negA), negA->IntModule.add(a), ())
+        t->Assert.deepEqual(a->IntModule.addExn(negA), IntModule.zero, ())
+        t->Assert.deepEqual(a->IntModule.addExn(negA), negA->IntModule.addExn(a), ())
+        t->Assert.deepEqual(a->IntModule.addClamped(negA), IntModule.zero, ())
+        t->Assert.deepEqual(a->IntModule.addClamped(negA), negA->IntModule.addClamped(a), ())
+        t->Assert.deepEqual(a->IntModule.addUnsafe(negA), IntModule.zero, ())
+        t->Assert.deepEqual(a->IntModule.addUnsafe(negA), negA->IntModule.addUnsafe(a), ())
+      }
+
+      if b !== minValue {
+        let negB = IntModule.fromIntExn(-b)
+        let b = IntModule.fromIntExn(b)
+        t->Assert.deepEqual(b->IntModule.add(negB), Some(IntModule.zero), ())
+        t->Assert.deepEqual(b->IntModule.add(negB), negB->IntModule.add(b), ())
+        t->Assert.deepEqual(b->IntModule.addExn(negB), IntModule.zero, ())
+        t->Assert.deepEqual(b->IntModule.addExn(negB), negB->IntModule.addExn(b), ())
+        t->Assert.deepEqual(b->IntModule.addClamped(negB), IntModule.zero, ())
+        t->Assert.deepEqual(b->IntModule.addClamped(negB), negB->IntModule.addClamped(b), ())
+        t->Assert.deepEqual(b->IntModule.addUnsafe(negB), IntModule.zero, ())
+        t->Assert.deepEqual(b->IntModule.addUnsafe(negB), negB->IntModule.addUnsafe(b), ())
+      }
+    }
+
     let result = IntModule.fromIntExn(a + b)
     let a = IntModule.fromIntExn(a)
     let b = IntModule.fromIntExn(b)
@@ -481,6 +516,47 @@ test(`test ${name} addition`, t => {
     t->Assert.deepEqual(a->IntModule.addClamped(b), b->IntModule.addClamped(a), ())
     t->Assert.deepEqual(a->IntModule.addUnsafe(b), result, ())
     t->Assert.deepEqual(a->IntModule.addUnsafe(b), b->IntModule.addUnsafe(a), ())
+
+    t->Assert.deepEqual(a->IntModule.add(IntModule.zero), Some(a), ())
+    t->Assert.deepEqual(a->IntModule.add(IntModule.zero), IntModule.zero->IntModule.add(a), ())
+    t->Assert.deepEqual(a->IntModule.addExn(IntModule.zero), a, ())
+    t->Assert.deepEqual(
+      a->IntModule.addExn(IntModule.zero),
+      IntModule.zero->IntModule.addExn(a),
+      (),
+    )
+    t->Assert.deepEqual(a->IntModule.addClamped(IntModule.zero), a, ())
+    t->Assert.deepEqual(
+      a->IntModule.addClamped(IntModule.zero),
+      IntModule.zero->IntModule.addClamped(a),
+      (),
+    )
+    t->Assert.deepEqual(a->IntModule.addUnsafe(IntModule.zero), a, ())
+    t->Assert.deepEqual(
+      a->IntModule.addUnsafe(IntModule.zero),
+      IntModule.zero->IntModule.addUnsafe(a),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.add(IntModule.zero), Some(b), ())
+    t->Assert.deepEqual(b->IntModule.add(IntModule.zero), IntModule.zero->IntModule.add(b), ())
+    t->Assert.deepEqual(b->IntModule.addExn(IntModule.zero), b, ())
+    t->Assert.deepEqual(
+      b->IntModule.addExn(IntModule.zero),
+      IntModule.zero->IntModule.addExn(b),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.addClamped(IntModule.zero), b, ())
+    t->Assert.deepEqual(
+      b->IntModule.addClamped(IntModule.zero),
+      IntModule.zero->IntModule.addClamped(b),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.addUnsafe(IntModule.zero), b, ())
+    t->Assert.deepEqual(
+      b->IntModule.addUnsafe(IntModule.zero),
+      IntModule.zero->IntModule.addUnsafe(b),
+      (),
+    )
   }
 
   testInRange(min, max)
@@ -523,8 +599,6 @@ test(`test ${name} addition`, t => {
     } else {
       testInRange(a, b)
     }
-    testInRange(a, 0)
-    testInRange(b, 0)
     testInRange(a, 1)
     testInRange(b, 1)
   })
@@ -539,16 +613,28 @@ test(`test ${name} subtraction`, t => {
     t->Assert.deepEqual(a->IntModule.subExn(b), result, ())
     t->Assert.deepEqual(a->IntModule.subClamped(b), result, ())
     t->Assert.deepEqual(a->IntModule.subUnsafe(b), result, ())
+    t->Assert.deepEqual(a->IntModule.sub(result), Some(b), ())
+    t->Assert.deepEqual(a->IntModule.subExn(result), b, ())
+    t->Assert.deepEqual(a->IntModule.subClamped(result), b, ())
+    t->Assert.deepEqual(a->IntModule.subUnsafe(result), b, ())
 
     t->Assert.deepEqual(a->IntModule.sub(a), Some(IntModule.zero), ())
     t->Assert.deepEqual(a->IntModule.subExn(a), IntModule.zero, ())
     t->Assert.deepEqual(a->IntModule.subClamped(a), IntModule.zero, ())
     t->Assert.deepEqual(a->IntModule.subUnsafe(a), IntModule.zero, ())
+    t->Assert.deepEqual(a->IntModule.sub(IntModule.zero), Some(a), ())
+    t->Assert.deepEqual(a->IntModule.subExn(IntModule.zero), a, ())
+    t->Assert.deepEqual(a->IntModule.subClamped(IntModule.zero), a, ())
+    t->Assert.deepEqual(a->IntModule.subUnsafe(IntModule.zero), a, ())
 
     t->Assert.deepEqual(b->IntModule.sub(b), Some(IntModule.zero), ())
     t->Assert.deepEqual(b->IntModule.subExn(b), IntModule.zero, ())
     t->Assert.deepEqual(b->IntModule.subClamped(b), IntModule.zero, ())
     t->Assert.deepEqual(b->IntModule.subUnsafe(b), IntModule.zero, ())
+    t->Assert.deepEqual(b->IntModule.sub(IntModule.zero), Some(b), ())
+    t->Assert.deepEqual(b->IntModule.subExn(IntModule.zero), b, ())
+    t->Assert.deepEqual(b->IntModule.subClamped(IntModule.zero), b, ())
+    t->Assert.deepEqual(b->IntModule.subUnsafe(IntModule.zero), b, ())
   }
 
   testInRange(max, min)
@@ -615,6 +701,80 @@ test(`test ${name} multiplication`, t => {
     t->Assert.deepEqual(a->IntModule.mulClamped(b), b->IntModule.mulClamped(a), ())
     t->Assert.deepEqual(a->IntModule.mulUnsafe(b), result, ())
     t->Assert.deepEqual(a->IntModule.mulUnsafe(b), b->IntModule.mulUnsafe(a), ())
+
+    t->Assert.deepEqual(a->IntModule.mul(IntModule.zero), Some(IntModule.zero), ())
+    t->Assert.deepEqual(a->IntModule.mul(IntModule.zero), IntModule.zero->IntModule.mul(a), ())
+    t->Assert.deepEqual(a->IntModule.mulExn(IntModule.zero), IntModule.zero, ())
+    t->Assert.deepEqual(
+      a->IntModule.mulExn(IntModule.zero),
+      IntModule.zero->IntModule.mulExn(a),
+      (),
+    )
+    t->Assert.deepEqual(a->IntModule.mulClamped(IntModule.zero), IntModule.zero, ())
+    t->Assert.deepEqual(
+      a->IntModule.mulClamped(IntModule.zero),
+      IntModule.zero->IntModule.mulClamped(a),
+      (),
+    )
+    t->Assert.deepEqual(a->IntModule.mulUnsafe(IntModule.zero), IntModule.zero, ())
+    t->Assert.deepEqual(
+      a->IntModule.mulUnsafe(IntModule.zero),
+      IntModule.zero->IntModule.mulUnsafe(a),
+      (),
+    )
+    t->Assert.deepEqual(a->IntModule.mul(IntModule.one), Some(a), ())
+    t->Assert.deepEqual(a->IntModule.mul(IntModule.one), IntModule.one->IntModule.mul(a), ())
+    t->Assert.deepEqual(a->IntModule.mulExn(IntModule.one), a, ())
+    t->Assert.deepEqual(a->IntModule.mulExn(IntModule.one), IntModule.one->IntModule.mulExn(a), ())
+    t->Assert.deepEqual(a->IntModule.mulClamped(IntModule.one), a, ())
+    t->Assert.deepEqual(
+      a->IntModule.mulClamped(IntModule.one),
+      IntModule.one->IntModule.mulClamped(a),
+      (),
+    )
+    t->Assert.deepEqual(a->IntModule.mulUnsafe(IntModule.one), a, ())
+    t->Assert.deepEqual(
+      a->IntModule.mulUnsafe(IntModule.one),
+      IntModule.one->IntModule.mulUnsafe(a),
+      (),
+    )
+
+    t->Assert.deepEqual(b->IntModule.mul(IntModule.zero), Some(IntModule.zero), ())
+    t->Assert.deepEqual(b->IntModule.mul(IntModule.zero), IntModule.zero->IntModule.mul(b), ())
+    t->Assert.deepEqual(b->IntModule.mulExn(IntModule.zero), IntModule.zero, ())
+    t->Assert.deepEqual(
+      b->IntModule.mulExn(IntModule.zero),
+      IntModule.zero->IntModule.mulExn(b),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.mulClamped(IntModule.zero), IntModule.zero, ())
+    t->Assert.deepEqual(
+      b->IntModule.mulClamped(IntModule.zero),
+      IntModule.zero->IntModule.mulClamped(b),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.mulUnsafe(IntModule.zero), IntModule.zero, ())
+    t->Assert.deepEqual(
+      b->IntModule.mulUnsafe(IntModule.zero),
+      IntModule.zero->IntModule.mulUnsafe(b),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.mul(IntModule.one), Some(b), ())
+    t->Assert.deepEqual(b->IntModule.mul(IntModule.one), IntModule.one->IntModule.mul(b), ())
+    t->Assert.deepEqual(b->IntModule.mulExn(IntModule.one), b, ())
+    t->Assert.deepEqual(b->IntModule.mulExn(IntModule.one), IntModule.one->IntModule.mulExn(b), ())
+    t->Assert.deepEqual(b->IntModule.mulClamped(IntModule.one), b, ())
+    t->Assert.deepEqual(
+      b->IntModule.mulClamped(IntModule.one),
+      IntModule.one->IntModule.mulClamped(b),
+      (),
+    )
+    t->Assert.deepEqual(b->IntModule.mulUnsafe(IntModule.one), b, ())
+    t->Assert.deepEqual(
+      b->IntModule.mulUnsafe(IntModule.one),
+      IntModule.one->IntModule.mulUnsafe(b),
+      (),
+    )
   }
 
   testInRange(min, max)
@@ -665,15 +825,31 @@ test(`test ${name} multiplication`, t => {
     } else {
       testInRange(a, b)
     }
-    testInRange(a, 0)
-    testInRange(b, 0)
-    testInRange(a, 1)
-    testInRange(b, 1)
   })
 })
 
 test(`test ${name} division`, t => {
   let testNotDividedByZero = (a, b) => {
+    if isSigned {
+      let negOne = IntModule.fromIntExn(-1)
+
+      if a !== minValue {
+        let negA = IntModule.fromIntExn(-a)
+        let a = IntModule.fromIntExn(a)
+        t->Assert.deepEqual(a->IntModule.div(negOne), Some(negA), ())
+        t->Assert.deepEqual(a->IntModule.divExn(negOne), negA, ())
+        t->Assert.deepEqual(a->IntModule.divUnsafe(negOne), negA, ())
+      }
+
+      if b !== minValue {
+        let negB = IntModule.fromIntExn(-b)
+        let b = IntModule.fromIntExn(b)
+        t->Assert.deepEqual(b->IntModule.div(negOne), Some(negB), ())
+        t->Assert.deepEqual(b->IntModule.divExn(negOne), negB, ())
+        t->Assert.deepEqual(b->IntModule.divUnsafe(negOne), negB, ())
+      }
+    }
+
     if a !== 0 {
       let result = IntModule.fromIntExn(b / a)
       let a = IntModule.fromIntExn(a)
@@ -681,6 +857,9 @@ test(`test ${name} division`, t => {
       t->Assert.deepEqual(b->IntModule.div(a), Some(result), ())
       t->Assert.deepEqual(b->IntModule.divExn(a), result, ())
       t->Assert.deepEqual(b->IntModule.divUnsafe(a), result, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.div(a), Some(IntModule.zero), ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.divExn(a), IntModule.zero, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.divUnsafe(a), IntModule.zero, ())
     }
 
     if b !== 0 {
@@ -690,7 +869,19 @@ test(`test ${name} division`, t => {
       t->Assert.deepEqual(a->IntModule.div(b), Some(result), ())
       t->Assert.deepEqual(a->IntModule.divExn(b), result, ())
       t->Assert.deepEqual(a->IntModule.divUnsafe(b), result, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.div(b), Some(IntModule.zero), ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.divExn(b), IntModule.zero, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.divUnsafe(b), IntModule.zero, ())
     }
+
+    let a = IntModule.fromIntExn(a)
+    let b = IntModule.fromIntExn(b)
+    t->Assert.deepEqual(a->IntModule.div(IntModule.one), Some(a), ())
+    t->Assert.deepEqual(a->IntModule.divExn(IntModule.one), a, ())
+    t->Assert.deepEqual(a->IntModule.divUnsafe(IntModule.one), a, ())
+    t->Assert.deepEqual(b->IntModule.div(IntModule.one), Some(b), ())
+    t->Assert.deepEqual(b->IntModule.divExn(IntModule.one), b, ())
+    t->Assert.deepEqual(b->IntModule.divUnsafe(IntModule.one), b, ())
   }
 
   testNotDividedByZero(min, max)
@@ -698,24 +889,12 @@ test(`test ${name} division`, t => {
   testNotDividedByZero(minValue, max)
   testNotDividedByZero(maxValue, min)
   testNotDividedByZero(maxValue, max)
-  testNotDividedByZero(min, 1)
-  testNotDividedByZero(max, 1)
-  testNotDividedByZero(minValue, 1)
-  testNotDividedByZero(maxValue, 1)
-  testNotDividedByZero(minValue + 1, 1)
-  testNotDividedByZero(maxValue - 1, 1)
   testNotDividedByZero(min, 2)
   testNotDividedByZero(max, 2)
   testNotDividedByZero(minValue, 2)
   testNotDividedByZero(maxValue, 2)
   testNotDividedByZero(minValue + 1, 2)
   testNotDividedByZero(maxValue - 1, 2)
-  testNotDividedByZero(0, min)
-  testNotDividedByZero(0, max)
-  testNotDividedByZero(0, minValue)
-  testNotDividedByZero(0, maxValue)
-  testNotDividedByZero(0, minValue + 1)
-  testNotDividedByZero(0, maxValue - 1)
 
   if isSigned {
     testNotDividedByZero(min, -max)
@@ -727,20 +906,12 @@ test(`test ${name} division`, t => {
     testNotDividedByZero(maxValue, -max)
     testNotDividedByZero(-maxValue, -min)
     testNotDividedByZero(-maxValue, -max)
-    testNotDividedByZero(min, -1)
-    testNotDividedByZero(max, -1)
-    testNotDividedByZero(maxValue, -1)
-    testNotDividedByZero(minValue + 1, -1)
-    testNotDividedByZero(maxValue - 1, -1)
     testNotDividedByZero(min, -2)
     testNotDividedByZero(max, -2)
     testNotDividedByZero(minValue, -2)
     testNotDividedByZero(maxValue, -2)
     testNotDividedByZero(minValue + 1, -2)
     testNotDividedByZero(maxValue - 1, -2)
-    testNotDividedByZero(0, -min)
-    testNotDividedByZero(0, -max)
-    testNotDividedByZero(0, -maxValue)
   }
 
   let testDividedByZero = a => {
@@ -769,7 +940,7 @@ test(`test ${name} division`, t => {
 })
 
 test(`test ${name} remainder`, t => {
-  let testNotDividedByZero = (a, b) => {
+  let testNotModByZero = (a, b) => {
     if a !== 0 {
       let result = IntModule.fromIntExn(b->mod(a)->lor(0))
       let a = IntModule.fromIntExn(a)
@@ -777,6 +948,9 @@ test(`test ${name} remainder`, t => {
       t->Assert.deepEqual(b->IntModule.rem(a), Some(result), ())
       t->Assert.deepEqual(b->IntModule.remExn(a), result, ())
       t->Assert.deepEqual(b->IntModule.remUnsafe(a), result, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.rem(a), Some(IntModule.zero), ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.remExn(a), IntModule.zero, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.remUnsafe(a), IntModule.zero, ())
     }
     if b !== 0 {
       let result = IntModule.fromIntExn(a->mod(b)->lor(0))
@@ -785,81 +959,83 @@ test(`test ${name} remainder`, t => {
       t->Assert.deepEqual(a->IntModule.rem(b), Some(result), ())
       t->Assert.deepEqual(a->IntModule.remExn(b), result, ())
       t->Assert.deepEqual(a->IntModule.remUnsafe(b), result, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.rem(b), Some(IntModule.zero), ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.remExn(b), IntModule.zero, ())
+      t->Assert.deepEqual(IntModule.zero->IntModule.remUnsafe(b), IntModule.zero, ())
+    }
+
+    let a = IntModule.fromIntExn(a)
+    let b = IntModule.fromIntExn(b)
+    t->Assert.deepEqual(a->IntModule.rem(IntModule.one), Some(IntModule.zero), ())
+    t->Assert.deepEqual(a->IntModule.remExn(IntModule.one), IntModule.zero, ())
+    t->Assert.deepEqual(a->IntModule.remUnsafe(IntModule.one), IntModule.zero, ())
+    t->Assert.deepEqual(b->IntModule.rem(IntModule.one), Some(IntModule.zero), ())
+    t->Assert.deepEqual(b->IntModule.remExn(IntModule.one), IntModule.zero, ())
+    t->Assert.deepEqual(b->IntModule.remUnsafe(IntModule.one), IntModule.zero, ())
+
+    if isSigned {
+      let negOne = IntModule.fromIntExn(-1)
+      t->Assert.deepEqual(a->IntModule.rem(negOne), Some(IntModule.zero), ())
+      t->Assert.deepEqual(a->IntModule.remExn(negOne), IntModule.zero, ())
+      t->Assert.deepEqual(a->IntModule.remUnsafe(negOne), IntModule.zero, ())
+      t->Assert.deepEqual(b->IntModule.rem(negOne), Some(IntModule.zero), ())
+      t->Assert.deepEqual(b->IntModule.remExn(negOne), IntModule.zero, ())
+      t->Assert.deepEqual(b->IntModule.remUnsafe(negOne), IntModule.zero, ())
     }
   }
 
-  testNotDividedByZero(min, max)
-  testNotDividedByZero(minValue, min)
-  testNotDividedByZero(minValue, max)
-  testNotDividedByZero(maxValue, min)
-  testNotDividedByZero(maxValue, max)
-  testNotDividedByZero(min, 1)
-  testNotDividedByZero(max, 1)
-  testNotDividedByZero(minValue, 1)
-  testNotDividedByZero(maxValue, 1)
-  testNotDividedByZero(minValue + 1, 1)
-  testNotDividedByZero(maxValue - 1, 1)
-  testNotDividedByZero(min, 2)
-  testNotDividedByZero(max, 2)
-  testNotDividedByZero(minValue, 2)
-  testNotDividedByZero(maxValue, 2)
-  testNotDividedByZero(minValue + 1, 2)
-  testNotDividedByZero(maxValue - 1, 2)
-  testNotDividedByZero(0, min)
-  testNotDividedByZero(0, max)
-  testNotDividedByZero(0, minValue)
-  testNotDividedByZero(0, maxValue)
-  testNotDividedByZero(0, minValue + 1)
-  testNotDividedByZero(0, maxValue - 1)
+  testNotModByZero(min, max)
+  testNotModByZero(minValue, min)
+  testNotModByZero(minValue, max)
+  testNotModByZero(maxValue, min)
+  testNotModByZero(maxValue, max)
+  testNotModByZero(min, 2)
+  testNotModByZero(max, 2)
+  testNotModByZero(minValue, 2)
+  testNotModByZero(maxValue, 2)
+  testNotModByZero(minValue + 1, 2)
+  testNotModByZero(maxValue - 1, 2)
 
   if isSigned {
-    testNotDividedByZero(min, -max)
-    testNotDividedByZero(max, -min)
-    testNotDividedByZero(-min, -max)
-    testNotDividedByZero(minValue, -min)
-    testNotDividedByZero(minValue, -max)
-    testNotDividedByZero(maxValue, -min)
-    testNotDividedByZero(maxValue, -max)
-    testNotDividedByZero(-maxValue, -min)
-    testNotDividedByZero(-maxValue, -max)
-    testNotDividedByZero(min, -1)
-    testNotDividedByZero(max, -1)
-    testNotDividedByZero(maxValue, -1)
-    testNotDividedByZero(minValue + 1, -1)
-    testNotDividedByZero(maxValue - 1, -1)
-    testNotDividedByZero(min, -2)
-    testNotDividedByZero(max, -2)
-    testNotDividedByZero(minValue, -2)
-    testNotDividedByZero(maxValue, -2)
-    testNotDividedByZero(minValue + 1, -2)
-    testNotDividedByZero(maxValue - 1, -2)
-    testNotDividedByZero(0, -min)
-    testNotDividedByZero(0, -max)
-    testNotDividedByZero(0, -maxValue)
+    testNotModByZero(min, -max)
+    testNotModByZero(max, -min)
+    testNotModByZero(-min, -max)
+    testNotModByZero(minValue, -min)
+    testNotModByZero(minValue, -max)
+    testNotModByZero(maxValue, -min)
+    testNotModByZero(maxValue, -max)
+    testNotModByZero(-maxValue, -min)
+    testNotModByZero(-maxValue, -max)
+    testNotModByZero(min, -2)
+    testNotModByZero(max, -2)
+    testNotModByZero(minValue, -2)
+    testNotModByZero(maxValue, -2)
+    testNotModByZero(minValue + 1, -2)
+    testNotModByZero(maxValue - 1, -2)
   }
 
-  let testDividedByZero = a => {
+  let testModByZero = a => {
     let a = IntModule.fromIntExn(a)
     t->Assert.deepEqual(a->IntModule.rem(IntModule.zero), None, ())
     t->assertDivisionByZero(() => a->IntModule.remExn(IntModule.zero))
   }
 
-  testDividedByZero(0)
-  testDividedByZero(1)
-  testDividedByZero(min)
-  testDividedByZero(max)
-  testDividedByZero(value)
-  testDividedByZero(minValue)
-  testDividedByZero(maxValue)
-  testDividedByZero(minValue + 1)
-  testDividedByZero(maxValue - 1)
+  testModByZero(0)
+  testModByZero(1)
+  testModByZero(min)
+  testModByZero(max)
+  testModByZero(value)
+  testModByZero(minValue)
+  testModByZero(maxValue)
+  testModByZero(minValue + 1)
+  testModByZero(maxValue - 1)
 
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotDividedByZero(a, b)
-    testDividedByZero(a)
-    testDividedByZero(b)
+    testNotModByZero(a, b)
+    testModByZero(a)
+    testModByZero(b)
   })
 })
 
@@ -1222,7 +1398,7 @@ test(`test ${name} integer math`, t => {
   }
 
   for i in 0 to bits - 1 {
-    testClz(IntModule.fromIntExn(1)->IntModule.lsl(i), bits - i - 1)
+    testClz(IntModule.one->IntModule.lsl(i), bits - i - 1)
   }
 
   t->Assert.deepEqual(
@@ -1234,7 +1410,7 @@ test(`test ${name} integer math`, t => {
   let mask = -1->lsr(32 - bits)
   let j = 2.0 ** bits->Int.toFloat
   let k = 2.0 ** (bits - 1)->Int.toFloat
-  let toU32 = i => i->land(mask)->toUint32
+  let toU32 = i => i->land(mask)->intToUint32
 
   let testImul = (a, b) => {
     let m = (a->toU32 *. b->toU32)->mod_float(j)
@@ -1316,11 +1492,13 @@ test(`test ${name} integer math`, t => {
 
   if isSigned {
     testPowOutOfRange(minValue, 2)
+  } else {
+    testPowInRange(minValue, value)
   }
 
   loop100Fn(() => {
     let a = randomValue()
-    let b = randomPositiveSmallValue()
+    let b = randomPositiveSmallInt()
     let result = a->Int.toFloat ** b->Int.toFloat
 
     if result >= minValue->Int.toFloat && result <= maxValue->Int.toFloat {

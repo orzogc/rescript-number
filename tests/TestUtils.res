@@ -47,5 +47,11 @@ let randomFloat = (min, max) => Js.Math.random() *. (max -. min) +. min
 
 let randomInt = (min, max) => randomFloat(min, max)->Js.Math.floor_int
 
+let randomPositiveSmallInt = () => randomInt(0.0, 16.0)
+
+let randomPositiveInt = () => randomInt(0.0, Js.Int.max->Js.Int.toFloat)
+
+let randomNegativeInt = () => randomInt(Js.Int.min->Js.Int.toFloat, 0.0)
+
 @warning("-27")
-let toUint32 = (i: int): float => %raw(`i >>> 0`)
+let intToUint32 = (i: int): float => %raw(`i >>> 0`)

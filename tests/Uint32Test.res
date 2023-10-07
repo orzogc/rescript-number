@@ -3,77 +3,112 @@ open Belt
 
 open TestUtils
 
-module IntModule = Number.Uint16
+module IntModule = Number.Uint32
 
-let name = "Uint16"
+let name = "Uint32"
 
 let isSigned = false
 
-let is32Bits = false
+let bits = 32
 
-let bits = 16
+let minValue = 0.0
 
-let minValue = 0
+let maxValue = 4294967295.0
 
-let maxValue = 65535
+let value = 2000000000.0
 
-let value = 10000
-
-let valueNot = 55535
+let valueNot = 2294967295.0
 
 let valueShiftLeft = [
   value,
-  20000,
-  40000,
-  14464,
-  28928,
-  57856,
-  50176,
-  34816,
-  4096,
-  8192,
-  16384,
-  32768,
-  0,
-  0,
-  0,
-  0,
+  4000000000.0,
+  3705032704.0,
+  3115098112.0,
+  1935228928.0,
+  3870457856.0,
+  3445948416.0,
+  2596929536.0,
+  898891776.0,
+  1797783552.0,
+  3595567104.0,
+  2896166912.0,
+  1497366528.0,
+  2994733056.0,
+  1694498816.0,
+  3388997632.0,
+  2483027968.0,
+  671088640.0,
+  1342177280.0,
+  2684354560.0,
+  1073741824.0,
+  2147483648.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
 ]
 
 let valueRotateShiftLeft = [
   value,
-  20000,
-  40000,
-  14465,
-  28930,
-  57860,
-  50185,
-  34835,
-  4135,
-  8270,
-  16540,
-  33080,
-  625,
-  1250,
-  2500,
-  5000,
+  4000000000.0,
+  3705032705.0,
+  3115098115.0,
+  1935228935.0,
+  3870457870.0,
+  3445948445.0,
+  2596929595.0,
+  898891895.0,
+  1797783790.0,
+  3595567580.0,
+  2896167865.0,
+  1497368435.0,
+  2994736870.0,
+  1694506445.0,
+  3389012890.0,
+  2483058485.0,
+  671149675.0,
+  1342299350.0,
+  2684598700.0,
+  1074230105.0,
+  2148460210.0,
+  1953125.0,
+  3906250.0,
+  7812500.0,
+  15625000.0,
+  31250000.0,
+  62500000.0,
+  125000000.0,
+  250000000.0,
+  500000000.0,
+  1000000000.0,
 ]
 
-let min = 73
+let min = 27852.0
 
-let max = 382
+let max = 56331.0
 
-let minMaxAnd = 72
+let minMaxAnd = 19464.0
 
-let minMaxOr = 383
+let minMaxOr = 64719.0
 
-let minMaxXor = 311
+let minMaxXor = 45255.0
 
-let randomValue = () => randomInt(minValue->Int.toFloat, maxValue->Int.toFloat)
+let minInt = Js.Int.min
 
-let randomLargerInt = () => randomInt(maxValue->Int.toFloat +. 1.0, Js.Int.max->Int.toFloat)
+let maxInt = Js.Int.max
 
-let randomSmallerInt = () => randomInt(Js.Int.min->Int.toFloat, minValue->Int.toFloat)
+@warning("-27")
+let toUint32 = (f: float): float => %raw(`f >>> 0`)
+
+let randomValue = () => randomFloat(minValue, maxValue)->Js.Math.floor_float
+
+let randomLargerFloat = () => randomFloat(maxInt->Int.toFloat +. 1.0, maxValue)->Js.Math.floor_float
 
 test(`test ${name} sign`, t => {
   t->Assert.deepEqual(IntModule.isSigned, isSigned, ())
@@ -93,41 +128,26 @@ test(`test ${name} from int`, t => {
 
   testInRange(0)
   testInRange(1)
-  testInRange(value)
-  testInRange(minValue)
-  testInRange(maxValue)
-  testInRange(minValue + 1)
-  testInRange(maxValue - 1)
-  loop100Fn(() => testInRange(randomValue()))
+  testInRange(value->Float.toInt)
+  testInRange(maxInt)
+  testInRange(maxInt - 1)
+  loop100Fn(() => testInRange(randomPositiveInt()))
 
-  if isSigned {
-    testInRange(-1)
-    testInRange(-value)
-    testInRange(-maxValue)
-
-    if !is32Bits {
-      testInRange(-minValue - 1)
-    }
+  let testOutOfRange = i => {
+    t->Assert.deepEqual(IntModule.fromInt(i), None, ())
+    t->assertOverflow(() => IntModule.fromIntExn(i))
+    t->Assert.deepEqual(IntModule.fromIntClamped(i), IntModule.minValue, ())
   }
 
-  if !is32Bits {
-    let testOutOfRange = (i, value) => {
-      t->Assert.deepEqual(IntModule.fromInt(i), None, ())
-      t->assertOverflow(() => IntModule.fromIntExn(i))
-      t->Assert.deepEqual(IntModule.fromIntClamped(i), IntModule.fromIntExn(value), ())
-    }
-
-    testOutOfRange(minValue - 1, minValue)
-    testOutOfRange(maxValue + 1, maxValue)
-    testOutOfRange(minValue - value, minValue)
-    testOutOfRange(maxValue + value, maxValue)
-    loop100Fn(() => testOutOfRange(randomLargerInt(), maxValue))
-    loop100Fn(() => testOutOfRange(randomSmallerInt(), minValue))
-  }
+  testOutOfRange(-1)
+  testOutOfRange(-.value->Float.toInt)
+  testOutOfRange(minInt)
+  testOutOfRange(minInt + 1)
+  loop100Fn(() => testOutOfRange(randomNegativeInt()))
 })
 
 test(`test ${name} to int`, t => {
-  let testToInt = i => {
+  let testInRange = i => {
     let n = IntModule.fromIntExn(i)
     t->Assert.deepEqual(n->IntModule.toInt, Some(i), ())
     t->Assert.deepEqual(n->IntModule.toIntExn, i, ())
@@ -135,105 +155,78 @@ test(`test ${name} to int`, t => {
     t->Assert.deepEqual(n->IntModule.toIntUnsafe, i, ())
   }
 
-  testToInt(0)
-  testToInt(1)
-  testToInt(value)
-  testToInt(minValue)
-  testToInt(maxValue)
-  testToInt(minValue + 1)
-  testToInt(maxValue - 1)
-  loop100Fn(() => testToInt(randomValue()))
+  testInRange(0)
+  testInRange(1)
+  testInRange(value->Float.toInt)
+  testInRange(maxInt)
+  testInRange(maxInt - 1)
+  loop100Fn(() => testInRange(randomPositiveInt()))
 
-  if isSigned {
-    testToInt(-1)
-    testToInt(-value)
-    testToInt(-maxValue)
-
-    if !is32Bits {
-      testToInt(-minValue - 1)
-    }
+  let testOutOfRange = f => {
+    let n = IntModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->IntModule.toInt, None, ())
+    t->assertOverflow(() => n->IntModule.toIntExn)
+    t->Assert.deepEqual(n->IntModule.toIntClamped, maxInt, ())
   }
+
+  testOutOfRange(maxInt->Int.toFloat +. 1.0)
+  testOutOfRange(maxValue)
+  loop100Fn(() => testOutOfRange(randomLargerFloat()))
 })
 
 test(`test ${name} from float`, t => {
-  let testIsIntegerAndInRange = i => {
-    let f = i->Int.toFloat
-    let n = IntModule.fromIntExn(i)
+  let testIsIntegerAndInRange = f => {
+    let n = IntModule.fromFloatExn(f)
     t->Assert.deepEqual(IntModule.fromFloat(f), Some(n), ())
     t->Assert.deepEqual(IntModule.fromFloatExn(f), n, ())
     t->Assert.deepEqual(IntModule.fromFloatClamped(f), n, ())
     t->Assert.deepEqual(IntModule.fromFloatUnsafe(f), n, ())
   }
 
-  testIsIntegerAndInRange(0)
-  testIsIntegerAndInRange(1)
+  testIsIntegerAndInRange(0.0)
+  testIsIntegerAndInRange(1.0)
   testIsIntegerAndInRange(value)
   testIsIntegerAndInRange(minValue)
   testIsIntegerAndInRange(maxValue)
-  testIsIntegerAndInRange(minValue + 1)
-  testIsIntegerAndInRange(maxValue - 1)
+  testIsIntegerAndInRange(minValue +. 1.0)
+  testIsIntegerAndInRange(maxValue -. 1.0)
   loop100Fn(() => testIsIntegerAndInRange(randomValue()))
-
-  if isSigned {
-    testIsIntegerAndInRange(-1)
-    testIsIntegerAndInRange(-value)
-    testIsIntegerAndInRange(-maxValue)
-
-    if !is32Bits {
-      testIsIntegerAndInRange(-minValue - 1)
-    }
-  }
 
   let testOutOfRange = (f, value) => {
     t->Assert.deepEqual(IntModule.fromFloat(f), None, ())
     t->assertOverflow(() => IntModule.fromFloatExn(f))
-    t->Assert.deepEqual(IntModule.fromFloatClamped(f), IntModule.fromIntExn(value), ())
+    t->Assert.deepEqual(IntModule.fromFloatClamped(f), IntModule.fromFloatExn(value), ())
   }
 
-  testOutOfRange(minValue->Int.toFloat -. 1.0, minValue)
-  testOutOfRange(maxValue->Int.toFloat +. 1.0, maxValue)
-  testOutOfRange(minValue->Int.toFloat -. value->Int.toFloat, minValue)
-  testOutOfRange(maxValue->Int.toFloat +. value->Int.toFloat, maxValue)
+  testOutOfRange(minValue -. 1.0, minValue)
+  testOutOfRange(maxValue +. 1.0, maxValue)
+  testOutOfRange(minValue -. value, minValue)
+  testOutOfRange(maxValue +. value, maxValue)
   loop100Fn(() =>
-    testOutOfRange(
-      randomFloat(maxValue->Int.toFloat +. 1.0, maxSafeInteger)->Js.Math.floor_float,
-      maxValue,
-    )
+    testOutOfRange(randomFloat(maxValue +. 1.0, maxSafeInteger)->Js.Math.floor_float, maxValue)
   )
   loop100Fn(() =>
-    testOutOfRange(
-      randomFloat(minSafeInteger, minValue->Int.toFloat -. 1.0)->Js.Math.floor_float,
-      minValue,
-    )
+    testOutOfRange(randomFloat(minSafeInteger, minValue -. 1.0)->Js.Math.floor_float, minValue)
   )
 
   let testIsNotInteger = (f, value) => {
     t->Assert.deepEqual(IntModule.fromFloat(f), None, ())
     t->assertInvalidArgument(() => IntModule.fromFloatExn(f))
-    t->Assert.deepEqual(IntModule.fromFloatClamped(f), IntModule.fromIntExn(value), ())
+    t->Assert.deepEqual(IntModule.fromFloatClamped(f), IntModule.fromFloatExn(value), ())
   }
 
-  let f = value->Int.toFloat +. 0.5
-  testIsNotInteger(f, f->Float.toInt)
-
-  if isSigned {
-    let f = -.(value->Int.toFloat) -. 0.5
-    testIsNotInteger(f, f->Float.toInt)
-    testIsNotInteger(minValue->Int.toFloat +. 0.1, minValue + 1)
-  } else {
-    testIsNotInteger(minValue->Int.toFloat +. 0.1, minValue)
-  }
-
-  testIsNotInteger(minValue->Int.toFloat -. 0.1, minValue)
-  testIsNotInteger(maxValue->Int.toFloat +. 0.1, maxValue)
-  testIsNotInteger(maxValue->Int.toFloat -. 0.1, maxValue - 1)
-  testIsNotInteger(minValue->Int.toFloat -. value->Int.toFloat -. 0.5, minValue)
-  testIsNotInteger(maxValue->Int.toFloat +. value->Int.toFloat +. 0.5, maxValue)
+  let f = value +. 0.5
+  testIsNotInteger(f, value)
+  testIsNotInteger(minValue +. 0.1, minValue)
+  testIsNotInteger(minValue -. 0.1, minValue)
+  testIsNotInteger(maxValue +. 0.1, maxValue)
+  testIsNotInteger(maxValue -. 0.1, maxValue -. 1.0)
+  testIsNotInteger(minValue -. value -. 0.5, minValue)
+  testIsNotInteger(maxValue +. value +. 0.5, maxValue)
 })
 
 test(`test ${name} to float`, t => {
-  let testToFloat = i => {
-    let f = i->Int.toFloat
+  let testToFloat = f => {
     t->Assert.deepEqual(IntModule.fromFloatExn(f)->IntModule.toFloat, f, ())
   }
 
@@ -242,34 +235,23 @@ test(`test ${name} to float`, t => {
 })
 
 test(`test ${name} from string`, t => {
-  let testInRange = (i, s) => {
-    let n = IntModule.fromIntExn(i)
+  let testInRange = (f, s) => {
+    let n = IntModule.fromFloatExn(f)
     t->Assert.deepEqual(IntModule.fromString(s), Some(n), ())
     t->Assert.deepEqual(IntModule.fromStringExn(s), n, ())
   }
 
-  testInRange(0, "0")
-  testInRange(1, "1")
-  testInRange(value, value->Int.toString)
-  testInRange(value, (value->Int.toFloat +. 0.5)->Float.toString)
-  testInRange(minValue, minValue->Int.toString)
-  testInRange(maxValue, maxValue->Int.toString)
-  testInRange(minValue + 1, (minValue + 1)->Int.toString)
-  testInRange(maxValue - 1, (maxValue - 1)->Int.toString)
+  testInRange(0.0, "0")
+  testInRange(1.0, "1")
+  testInRange(value, value->Float.toString)
+  testInRange(minValue, minValue->Float.toString)
+  testInRange(maxValue, maxValue->Float.toString)
+  testInRange(minValue +. 1.0, (minValue +. 1.0)->Float.toString)
+  testInRange(maxValue -. 1.0, (maxValue -. 1.0)->Float.toString)
   loop100Fn(() => {
     let value = randomValue()
-    testInRange(value, value->Int.toString)
+    testInRange(value, value->Float.toString)
   })
-
-  if isSigned {
-    testInRange(-value, -value->Int.toString)
-    testInRange(-value, (-.(value->Int.toFloat) -. 0.5)->Float.toString)
-    testInRange(-maxValue, -maxValue->Int.toString)
-
-    if !is32Bits {
-      testInRange(-minValue - 1, (-minValue - 1)->Int.toString)
-    }
-  }
 
   let testOutOfRange = f => {
     let s = f->Float.toString
@@ -277,15 +259,11 @@ test(`test ${name} from string`, t => {
     t->assertException(() => IntModule.fromStringExn(s))
   }
 
-  testOutOfRange(minValue->Int.toFloat -. 1.0)
-  testOutOfRange(maxValue->Int.toFloat +. 1.0)
-  testOutOfRange(minValue->Int.toFloat -. value->Int.toFloat)
-  testOutOfRange(maxValue->Int.toFloat +. value->Int.toFloat)
-
-  if !is32Bits {
-    loop100Fn(() => testOutOfRange(randomLargerInt()->Int.toFloat))
-    loop100Fn(() => testOutOfRange(randomSmallerInt()->Int.toFloat))
-  }
+  testOutOfRange(minValue -. 1.0)
+  testOutOfRange(maxValue +. 1.0)
+  testOutOfRange(minValue -. value)
+  testOutOfRange(maxValue +. value)
+  loop100Fn(() => testOutOfRange(randomNegativeInt()->Int.toFloat))
 
   let s = "foo"
   t->Assert.deepEqual(IntModule.fromString(s), None, ())
@@ -293,8 +271,8 @@ test(`test ${name} from string`, t => {
 })
 
 test(`test ${name} to string`, t => {
-  let testToString = i => {
-    let s = i->Int.toString
+  let testToString = f => {
+    let s = f->Float.toString
     t->Assert.deepEqual(IntModule.fromStringExn(s)->IntModule.toString, s, ())
   }
 
@@ -314,19 +292,18 @@ test(`test ${name} one`, t => {
 })
 
 test(`test ${name} range`, t => {
-  t->Assert.deepEqual(IntModule.minValue, IntModule.fromIntExn(minValue), ())
-  t->Assert.deepEqual(IntModule.minValue, IntModule.fromFloatExn(minValue->Int.toFloat), ())
-  t->Assert.deepEqual(IntModule.maxValue, IntModule.fromIntExn(maxValue), ())
-  t->Assert.deepEqual(IntModule.maxValue, IntModule.fromFloatExn(maxValue->Int.toFloat), ())
+  t->Assert.deepEqual(IntModule.minValue, IntModule.fromIntExn(0), ())
+  t->Assert.deepEqual(IntModule.minValue, IntModule.fromFloatExn(minValue), ())
+  t->Assert.deepEqual(IntModule.maxValue, IntModule.fromFloatExn(maxValue), ())
 })
 
 test(`test ${name} comparison`, t => {
   let testCompare = (min, max) => {
-    let min = IntModule.fromIntExn(min)
-    let max = IntModule.fromIntExn(max)
-    let value = IntModule.fromIntExn(value)
-    let minValue = IntModule.fromIntExn(minValue)
-    let maxValue = IntModule.fromIntExn(maxValue)
+    let min = IntModule.fromFloatExn(min)
+    let max = IntModule.fromFloatExn(max)
+    let value = IntModule.fromFloatExn(value)
+    let minValue = IntModule.fromFloatExn(minValue)
+    let maxValue = IntModule.fromFloatExn(maxValue)
 
     t->Assert.deepEqual(IntModule.compare(min, max), Some(Less), ())
     t->Assert.deepEqual(IntModule.compare(max, min), Some(Greater), ())
@@ -425,12 +402,12 @@ test(`test ${name} comparison`, t => {
 
   loop100Fn(() => {
     let min = randomValue()
-    let max = randomInt(min->Int.toFloat +. 1.0, maxValue->Int.toFloat +. 1.0)
+    let max = randomFloat(min +. 1.0, maxValue +. 1.0)->Js.Math.floor_float
     testCompare(min, max)
   })
 
-  let zero = IntModule.fromIntExn(0)
-  let negZero = IntModule.fromIntExn(%raw(`-0`))
+  let zero = IntModule.fromFloatExn(0.0)
+  let negZero = IntModule.fromFloatExn(-0.0)
   t->Assert.isTrue(zero->IntModule.eq(negZero), ())
   t->Assert.isTrue(zero->IntModule.le(negZero), ())
   t->Assert.isTrue(zero->IntModule.ge(negZero), ())
@@ -445,37 +422,9 @@ test(`test ${name} comparison`, t => {
 
 test(`test ${name} addition`, t => {
   let testInRange = (a, b) => {
-    if isSigned {
-      if a !== minValue {
-        let negA = IntModule.fromIntExn(-a)
-        let a = IntModule.fromIntExn(a)
-        t->Assert.deepEqual(a->IntModule.add(negA), Some(IntModule.zero), ())
-        t->Assert.deepEqual(a->IntModule.add(negA), negA->IntModule.add(a), ())
-        t->Assert.deepEqual(a->IntModule.addExn(negA), IntModule.zero, ())
-        t->Assert.deepEqual(a->IntModule.addExn(negA), negA->IntModule.addExn(a), ())
-        t->Assert.deepEqual(a->IntModule.addClamped(negA), IntModule.zero, ())
-        t->Assert.deepEqual(a->IntModule.addClamped(negA), negA->IntModule.addClamped(a), ())
-        t->Assert.deepEqual(a->IntModule.addUnsafe(negA), IntModule.zero, ())
-        t->Assert.deepEqual(a->IntModule.addUnsafe(negA), negA->IntModule.addUnsafe(a), ())
-      }
-
-      if b !== minValue {
-        let negB = IntModule.fromIntExn(-b)
-        let b = IntModule.fromIntExn(b)
-        t->Assert.deepEqual(b->IntModule.add(negB), Some(IntModule.zero), ())
-        t->Assert.deepEqual(b->IntModule.add(negB), negB->IntModule.add(b), ())
-        t->Assert.deepEqual(b->IntModule.addExn(negB), IntModule.zero, ())
-        t->Assert.deepEqual(b->IntModule.addExn(negB), negB->IntModule.addExn(b), ())
-        t->Assert.deepEqual(b->IntModule.addClamped(negB), IntModule.zero, ())
-        t->Assert.deepEqual(b->IntModule.addClamped(negB), negB->IntModule.addClamped(b), ())
-        t->Assert.deepEqual(b->IntModule.addUnsafe(negB), IntModule.zero, ())
-        t->Assert.deepEqual(b->IntModule.addUnsafe(negB), negB->IntModule.addUnsafe(b), ())
-      }
-    }
-
-    let result = IntModule.fromIntExn(a + b)
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let result = IntModule.fromFloatExn(a +. b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.add(b), Some(result), ())
     t->Assert.deepEqual(a->IntModule.add(b), b->IntModule.add(a), ())
     t->Assert.deepEqual(a->IntModule.addExn(b), result, ())
@@ -528,18 +477,14 @@ test(`test ${name} addition`, t => {
   }
 
   testInRange(min, max)
-  testInRange(minValue, 0)
-  testInRange(maxValue, 0)
-  testInRange(minValue, 1)
-
-  if isSigned {
-    testInRange(maxValue, -1)
-  }
+  testInRange(minValue, 0.0)
+  testInRange(maxValue, 0.0)
+  testInRange(minValue, 1.0)
 
   let testOutOfRange = (a, b, value) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
-    let value = IntModule.fromIntExn(value)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
+    let value = IntModule.fromFloatExn(value)
     t->Assert.deepEqual(a->IntModule.add(b), None, ())
     t->Assert.deepEqual(b->IntModule.add(a), None, ())
     t->assertOverflow(() => a->IntModule.addExn(b))
@@ -548,35 +493,30 @@ test(`test ${name} addition`, t => {
     t->Assert.deepEqual(b->IntModule.addClamped(a), value, ())
   }
 
-  if isSigned {
-    testOutOfRange(minValue, -1, minValue)
-    testOutOfRange(minValue, -value, minValue)
-  }
-
-  testOutOfRange(maxValue, 1, maxValue)
+  testOutOfRange(maxValue, 1.0, maxValue)
   testOutOfRange(maxValue, value, maxValue)
 
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    let result = a->Int.toFloat +. b->Int.toFloat
-    if result < minValue->Int.toFloat {
+    let result = a +. b
+    if result < minValue {
       testOutOfRange(a, b, minValue)
-    } else if result > maxValue->Int.toFloat {
+    } else if result > maxValue {
       testOutOfRange(a, b, maxValue)
     } else {
       testInRange(a, b)
     }
-    testInRange(a, 1)
-    testInRange(b, 1)
+    testInRange(a, 1.0)
+    testInRange(b, 1.0)
   })
 })
 
 test(`test ${name} subtraction`, t => {
   let testInRange = (a, b) => {
-    let result = IntModule.fromIntExn(a - b)
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let result = IntModule.fromFloatExn(a -. b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.sub(b), Some(result), ())
     t->Assert.deepEqual(a->IntModule.subExn(b), result, ())
     t->Assert.deepEqual(a->IntModule.subClamped(b), result, ())
@@ -606,49 +546,38 @@ test(`test ${name} subtraction`, t => {
   }
 
   testInRange(max, min)
-  testInRange(minValue, 0)
-  testInRange(maxValue, 0)
-  testInRange(maxValue, 1)
-
-  if isSigned {
-    testInRange(min, max)
-    testInRange(minValue, -1)
-    testInRange(0, maxValue)
-  }
+  testInRange(minValue, 0.0)
+  testInRange(maxValue, 0.0)
+  testInRange(maxValue, 1.0)
 
   let testOutOfRange = (a, b, value) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.sub(b), None, ())
     t->assertOverflow(() => a->IntModule.subExn(b))
-    t->Assert.deepEqual(a->IntModule.subClamped(b), IntModule.fromIntExn(value), ())
+    t->Assert.deepEqual(a->IntModule.subClamped(b), IntModule.fromFloatExn(value), ())
   }
 
-  testOutOfRange(minValue, 1, minValue)
+  testOutOfRange(minValue, 1.0, minValue)
   testOutOfRange(minValue, value, minValue)
-
-  if isSigned {
-    testOutOfRange(maxValue, -1, maxValue)
-    testOutOfRange(maxValue, -value, maxValue)
-  }
 
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
 
-    let result = a->Int.toFloat -. b->Int.toFloat
-    if result < minValue->Int.toFloat {
+    let result = a -. b
+    if result < minValue {
       testOutOfRange(a, b, minValue)
-    } else if result > maxValue->Int.toFloat {
+    } else if result > maxValue {
       testOutOfRange(a, b, maxValue)
     } else {
       testInRange(a, b)
     }
 
-    let result = b->Int.toFloat -. a->Int.toFloat
-    if result < minValue->Int.toFloat {
+    let result = b -. a
+    if result < minValue {
       testOutOfRange(b, a, minValue)
-    } else if result > maxValue->Int.toFloat {
+    } else if result > maxValue {
       testOutOfRange(b, a, maxValue)
     } else {
       testInRange(b, a)
@@ -658,9 +587,9 @@ test(`test ${name} subtraction`, t => {
 
 test(`test ${name} multiplication`, t => {
   let testInRange = (a, b) => {
-    let result = IntModule.fromIntExn(a * b)
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let result = IntModule.fromFloatExn(a *. b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.mul(b), Some(result), ())
     t->Assert.deepEqual(a->IntModule.mul(b), b->IntModule.mul(a), ())
     t->Assert.deepEqual(a->IntModule.mulExn(b), result, ())
@@ -746,22 +675,17 @@ test(`test ${name} multiplication`, t => {
   }
 
   testInRange(min, max)
-  testInRange(minValue, 0)
-  testInRange(maxValue, 0)
-  testInRange(minValue, 1)
-  testInRange(maxValue, 1)
-  testInRange(minValue + 1, 1)
-  testInRange(maxValue - 1, 1)
-
-  if isSigned {
-    testInRange(-maxValue, 1)
-    testInRange(maxValue, -1)
-  }
+  testInRange(minValue, 0.0)
+  testInRange(maxValue, 0.0)
+  testInRange(minValue, 1.0)
+  testInRange(maxValue, 1.0)
+  testInRange(minValue +. 1.0, 1.0)
+  testInRange(maxValue -. 1.0, 1.0)
 
   let testOutOfRange = (a, b, value) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
-    let value = IntModule.fromIntExn(value)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
+    let value = IntModule.fromFloatExn(value)
     t->Assert.deepEqual(a->IntModule.mul(b), None, ())
     t->Assert.deepEqual(b->IntModule.mul(a), None, ())
     t->assertOverflow(() => a->IntModule.mulExn(b))
@@ -770,25 +694,16 @@ test(`test ${name} multiplication`, t => {
     t->Assert.deepEqual(b->IntModule.mulClamped(a), value, ())
   }
 
-  testOutOfRange(maxValue, 2, maxValue)
+  testOutOfRange(maxValue, 2.0, maxValue)
   testOutOfRange(maxValue, value, maxValue)
-
-  if isSigned {
-    testOutOfRange(minValue, 2, minValue)
-    testOutOfRange(minValue, value, minValue)
-    testOutOfRange(minValue, -1, maxValue)
-    testOutOfRange(maxValue, -2, minValue)
-    testOutOfRange(minValue, -value, maxValue)
-    testOutOfRange(maxValue, -value, minValue)
-  }
 
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    let result = a->Int.toFloat *. b->Int.toFloat
-    if result < minValue->Int.toFloat {
+    let result = a *. b
+    if result < minValue {
       testOutOfRange(a, b, minValue)
-    } else if result > maxValue->Int.toFloat {
+    } else if result > maxValue {
       testOutOfRange(a, b, maxValue)
     } else {
       testInRange(a, b)
@@ -798,30 +713,10 @@ test(`test ${name} multiplication`, t => {
 
 test(`test ${name} division`, t => {
   let testNotDividedByZero = (a, b) => {
-    if isSigned {
-      let negOne = IntModule.fromIntExn(-1)
-
-      if a !== minValue {
-        let negA = IntModule.fromIntExn(-a)
-        let a = IntModule.fromIntExn(a)
-        t->Assert.deepEqual(a->IntModule.div(negOne), Some(negA), ())
-        t->Assert.deepEqual(a->IntModule.divExn(negOne), negA, ())
-        t->Assert.deepEqual(a->IntModule.divUnsafe(negOne), negA, ())
-      }
-
-      if b !== minValue {
-        let negB = IntModule.fromIntExn(-b)
-        let b = IntModule.fromIntExn(b)
-        t->Assert.deepEqual(b->IntModule.div(negOne), Some(negB), ())
-        t->Assert.deepEqual(b->IntModule.divExn(negOne), negB, ())
-        t->Assert.deepEqual(b->IntModule.divUnsafe(negOne), negB, ())
-      }
-    }
-
-    if a !== 0 {
-      let result = IntModule.fromIntExn(b / a)
-      let a = IntModule.fromIntExn(a)
-      let b = IntModule.fromIntExn(b)
+    if a !== 0.0 {
+      let result = IntModule.fromFloatExn((b /. a)->toUint32)
+      let a = IntModule.fromFloatExn(a)
+      let b = IntModule.fromFloatExn(b)
       t->Assert.deepEqual(b->IntModule.div(a), Some(result), ())
       t->Assert.deepEqual(b->IntModule.divExn(a), result, ())
       t->Assert.deepEqual(b->IntModule.divUnsafe(a), result, ())
@@ -830,10 +725,10 @@ test(`test ${name} division`, t => {
       t->Assert.deepEqual(IntModule.zero->IntModule.divUnsafe(a), IntModule.zero, ())
     }
 
-    if b !== 0 {
-      let result = IntModule.fromIntExn(a / b)
-      let a = IntModule.fromIntExn(a)
-      let b = IntModule.fromIntExn(b)
+    if b !== 0.0 {
+      let result = IntModule.fromFloatExn((a /. b)->toUint32)
+      let a = IntModule.fromFloatExn(a)
+      let b = IntModule.fromFloatExn(b)
       t->Assert.deepEqual(a->IntModule.div(b), Some(result), ())
       t->Assert.deepEqual(a->IntModule.divExn(b), result, ())
       t->Assert.deepEqual(a->IntModule.divUnsafe(b), result, ())
@@ -842,8 +737,8 @@ test(`test ${name} division`, t => {
       t->Assert.deepEqual(IntModule.zero->IntModule.divUnsafe(b), IntModule.zero, ())
     }
 
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.div(IntModule.one), Some(a), ())
     t->Assert.deepEqual(a->IntModule.divExn(IntModule.one), a, ())
     t->Assert.deepEqual(a->IntModule.divUnsafe(IntModule.one), a, ())
@@ -857,46 +752,28 @@ test(`test ${name} division`, t => {
   testNotDividedByZero(minValue, max)
   testNotDividedByZero(maxValue, min)
   testNotDividedByZero(maxValue, max)
-  testNotDividedByZero(min, 2)
-  testNotDividedByZero(max, 2)
-  testNotDividedByZero(minValue, 2)
-  testNotDividedByZero(maxValue, 2)
-  testNotDividedByZero(minValue + 1, 2)
-  testNotDividedByZero(maxValue - 1, 2)
-
-  if isSigned {
-    testNotDividedByZero(min, -max)
-    testNotDividedByZero(max, -min)
-    testNotDividedByZero(-min, -max)
-    testNotDividedByZero(minValue, -min)
-    testNotDividedByZero(minValue, -max)
-    testNotDividedByZero(maxValue, -min)
-    testNotDividedByZero(maxValue, -max)
-    testNotDividedByZero(-maxValue, -min)
-    testNotDividedByZero(-maxValue, -max)
-    testNotDividedByZero(min, -2)
-    testNotDividedByZero(max, -2)
-    testNotDividedByZero(minValue, -2)
-    testNotDividedByZero(maxValue, -2)
-    testNotDividedByZero(minValue + 1, -2)
-    testNotDividedByZero(maxValue - 1, -2)
-  }
+  testNotDividedByZero(min, 2.0)
+  testNotDividedByZero(max, 2.0)
+  testNotDividedByZero(minValue, 2.0)
+  testNotDividedByZero(maxValue, 2.0)
+  testNotDividedByZero(minValue +. 1.0, 2.0)
+  testNotDividedByZero(maxValue -. 1.0, 2.0)
 
   let testDividedByZero = a => {
-    let a = IntModule.fromIntExn(a)
+    let a = IntModule.fromFloatExn(a)
     t->Assert.deepEqual(a->IntModule.div(IntModule.zero), None, ())
     t->assertDivisionByZero(() => a->IntModule.divExn(IntModule.zero))
   }
 
-  testDividedByZero(0)
-  testDividedByZero(1)
+  testDividedByZero(0.0)
+  testDividedByZero(1.0)
   testDividedByZero(min)
   testDividedByZero(max)
   testDividedByZero(value)
   testDividedByZero(minValue)
   testDividedByZero(maxValue)
-  testDividedByZero(minValue + 1)
-  testDividedByZero(maxValue - 1)
+  testDividedByZero(minValue +. 1.0)
+  testDividedByZero(maxValue -. 1.0)
 
   loop100Fn(() => {
     let a = randomValue()
@@ -909,10 +786,10 @@ test(`test ${name} division`, t => {
 
 test(`test ${name} remainder`, t => {
   let testNotModByZero = (a, b) => {
-    if a !== 0 {
-      let result = IntModule.fromIntExn(b->mod(a)->lor(0))
-      let a = IntModule.fromIntExn(a)
-      let b = IntModule.fromIntExn(b)
+    if a !== 0.0 {
+      let result = IntModule.fromFloatExn(b->mod_float(a)->toUint32)
+      let a = IntModule.fromFloatExn(a)
+      let b = IntModule.fromFloatExn(b)
       t->Assert.deepEqual(b->IntModule.rem(a), Some(result), ())
       t->Assert.deepEqual(b->IntModule.remExn(a), result, ())
       t->Assert.deepEqual(b->IntModule.remUnsafe(a), result, ())
@@ -920,10 +797,10 @@ test(`test ${name} remainder`, t => {
       t->Assert.deepEqual(IntModule.zero->IntModule.remExn(a), IntModule.zero, ())
       t->Assert.deepEqual(IntModule.zero->IntModule.remUnsafe(a), IntModule.zero, ())
     }
-    if b !== 0 {
-      let result = IntModule.fromIntExn(a->mod(b)->lor(0))
-      let a = IntModule.fromIntExn(a)
-      let b = IntModule.fromIntExn(b)
+    if b !== 0.0 {
+      let result = IntModule.fromFloatExn(a->mod_float(b)->toUint32)
+      let a = IntModule.fromFloatExn(a)
+      let b = IntModule.fromFloatExn(b)
       t->Assert.deepEqual(a->IntModule.rem(b), Some(result), ())
       t->Assert.deepEqual(a->IntModule.remExn(b), result, ())
       t->Assert.deepEqual(a->IntModule.remUnsafe(b), result, ())
@@ -932,24 +809,14 @@ test(`test ${name} remainder`, t => {
       t->Assert.deepEqual(IntModule.zero->IntModule.remUnsafe(b), IntModule.zero, ())
     }
 
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.rem(IntModule.one), Some(IntModule.zero), ())
     t->Assert.deepEqual(a->IntModule.remExn(IntModule.one), IntModule.zero, ())
     t->Assert.deepEqual(a->IntModule.remUnsafe(IntModule.one), IntModule.zero, ())
     t->Assert.deepEqual(b->IntModule.rem(IntModule.one), Some(IntModule.zero), ())
     t->Assert.deepEqual(b->IntModule.remExn(IntModule.one), IntModule.zero, ())
     t->Assert.deepEqual(b->IntModule.remUnsafe(IntModule.one), IntModule.zero, ())
-
-    if isSigned {
-      let negOne = IntModule.fromIntExn(-1)
-      t->Assert.deepEqual(a->IntModule.rem(negOne), Some(IntModule.zero), ())
-      t->Assert.deepEqual(a->IntModule.remExn(negOne), IntModule.zero, ())
-      t->Assert.deepEqual(a->IntModule.remUnsafe(negOne), IntModule.zero, ())
-      t->Assert.deepEqual(b->IntModule.rem(negOne), Some(IntModule.zero), ())
-      t->Assert.deepEqual(b->IntModule.remExn(negOne), IntModule.zero, ())
-      t->Assert.deepEqual(b->IntModule.remUnsafe(negOne), IntModule.zero, ())
-    }
   }
 
   testNotModByZero(min, max)
@@ -957,46 +824,28 @@ test(`test ${name} remainder`, t => {
   testNotModByZero(minValue, max)
   testNotModByZero(maxValue, min)
   testNotModByZero(maxValue, max)
-  testNotModByZero(min, 2)
-  testNotModByZero(max, 2)
-  testNotModByZero(minValue, 2)
-  testNotModByZero(maxValue, 2)
-  testNotModByZero(minValue + 1, 2)
-  testNotModByZero(maxValue - 1, 2)
-
-  if isSigned {
-    testNotModByZero(min, -max)
-    testNotModByZero(max, -min)
-    testNotModByZero(-min, -max)
-    testNotModByZero(minValue, -min)
-    testNotModByZero(minValue, -max)
-    testNotModByZero(maxValue, -min)
-    testNotModByZero(maxValue, -max)
-    testNotModByZero(-maxValue, -min)
-    testNotModByZero(-maxValue, -max)
-    testNotModByZero(min, -2)
-    testNotModByZero(max, -2)
-    testNotModByZero(minValue, -2)
-    testNotModByZero(maxValue, -2)
-    testNotModByZero(minValue + 1, -2)
-    testNotModByZero(maxValue - 1, -2)
-  }
+  testNotModByZero(min, 2.0)
+  testNotModByZero(max, 2.0)
+  testNotModByZero(minValue, 2.0)
+  testNotModByZero(maxValue, 2.0)
+  testNotModByZero(minValue +. 1.0, 2.0)
+  testNotModByZero(maxValue -. 1.0, 2.0)
 
   let testModByZero = a => {
-    let a = IntModule.fromIntExn(a)
+    let a = IntModule.fromFloatExn(a)
     t->Assert.deepEqual(a->IntModule.rem(IntModule.zero), None, ())
     t->assertDivisionByZero(() => a->IntModule.remExn(IntModule.zero))
   }
 
-  testModByZero(0)
-  testModByZero(1)
+  testModByZero(0.0)
+  testModByZero(1.0)
   testModByZero(min)
   testModByZero(max)
   testModByZero(value)
   testModByZero(minValue)
   testModByZero(maxValue)
-  testModByZero(minValue + 1)
-  testModByZero(maxValue - 1)
+  testModByZero(minValue +. 1.0)
+  testModByZero(maxValue -. 1.0)
 
   loop100Fn(() => {
     let a = randomValue()
@@ -1009,8 +858,8 @@ test(`test ${name} remainder`, t => {
 
 test(`test ${name} sum`, t => {
   let testInRange = arr => {
-    let result = IntModule.fromIntExn(arr->Array.reduce(0, (acc, v) => acc + v))
-    let arr = arr->Array.mapU(i => IntModule.fromIntExn(i))
+    let result = IntModule.fromFloatExn(arr->Array.reduce(0.0, (acc, v) => acc +. v))
+    let arr = arr->Array.mapU(i => IntModule.fromFloatExn(i))
     t->Assert.deepEqual(arr->IntModule.sum, Some(result), ())
     t->Assert.deepEqual(arr->IntModule.sumExn, result, ())
     t->Assert.deepEqual(arr->IntModule.sumUnsafe, result, ())
@@ -1020,8 +869,8 @@ test(`test ${name} sum`, t => {
   testInRange([max])
   testInRange([minValue])
   testInRange([maxValue])
-  testInRange([minValue + 1])
-  testInRange([maxValue - 1])
+  testInRange([minValue +. 1.0])
+  testInRange([maxValue -. 1.0])
   testInRange([min, max])
   testInRange([max, min])
   testInRange([min, value, max])
@@ -1031,24 +880,16 @@ test(`test ${name} sum`, t => {
   t->assertInvalidArgument(() => IntModule.sumExn([]))
 
   let testOutOfRange = arr => {
-    let arr = arr->Array.mapU(i => IntModule.fromIntExn(i))
+    let arr = arr->Array.mapU(i => IntModule.fromFloatExn(i))
     t->Assert.deepEqual(arr->IntModule.sum, None, ())
     t->assertOverflow(() => arr->IntModule.sumExn)
   }
 
-  testOutOfRange([maxValue, 1])
-  testOutOfRange([1, maxValue])
+  testOutOfRange([maxValue, 1.0])
+  testOutOfRange([1.0, maxValue])
   testOutOfRange([maxValue, value])
   testOutOfRange([value, maxValue])
-  testOutOfRange([maxValue, max - min, value])
-
-  if isSigned {
-    testOutOfRange([minValue, -1])
-    testOutOfRange([-1, minValue])
-    testOutOfRange([minValue, -value])
-    testOutOfRange([-value, minValue])
-    testOutOfRange([minValue, min - max, -value])
-  }
+  testOutOfRange([maxValue, max -. min, value])
 
   loop100Fn(() => {
     let a = randomValue()
@@ -1056,8 +897,8 @@ test(`test ${name} sum`, t => {
     testInRange([a])
     testInRange([b])
 
-    let result = a->Int.toFloat +. b->Int.toFloat
-    if result >= minValue->Int.toFloat && result <= maxValue->Int.toFloat {
+    let result = a +. b
+    if result >= minValue && result <= maxValue {
       testInRange([a, b])
       testInRange([b, a])
     } else {
@@ -1068,50 +909,39 @@ test(`test ${name} sum`, t => {
 })
 
 test(`test ${name} increase and decrease`, t => {
-  let testIncInRange = i => {
-    let result = IntModule.fromIntExn(i + 1)
-    let n = IntModule.fromIntExn(i)
+  let testIncInRange = f => {
+    let result = IntModule.fromFloatExn(f +. 1.0)
+    let n = IntModule.fromFloatExn(f)
     t->Assert.deepEqual(n->IntModule.inc, Some(result), ())
     t->Assert.deepEqual(n->IntModule.incExn, result, ())
     t->Assert.deepEqual(n->IntModule.incUnsafe, result, ())
   }
 
-  testIncInRange(0)
-  testIncInRange(1)
+  testIncInRange(0.0)
+  testIncInRange(1.0)
   testIncInRange(value)
   testIncInRange(minValue)
-  testIncInRange(minValue + 1)
-  testIncInRange(maxValue - 1)
+  testIncInRange(minValue +. 1.0)
+  testIncInRange(maxValue -. 1.0)
   loop100Fn(() => testIncInRange(randomValue()))
-
-  if isSigned {
-    testIncInRange(-value)
-    testIncInRange(-maxValue)
-  }
 
   t->Assert.deepEqual(IntModule.maxValue->IntModule.inc, None, ())
   t->assertOverflow(() => IntModule.maxValue->IntModule.incExn)
 
-  let testDecInRange = i => {
-    let result = IntModule.fromIntExn(i - 1)
-    let n = IntModule.fromIntExn(i)
+  let testDecInRange = f => {
+    let result = IntModule.fromFloatExn(f -. 1.0)
+    let n = IntModule.fromFloatExn(f)
     t->Assert.deepEqual(n->IntModule.dec, Some(result), ())
     t->Assert.deepEqual(n->IntModule.decExn, result, ())
     t->Assert.deepEqual(n->IntModule.decUnsafe, result, ())
   }
 
-  testDecInRange(1)
+  testDecInRange(1.0)
   testDecInRange(value)
-  testDecInRange(minValue + 1)
+  testDecInRange(minValue +. 1.0)
   testDecInRange(maxValue)
-  testDecInRange(maxValue - 1)
-  loop100Fn(() => testDecInRange(randomInt(minValue->Int.toFloat +. 1.0, maxValue->Int.toFloat)))
-
-  if isSigned {
-    testDecInRange(0)
-    testDecInRange(-value)
-    testDecInRange(-maxValue)
-  }
+  testDecInRange(maxValue -. 1.0)
+  loop100Fn(() => testDecInRange(randomFloat(minValue +. 1.0, maxValue)->Js.Math.floor_float))
 
   t->Assert.deepEqual(IntModule.minValue->IntModule.dec, None, ())
   t->assertOverflow(() => IntModule.minValue->IntModule.decExn)
@@ -1119,41 +949,32 @@ test(`test ${name} increase and decrease`, t => {
 
 test(`test ${name} bitwise`, t => {
   let assertNot1 = (a, b) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
     t->Assert.deepEqual(a->IntModule.lnot, b, ())
     t->Assert.deepEqual(b->IntModule.lnot, a, ())
   }
 
   assertNot1(value, valueNot)
   assertNot1(minValue, maxValue)
-  assertNot1(minValue + 1, maxValue - 1)
-
-  if isSigned {
-    assertNot1(0, -1)
-  }
+  assertNot1(minValue +. 1.0, maxValue -. 1.0)
 
   let assertNot2 = i => {
-    let n = IntModule.fromIntExn(i)
+    let n = IntModule.fromFloatExn(i)
     t->Assert.deepEqual(n->IntModule.lnot->IntModule.lnot, n, ())
   }
 
-  assertNot2(0)
-  assertNot2(1)
+  assertNot2(0.0)
+  assertNot2(1.0)
   assertNot2(value)
   assertNot2(minValue)
   assertNot2(maxValue)
   loop100Fn(() => assertNot2(randomValue()))
 
-  if isSigned {
-    assertNot2(-1)
-    assertNot2(-maxValue)
-  }
-
   let assertAnd = (a, b, value) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
-    let value = IntModule.fromIntExn(value)
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
+    let value = IntModule.fromFloatExn(value)
     t->Assert.deepEqual(a->IntModule.land(a), a, ())
     t->Assert.deepEqual(b->IntModule.land(b), b, ())
     t->Assert.deepEqual(value->IntModule.land(value), value, ())
@@ -1164,24 +985,20 @@ test(`test ${name} bitwise`, t => {
     t->Assert.deepEqual(b->IntModule.land(a), value, ())
   }
 
-  assertAnd(value, valueNot, 0)
-  assertAnd(minValue, maxValue, 0)
-  assertAnd(minValue + 1, maxValue - 1, 0)
+  assertAnd(value, valueNot, 0.0)
+  assertAnd(minValue, maxValue, 0.0)
+  assertAnd(minValue +. 1.0, maxValue -. 1.0, 0.0)
   assertAnd(min, max, minMaxAnd)
   loop100Fn(() => {
     let value = randomValue()
     assertAnd(value, value, value)
   })
 
-  if isSigned {
-    assertAnd(0, -1, 0)
-  }
-
   let assertOr = (a, b, value) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
-    let value = IntModule.fromIntExn(value)
-    let oneBits = isSigned ? IntModule.fromIntExn(-1) : IntModule.maxValue
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
+    let value = IntModule.fromFloatExn(value)
+    let oneBits = IntModule.maxValue
     t->Assert.deepEqual(a->IntModule.lor(a), a, ())
     t->Assert.deepEqual(b->IntModule.lor(b), b, ())
     t->Assert.deepEqual(value->IntModule.lor(value), value, ())
@@ -1193,27 +1010,19 @@ test(`test ${name} bitwise`, t => {
   }
 
   assertOr(min, max, minMaxOr)
+  assertOr(value, valueNot, maxValue)
+  assertOr(minValue, maxValue, maxValue)
+  assertOr(minValue +. 1.0, maxValue -. 1.0, maxValue)
   loop100Fn(() => {
     let value = randomValue()
     assertOr(value, value, value)
   })
 
-  if isSigned {
-    assertOr(value, valueNot, -1)
-    assertOr(minValue, maxValue, -1)
-    assertOr(minValue + 1, maxValue - 1, -1)
-    assertOr(0, -1, -1)
-  } else {
-    assertOr(value, valueNot, maxValue)
-    assertOr(minValue, maxValue, maxValue)
-    assertOr(minValue + 1, maxValue - 1, maxValue)
-  }
-
   let assertXor = (a, b, value) => {
-    let a = IntModule.fromIntExn(a)
-    let b = IntModule.fromIntExn(b)
-    let value = IntModule.fromIntExn(value)
-    let oneBits = isSigned ? IntModule.fromIntExn(-1) : IntModule.maxValue
+    let a = IntModule.fromFloatExn(a)
+    let b = IntModule.fromFloatExn(b)
+    let value = IntModule.fromFloatExn(value)
+    let oneBits = IntModule.maxValue
     t->Assert.deepEqual(a->IntModule.lxor(a), IntModule.zero, ())
     t->Assert.deepEqual(b->IntModule.lxor(b), IntModule.zero, ())
     t->Assert.deepEqual(value->IntModule.lxor(value), IntModule.zero, ())
@@ -1225,55 +1034,37 @@ test(`test ${name} bitwise`, t => {
   }
 
   assertXor(min, max, minMaxXor)
+  assertXor(value, valueNot, maxValue)
+  assertXor(minValue, maxValue, maxValue)
+  assertXor(minValue +. 1.0, maxValue -. 1.0, maxValue)
   loop100Fn(() => {
     let value = randomValue()
-    assertXor(value, value, 0)
+    assertXor(value, value, 0.0)
   })
-
-  if isSigned {
-    assertXor(value, valueNot, -1)
-    assertXor(minValue, maxValue, -1)
-    assertXor(minValue + 1, maxValue - 1, -1)
-    assertXor(0, -1, -1)
-  } else {
-    assertXor(value, valueNot, maxValue)
-    assertXor(minValue, maxValue, maxValue)
-    assertXor(minValue + 1, maxValue - 1, maxValue)
-  }
 
   @warning("-27")
   let modBits = (i: int): int => %raw(`(i >>> 0) % bits`)
 
   {
-    let value = IntModule.fromIntExn(value)
+    let value = IntModule.fromFloatExn(value)
 
     for i in -bits to 2 * bits {
       t->Assert.deepEqual(
         value->IntModule.lsl(i),
-        IntModule.fromIntExn(valueShiftLeft->Array.getExn(i->modBits)),
+        IntModule.fromFloatExn(valueShiftLeft->Array.getExn(i->modBits)),
         (),
       )
     }
   }
 
-  let mask = -1->lsr(32 - bits)
-
   let testUnsignedShiftRight = value => {
-    let n = IntModule.fromIntExn(value)
+    let n = IntModule.fromFloatExn(value)
     for i in -bits to 2 * bits {
-      if !is32Bits {
-        let i_ = i->modBits
-        t->Assert.deepEqual(
-          n->IntModule.lsr(i),
-          IntModule.fromFloatExn(
-            ((value < 0 && i_ !== 0 ? value->land(mask) : value)->Int.toFloat /.
-              2.0 ** i_->Int.toFloat)->Js.Math.floor_float,
-          ),
-          (),
-        )
-      } else {
-        t->Assert.deepEqual(n->IntModule.lsr(i), IntModule.fromIntExn(value->lsr(i)), ())
-      }
+      t->Assert.deepEqual(
+        n->IntModule.lsr(i),
+        IntModule.fromFloatExn(value->Float.toInt->lsr(i)->Int.toFloat->toUint32),
+        (),
+      )
     }
   }
 
@@ -1282,22 +1073,13 @@ test(`test ${name} bitwise`, t => {
   loop100Fn(() => testUnsignedShiftRight(randomValue()))
 
   let testShiftRight = value => {
-    let n = IntModule.fromIntExn(value)
+    let n = IntModule.fromFloatExn(value)
     for i in -bits to 2 * bits {
       t->Assert.deepEqual(
         n->IntModule.asr(i),
-        IntModule.fromFloatExn(
-          (value->Int.toFloat /. 2.0 ** i->modBits->Int.toFloat)->Js.Math.floor_float,
-        ),
+        IntModule.fromFloatExn((value /. 2.0 ** i->modBits->Int.toFloat)->Js.Math.floor_float),
         (),
       )
-      if isSigned {
-        t->Assert.deepEqual(
-          n->IntModule.asr(i)->IntModule.lnot,
-          n->IntModule.lnot->IntModule.asr(i),
-          (),
-        )
-      }
     }
   }
 
@@ -1306,19 +1088,19 @@ test(`test ${name} bitwise`, t => {
   loop100Fn(() => testShiftRight(randomValue()))
 
   {
-    let value = IntModule.fromIntExn(value)
+    let value = IntModule.fromFloatExn(value)
 
     for i in -bits to 2 * bits {
       t->Assert.deepEqual(
         value->IntModule.rsl(i),
-        IntModule.fromIntExn(valueRotateShiftLeft->Array.getExn(i->modBits)),
+        IntModule.fromFloatExn(valueRotateShiftLeft->Array.getExn(i->modBits)),
         (),
       )
     }
   }
 
   let testRotateShiftLeft = value => {
-    let n = IntModule.fromIntExn(value)
+    let n = IntModule.fromFloatExn(value)
     for i in -bits to 2 * bits {
       t->Assert.deepEqual(
         n->IntModule.rsl(i)->IntModule.lnot,
@@ -1333,7 +1115,7 @@ test(`test ${name} bitwise`, t => {
   loop100Fn(() => testRotateShiftLeft(randomValue()))
 
   let testRotateShiftRight = value => {
-    let n = IntModule.fromIntExn(value)
+    let n = IntModule.fromFloatExn(value)
     for i in -bits to 2 * bits {
       t->Assert.deepEqual(n->IntModule.rsl(i), n->IntModule.rsr(bits - i), ())
       t->Assert.deepEqual(
@@ -1356,33 +1138,24 @@ test(`test ${name} integer math`, t => {
 
   testClz(IntModule.zero, bits)
 
-  if isSigned {
-    testClz(IntModule.fromIntExn(-1), 0)
-    testClz(IntModule.minValue, 0)
-    testClz(IntModule.maxValue, 1)
-  } else {
-    testClz(IntModule.minValue, bits)
-    testClz(IntModule.maxValue, 0)
-  }
+  testClz(IntModule.minValue, bits)
+  testClz(IntModule.maxValue, 0)
 
   for i in 0 to bits - 1 {
     testClz(IntModule.one->IntModule.lsl(i), bits - i - 1)
   }
 
   t->Assert.deepEqual(
-    IntModule.fromIntExn(min)->IntModule.imul(IntModule.fromIntExn(max)),
-    IntModule.fromIntExn(min * max),
+    IntModule.fromFloatExn(min)->IntModule.imul(IntModule.fromFloatExn(max)),
+    IntModule.fromFloatExn(min *. max),
     (),
   )
 
-  let mask = -1->lsr(32 - bits)
   let j = 2.0 ** bits->Int.toFloat
-  let k = 2.0 ** (bits - 1)->Int.toFloat
-  let toU32 = i => i->land(mask)->intToUint32
 
   let testImul = (a, b) => {
-    let m = (a->toU32 *. b->toU32)->mod_float(j)
-    let result = isSigned && m >= k ? m -. j : m
+    let m = (a->Int.toFloat *. b->Int.toFloat)->mod_float(j)
+    let result = m
 
     t->Assert.deepEqual(
       IntModule.fromIntExn(a)->IntModule.imul(IntModule.fromIntExn(b)),
@@ -1396,31 +1169,22 @@ test(`test ${name} integer math`, t => {
     )
   }
 
-  if is32Bits {
-    let n = 1000000.0
-    loop100Fn(() => testImul(randomInt(0.0, n), randomInt(minValue->Int.toFloat, n)))
+  let n = 1000000.0
+  loop100Fn(() => testImul(randomInt(0.0, n), randomInt(0.0, n)))
 
-    loop100Fn(() => {
-      let a = randomValue()
-      let b = randomValue()
-      t->Assert.deepEqual(
-        IntModule.fromIntExn(a)->IntModule.imul(IntModule.fromIntExn(b)),
-        IntModule.fromIntExn(a->Js.Math.imul(b)),
-        (),
-      )
-      t->Assert.deepEqual(
-        IntModule.fromIntExn(a)->IntModule.imul(IntModule.fromIntExn(b)),
-        IntModule.fromIntExn(b)->IntModule.imul(IntModule.fromIntExn(a)),
-        (),
-      )
-    })
-  } else {
-    loop100Fn(() => testImul(randomValue(), randomValue()))
-  }
+  loop100Fn(() => {
+    let a = randomValue()
+    let b = randomValue()
+    t->Assert.deepEqual(
+      IntModule.fromFloatExn(a)->IntModule.imul(IntModule.fromFloatExn(b)),
+      IntModule.fromFloatExn(b)->IntModule.imul(IntModule.fromFloatExn(a)),
+      (),
+    )
+  })
 
   let testPowInRange = (a, b) => {
-    let result = IntModule.fromFloatExn(a->Int.toFloat ** b->Int.toFloat)
-    let a = IntModule.fromIntExn(a)
+    let result = IntModule.fromFloatExn(a ** b->Int.toFloat)
+    let a = IntModule.fromFloatExn(a)
     let b = IntModule.fromIntExn(b)
 
     t->Assert.deepEqual(IntModule.pow(~base=a, ~exp=b), Some(result), ())
@@ -1442,14 +1206,15 @@ test(`test ${name} integer math`, t => {
     t->Assert.deepEqual(IntModule.powUnsafe(~base=b, ~exp=IntModule.one), b, ())
   }
 
-  testPowInRange(0, 1)
-  testPowInRange(1, 0)
+  testPowInRange(0.0, 1)
+  testPowInRange(1.0, 0)
   testPowInRange(value, 0)
   testPowInRange(minValue, 1)
+  testPowInRange(minValue, value->Float.toInt)
   testPowInRange(maxValue, 1)
 
   let testPowOutOfRange = (a, b) => {
-    let a = IntModule.fromIntExn(a)
+    let a = IntModule.fromFloatExn(a)
     let b = IntModule.fromIntExn(b)
 
     t->Assert.deepEqual(IntModule.pow(~base=a, ~exp=b), None, ())
@@ -1458,43 +1223,23 @@ test(`test ${name} integer math`, t => {
 
   testPowOutOfRange(maxValue, 2)
 
-  if isSigned {
-    testPowOutOfRange(minValue, 2)
-  } else {
-    testPowInRange(minValue, value)
-  }
-
   loop100Fn(() => {
     let a = randomValue()
     let b = randomPositiveSmallInt()
-    let result = a->Int.toFloat ** b->Int.toFloat
+    let result = a ** b->Int.toFloat
 
-    if result >= minValue->Int.toFloat && result <= maxValue->Int.toFloat {
+    if result >= minValue && result <= maxValue {
       testPowInRange(a, b)
     } else {
       testPowOutOfRange(a, b)
     }
   })
 
-  if isSigned {
-    let testPowNotInteger = (a, b) => {
-      let a = IntModule.fromIntExn(a)
-      let b = IntModule.fromIntExn(b)
-
-      t->Assert.deepEqual(IntModule.pow(~base=a, ~exp=b), None, ())
-      t->assertInvalidArgument(() => IntModule.powExn(~base=a, ~exp=b))
-    }
-
-    testPowNotInteger(value, -1)
-    testPowNotInteger(minValue, -1)
-    testPowNotInteger(maxValue, -1)
-  }
-
   loop100Fn(() => {
     let m = randomValue()
     let n = randomValue()
-    let min = IntModule.fromIntExn(m < n ? m : n)
-    let max = IntModule.fromIntExn(m > n ? m : n)
+    let min = IntModule.fromFloatExn(m < n ? m : n)
+    let max = IntModule.fromFloatExn(m > n ? m : n)
 
     if min !== max {
       loopFn(

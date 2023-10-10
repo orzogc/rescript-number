@@ -23,15 +23,16 @@ function MakeIntegerConversion(IntModule) {
   if (minValue < Number.MIN_SAFE_INTEGER || maxValue > Number.MAX_SAFE_INTEGER) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
   }
+  var fromIntUnsafe = IntModule.fromIntUnsafe;
   var fromInt = function (i) {
     if (i >= minValue && i <= maxValue) {
-      return i;
+      return fromIntUnsafe(i);
     }
     
   };
   var fromIntExn = function (i) {
     if (i >= minValue && i <= maxValue) {
-      return i;
+      return fromIntUnsafe(i);
     } else {
       return ResNumber__Utils.raiseOverflow(i, IntModule);
     }
@@ -42,7 +43,7 @@ function MakeIntegerConversion(IntModule) {
     } else if (i > maxValue) {
       return maxValue;
     } else {
-      return i;
+      return fromIntUnsafe(i);
     }
   };
   var toInt = function (i) {
@@ -119,7 +120,7 @@ function MakeIntegerConversion(IntModule) {
           fromInt: fromInt,
           fromIntExn: fromIntExn,
           fromIntClamped: fromIntClamped,
-          fromIntUnsafe: IntModule.fromIntUnsafe,
+          fromIntUnsafe: fromIntUnsafe,
           toInt: toInt,
           toIntExn: toIntExn,
           toIntClamped: toIntClamped,
@@ -176,15 +177,16 @@ function MakeInteger(IntModule) {
   if (minValue < Number.MIN_SAFE_INTEGER || maxValue > Number.MAX_SAFE_INTEGER) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
   }
+  var fromIntUnsafe = IntModule.fromIntUnsafe;
   var fromInt = function (i) {
     if (i >= minValue && i <= maxValue) {
-      return i;
+      return fromIntUnsafe(i);
     }
     
   };
   var fromIntExn = function (i) {
     if (i >= minValue && i <= maxValue) {
-      return i;
+      return fromIntUnsafe(i);
     } else {
       return ResNumber__Utils.raiseOverflow(i, IntModule);
     }
@@ -195,7 +197,7 @@ function MakeInteger(IntModule) {
     } else if (i > maxValue) {
       return maxValue;
     } else {
-      return i;
+      return fromIntUnsafe(i);
     }
   };
   var toInt = function (i) {
@@ -363,13 +365,13 @@ function MakeInteger(IntModule) {
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
-      return f;
+      return fromFloatUnsafe(f);
     }
     
   };
   var fromFloatUncheckIntegerExn = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
-      return f;
+      return fromFloatUnsafe(f);
     } else {
       return ResNumber__Utils.raiseOverflow(f, IntModule);
     }
@@ -380,7 +382,7 @@ function MakeInteger(IntModule) {
     } else if (f > maxValue$1) {
       return maxValue$1;
     } else {
-      return f;
+      return fromFloatUnsafe(f);
     }
   };
   var add = function (a, b) {
@@ -408,29 +410,13 @@ function MakeInteger(IntModule) {
     return fromFloatUnsafe(a - b);
   };
   var mul = function (a, b) {
-    var f = a * b;
-    if (f >= minValue$1 && f <= maxValue$1) {
-      return fromFloatUnsafe(f);
-    }
-    
+    return fromFloatUncheckInteger(a * b);
   };
   var mulExn = function (a, b) {
-    var f = a * b;
-    if (f >= minValue$1 && f <= maxValue$1) {
-      return fromFloatUnsafe(f);
-    } else {
-      return ResNumber__Utils.raiseOverflow(f, IntModule);
-    }
+    return fromFloatUncheckIntegerExn(a * b);
   };
   var mulClamped = function (a, b) {
-    var f = a * b;
-    if (f < minValue$1) {
-      return minValue$1;
-    } else if (f > maxValue$1) {
-      return maxValue$1;
-    } else {
-      return fromFloatUnsafe(f);
-    }
+    return fromFloatUncheckIntegerClamped(a * b);
   };
   var mulUnsafe = function (a, b) {
     return fromFloatUnsafe(a * b);
@@ -499,7 +485,7 @@ function MakeInteger(IntModule) {
           fromInt: fromInt,
           fromIntExn: fromIntExn,
           fromIntClamped: fromIntClamped,
-          fromIntUnsafe: IntModule.fromIntUnsafe,
+          fromIntUnsafe: fromIntUnsafe,
           toInt: toInt,
           toIntExn: toIntExn,
           toIntClamped: toIntClamped,
@@ -575,37 +561,37 @@ function MakeFixedBitsIntegerConversion(IntRange) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Js_int.min.toString() + " - " + Js_int.max.toString());
   }
   var isInt32 = minValue === Js_int.min && maxValue === Js_int.max;
+  var fromIntUnsafe = function (i) {
+    return i | 0;
+  };
   var fromInt = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         }
         
       });
   var fromIntExn = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         } else {
           return ResNumber__Utils.raiseOverflow(i, IntRange);
         }
       });
   var fromIntClamped = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i < minValue) {
           return minValue;
         } else if (i > maxValue) {
           return maxValue;
         } else {
-          return i;
+          return i | 0;
         }
       });
-  var fromIntUnsafe = function (i) {
-    return i;
-  };
   var toInt = function (i) {
     return i;
   };
@@ -698,37 +684,37 @@ function MakeFixedBitsInt(IntRange) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Js_int.min.toString() + " - " + Js_int.max.toString());
   }
   var isInt32 = minValue === Js_int.min && maxValue === Js_int.max;
+  var fromIntUnsafe = function (i) {
+    return i | 0;
+  };
   var fromInt = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         }
         
       });
   var fromIntExn = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         } else {
           return ResNumber__Utils.raiseOverflow(i, IntRange);
         }
       });
   var fromIntClamped = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i < minValue) {
           return minValue;
         } else if (i > maxValue) {
           return maxValue;
         } else {
-          return i;
+          return i | 0;
         }
       });
-  var fromIntUnsafe = function (i) {
-    return i;
-  };
   var toInt = function (i) {
     return i;
   };
@@ -883,13 +869,13 @@ function MakeFixedBitsInt(IntRange) {
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
-      return f;
+      return f | 0;
     }
     
   };
   var fromFloatUncheckIntegerExn = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
-      return f;
+      return f | 0;
     } else {
       return ResNumber__Utils.raiseOverflow(f, IntRange);
     }
@@ -900,7 +886,7 @@ function MakeFixedBitsInt(IntRange) {
     } else if (f > maxValue$1) {
       return maxValue$1;
     } else {
-      return f;
+      return f | 0;
     }
   };
   var isAddMaybeOverflow = minValue$1 + minValue$1 < Js_int.min || maxValue$1 + maxValue$1 > Js_int.max;
@@ -946,33 +932,17 @@ function MakeFixedBitsInt(IntRange) {
     return Math.imul(a, b);
   };
   var mul = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue$1 && f <= maxValue$1) {
-          return f | 0;
-        }
-        
+        return fromFloatUncheckInteger(a * b);
       }) : (function (a, b) {
         return fromInt(Math.imul(a, b));
       });
   var mulExn = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue$1 && f <= maxValue$1) {
-          return f | 0;
-        } else {
-          return ResNumber__Utils.raiseOverflow(f, IntRange);
-        }
+        return fromFloatUncheckIntegerExn(a * b);
       }) : (function (a, b) {
         return fromIntExn(Math.imul(a, b));
       });
   var mulClamped = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f < minValue$1) {
-          return minValue$1;
-        } else if (f > maxValue$1) {
-          return maxValue$1;
-        } else {
-          return f | 0;
-        }
+        return fromFloatUncheckIntegerClamped(a * b);
       }) : (function (a, b) {
         return fromIntClamped(Math.imul(a, b));
       });
@@ -1136,37 +1106,37 @@ function MakeFixedBitsInteger(M) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Js_int.min.toString() + " - " + Js_int.max.toString());
   }
   var isInt32 = minValue === Js_int.min && maxValue === Js_int.max;
+  var fromIntUnsafe = function (i) {
+    return i | 0;
+  };
   var fromInt = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         }
         
       });
   var fromIntExn = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         } else {
           return ResNumber__Utils.raiseOverflow(i, IntRange);
         }
       });
   var fromIntClamped = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i < minValue) {
           return minValue;
         } else if (i > maxValue) {
           return maxValue;
         } else {
-          return i;
+          return i | 0;
         }
       });
-  var fromIntUnsafe = function (i) {
-    return i;
-  };
   var toInt = function (i) {
     return i;
   };
@@ -1321,13 +1291,13 @@ function MakeFixedBitsInteger(M) {
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
-      return f;
+      return f | 0;
     }
     
   };
   var fromFloatUncheckIntegerExn = function (f) {
     if (f >= minValue$1 && f <= maxValue$1) {
-      return f;
+      return f | 0;
     } else {
       return ResNumber__Utils.raiseOverflow(f, IntRange);
     }
@@ -1338,7 +1308,7 @@ function MakeFixedBitsInteger(M) {
     } else if (f > maxValue$1) {
       return maxValue$1;
     } else {
-      return f;
+      return f | 0;
     }
   };
   var isAddMaybeOverflow = minValue$1 + minValue$1 < Js_int.min || maxValue$1 + maxValue$1 > Js_int.max;
@@ -1384,33 +1354,17 @@ function MakeFixedBitsInteger(M) {
     return Math.imul(a, b);
   };
   var mul = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue$1 && f <= maxValue$1) {
-          return f | 0;
-        }
-        
+        return fromFloatUncheckInteger(a * b);
       }) : (function (a, b) {
         return fromInt(Math.imul(a, b));
       });
   var mulExn = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue$1 && f <= maxValue$1) {
-          return f | 0;
-        } else {
-          return ResNumber__Utils.raiseOverflow(f, IntRange);
-        }
+        return fromFloatUncheckIntegerExn(a * b);
       }) : (function (a, b) {
         return fromIntExn(Math.imul(a, b));
       });
   var mulClamped = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f < minValue$1) {
-          return minValue$1;
-        } else if (f > maxValue$1) {
-          return maxValue$1;
-        } else {
-          return f | 0;
-        }
+        return fromFloatUncheckIntegerClamped(a * b);
       }) : (function (a, b) {
         return fromIntClamped(Math.imul(a, b));
       });
@@ -1713,37 +1667,37 @@ function MakeSignedInteger(M) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Js_int.min.toString() + " - " + Js_int.max.toString());
   }
   var isInt32 = minValue === Js_int.min && maxValue === Js_int.max;
+  var fromIntUnsafe = function (i) {
+    return i | 0;
+  };
   var fromInt = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         }
         
       });
   var fromIntExn = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         } else {
           return ResNumber__Utils.raiseOverflow(i, IntRange);
         }
       });
   var fromIntClamped = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i < minValue) {
           return minValue;
         } else if (i > maxValue) {
           return maxValue;
         } else {
-          return i;
+          return i | 0;
         }
       });
-  var fromIntUnsafe = function (i) {
-    return i;
-  };
   var toInt = function (i) {
     return i;
   };
@@ -1896,13 +1850,13 @@ function MakeSignedInteger(M) {
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue && f <= maxValue) {
-      return f;
+      return f | 0;
     }
     
   };
   var fromFloatUncheckIntegerExn = function (f) {
     if (f >= minValue && f <= maxValue) {
-      return f;
+      return f | 0;
     } else {
       return ResNumber__Utils.raiseOverflow(f, IntRange);
     }
@@ -1913,7 +1867,7 @@ function MakeSignedInteger(M) {
     } else if (f > maxValue) {
       return maxValue;
     } else {
-      return f;
+      return f | 0;
     }
   };
   var isAddMaybeOverflow = minValue + minValue < Js_int.min || maxValue + maxValue > Js_int.max;
@@ -1959,33 +1913,17 @@ function MakeSignedInteger(M) {
     return Math.imul(a, b);
   };
   var mul = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue && f <= maxValue) {
-          return f | 0;
-        }
-        
+        return fromFloatUncheckInteger(a * b);
       }) : (function (a, b) {
         return fromInt(Math.imul(a, b));
       });
   var mulExn = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue && f <= maxValue) {
-          return f | 0;
-        } else {
-          return ResNumber__Utils.raiseOverflow(f, IntRange);
-        }
+        return fromFloatUncheckIntegerExn(a * b);
       }) : (function (a, b) {
         return fromIntExn(Math.imul(a, b));
       });
   var mulClamped = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f < minValue) {
-          return minValue;
-        } else if (f > maxValue) {
-          return maxValue;
-        } else {
-          return f | 0;
-        }
+        return fromFloatUncheckIntegerClamped(a * b);
       }) : (function (a, b) {
         return fromIntClamped(Math.imul(a, b));
       });
@@ -2334,37 +2272,37 @@ function MakeUnsignedInteger(M) {
     PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Js_int.min.toString() + " - " + Js_int.max.toString());
   }
   var isInt32 = minValue === Js_int.min && maxValue === Js_int.max;
+  var fromIntUnsafe = function (i) {
+    return i | 0;
+  };
   var fromInt = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         }
         
       });
   var fromIntExn = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i >= minValue && i <= maxValue) {
-          return i;
+          return i | 0;
         } else {
           return ResNumber__Utils.raiseOverflow(i, IntRange);
         }
       });
   var fromIntClamped = isInt32 ? (function (i) {
-        return i;
+        return i | 0;
       }) : (function (i) {
         if (i < minValue) {
           return minValue;
         } else if (i > maxValue) {
           return maxValue;
         } else {
-          return i;
+          return i | 0;
         }
       });
-  var fromIntUnsafe = function (i) {
-    return i;
-  };
   var toInt = function (i) {
     return i;
   };
@@ -2517,13 +2455,13 @@ function MakeUnsignedInteger(M) {
   };
   var fromFloatUncheckInteger = function (f) {
     if (f >= minValue && f <= maxValue) {
-      return f;
+      return f | 0;
     }
     
   };
   var fromFloatUncheckIntegerExn = function (f) {
     if (f >= minValue && f <= maxValue) {
-      return f;
+      return f | 0;
     } else {
       return ResNumber__Utils.raiseOverflow(f, IntRange);
     }
@@ -2534,7 +2472,7 @@ function MakeUnsignedInteger(M) {
     } else if (f > maxValue) {
       return maxValue;
     } else {
-      return f;
+      return f | 0;
     }
   };
   var isAddMaybeOverflow = minValue + minValue < Js_int.min || maxValue + maxValue > Js_int.max;
@@ -2580,33 +2518,17 @@ function MakeUnsignedInteger(M) {
     return Math.imul(a, b);
   };
   var mul = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue && f <= maxValue) {
-          return f | 0;
-        }
-        
+        return fromFloatUncheckInteger(a * b);
       }) : (function (a, b) {
         return fromInt(Math.imul(a, b));
       });
   var mulExn = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f >= minValue && f <= maxValue) {
-          return f | 0;
-        } else {
-          return ResNumber__Utils.raiseOverflow(f, IntRange);
-        }
+        return fromFloatUncheckIntegerExn(a * b);
       }) : (function (a, b) {
         return fromIntExn(Math.imul(a, b));
       });
   var mulClamped = isMulMaybeOverflow ? (function (a, b) {
-        var f = a * b;
-        if (f < minValue) {
-          return minValue;
-        } else if (f > maxValue) {
-          return maxValue;
-        } else {
-          return f | 0;
-        }
+        return fromFloatUncheckIntegerClamped(a * b);
       }) : (function (a, b) {
         return fromIntClamped(Math.imul(a, b));
       });
@@ -2859,40 +2781,40 @@ if (-128 < Js_int.min || 127 > Js_int.max) {
 
 var isInt32 = -128 === Js_int.min && 127 === Js_int.max;
 
+function fromIntUnsafe(i) {
+  return i | 0;
+}
+
 var fromInt = isInt32 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= -128 && i <= 127) {
-        return i;
+        return i | 0;
       }
       
     });
 
 var fromIntExn = isInt32 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= -128 && i <= 127) {
-        return i;
+        return i | 0;
       } else {
         return ResNumber__Utils.raiseOverflow(i, IntRange);
       }
     });
 
 var fromIntClamped = isInt32 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i < -128) {
         return -128;
       } else if (i > 127) {
         return 127;
       } else {
-        return i;
+        return i | 0;
       }
     });
-
-function fromIntUnsafe(i) {
-  return i;
-}
 
 function toInt(i) {
   return i;
@@ -3070,14 +2992,14 @@ function maxManyUnsafe(arr) {
 
 function fromFloatUncheckInteger(f) {
   if (f >= -128 && f <= 127) {
-    return f;
+    return f | 0;
   }
   
 }
 
 function fromFloatUncheckIntegerExn(f) {
   if (f >= -128 && f <= 127) {
-    return f;
+    return f | 0;
   } else {
     return ResNumber__Utils.raiseOverflow(f, IntRange);
   }
@@ -3089,7 +3011,7 @@ function fromFloatUncheckIntegerClamped(f) {
   } else if (f > 127) {
     return 127;
   } else {
-    return f;
+    return f | 0;
   }
 }
 
@@ -3148,35 +3070,19 @@ function mulUnsafe(a, b) {
 }
 
 var mul = isMulMaybeOverflow ? (function (a, b) {
-      var f = a * b;
-      if (f >= -128 && f <= 127) {
-        return f | 0;
-      }
-      
+      return fromFloatUncheckInteger(a * b);
     }) : (function (a, b) {
       return fromInt(Math.imul(a, b));
     });
 
 var mulExn = isMulMaybeOverflow ? (function (a, b) {
-      var f = a * b;
-      if (f >= -128 && f <= 127) {
-        return f | 0;
-      } else {
-        return ResNumber__Utils.raiseOverflow(f, IntRange);
-      }
+      return fromFloatUncheckIntegerExn(a * b);
     }) : (function (a, b) {
       return fromIntExn(Math.imul(a, b));
     });
 
 var mulClamped = isMulMaybeOverflow ? (function (a, b) {
-      var f = a * b;
-      if (f < -128) {
-        return -128;
-      } else if (f > 127) {
-        return 127;
-      } else {
-        return f | 0;
-      }
+      return fromFloatUncheckIntegerClamped(a * b);
     }) : (function (a, b) {
       return fromIntClamped(Math.imul(a, b));
     });
@@ -3568,40 +3474,40 @@ if (0 < Js_int.min || 255 > Js_int.max) {
 
 var isInt32$1 = 0 === Js_int.min && 255 === Js_int.max;
 
+function fromIntUnsafe$1(i) {
+  return i | 0;
+}
+
 var fromInt$1 = isInt32$1 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= 0 && i <= 255) {
-        return i;
+        return i | 0;
       }
       
     });
 
 var fromIntExn$1 = isInt32$1 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= 0 && i <= 255) {
-        return i;
+        return i | 0;
       } else {
         return ResNumber__Utils.raiseOverflow(i, IntRange$1);
       }
     });
 
 var fromIntClamped$1 = isInt32$1 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i < 0) {
         return 0;
       } else if (i > 255) {
         return 255;
       } else {
-        return i;
+        return i | 0;
       }
     });
-
-function fromIntUnsafe$1(i) {
-  return i;
-}
 
 function toInt$1(i) {
   return i;
@@ -3779,14 +3685,14 @@ function maxManyUnsafe$1(arr) {
 
 function fromFloatUncheckInteger$1(f) {
   if (f >= 0 && f <= 255) {
-    return f;
+    return f | 0;
   }
   
 }
 
 function fromFloatUncheckIntegerExn$1(f) {
   if (f >= 0 && f <= 255) {
-    return f;
+    return f | 0;
   } else {
     return ResNumber__Utils.raiseOverflow(f, IntRange$1);
   }
@@ -3798,7 +3704,7 @@ function fromFloatUncheckIntegerClamped$1(f) {
   } else if (f > 255) {
     return 255;
   } else {
-    return f;
+    return f | 0;
   }
 }
 
@@ -3857,35 +3763,19 @@ function mulUnsafe$1(a, b) {
 }
 
 var mul$1 = isMulMaybeOverflow$1 ? (function (a, b) {
-      var f = a * b;
-      if (f >= 0 && f <= 255) {
-        return f | 0;
-      }
-      
+      return fromFloatUncheckInteger$1(a * b);
     }) : (function (a, b) {
       return fromInt$1(Math.imul(a, b));
     });
 
 var mulExn$1 = isMulMaybeOverflow$1 ? (function (a, b) {
-      var f = a * b;
-      if (f >= 0 && f <= 255) {
-        return f | 0;
-      } else {
-        return ResNumber__Utils.raiseOverflow(f, IntRange$1);
-      }
+      return fromFloatUncheckIntegerExn$1(a * b);
     }) : (function (a, b) {
       return fromIntExn$1(Math.imul(a, b));
     });
 
 var mulClamped$1 = isMulMaybeOverflow$1 ? (function (a, b) {
-      var f = a * b;
-      if (f < 0) {
-        return 0;
-      } else if (f > 255) {
-        return 255;
-      } else {
-        return f | 0;
-      }
+      return fromFloatUncheckIntegerClamped$1(a * b);
     }) : (function (a, b) {
       return fromIntClamped$1(Math.imul(a, b));
     });
@@ -4170,40 +4060,40 @@ if (-32768 < Js_int.min || 32767 > Js_int.max) {
 
 var isInt32$2 = -32768 === Js_int.min && 32767 === Js_int.max;
 
+function fromIntUnsafe$2(i) {
+  return i | 0;
+}
+
 var fromInt$2 = isInt32$2 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= -32768 && i <= 32767) {
-        return i;
+        return i | 0;
       }
       
     });
 
 var fromIntExn$2 = isInt32$2 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= -32768 && i <= 32767) {
-        return i;
+        return i | 0;
       } else {
         return ResNumber__Utils.raiseOverflow(i, IntRange$2);
       }
     });
 
 var fromIntClamped$2 = isInt32$2 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i < -32768) {
         return -32768;
       } else if (i > 32767) {
         return 32767;
       } else {
-        return i;
+        return i | 0;
       }
     });
-
-function fromIntUnsafe$2(i) {
-  return i;
-}
 
 function toInt$2(i) {
   return i;
@@ -4381,14 +4271,14 @@ function maxManyUnsafe$2(arr) {
 
 function fromFloatUncheckInteger$2(f) {
   if (f >= -32768 && f <= 32767) {
-    return f;
+    return f | 0;
   }
   
 }
 
 function fromFloatUncheckIntegerExn$2(f) {
   if (f >= -32768 && f <= 32767) {
-    return f;
+    return f | 0;
   } else {
     return ResNumber__Utils.raiseOverflow(f, IntRange$2);
   }
@@ -4400,7 +4290,7 @@ function fromFloatUncheckIntegerClamped$2(f) {
   } else if (f > 32767) {
     return 32767;
   } else {
-    return f;
+    return f | 0;
   }
 }
 
@@ -4459,35 +4349,19 @@ function mulUnsafe$2(a, b) {
 }
 
 var mul$2 = isMulMaybeOverflow$2 ? (function (a, b) {
-      var f = a * b;
-      if (f >= -32768 && f <= 32767) {
-        return f | 0;
-      }
-      
+      return fromFloatUncheckInteger$2(a * b);
     }) : (function (a, b) {
       return fromInt$2(Math.imul(a, b));
     });
 
 var mulExn$2 = isMulMaybeOverflow$2 ? (function (a, b) {
-      var f = a * b;
-      if (f >= -32768 && f <= 32767) {
-        return f | 0;
-      } else {
-        return ResNumber__Utils.raiseOverflow(f, IntRange$2);
-      }
+      return fromFloatUncheckIntegerExn$2(a * b);
     }) : (function (a, b) {
       return fromIntExn$2(Math.imul(a, b));
     });
 
 var mulClamped$2 = isMulMaybeOverflow$2 ? (function (a, b) {
-      var f = a * b;
-      if (f < -32768) {
-        return -32768;
-      } else if (f > 32767) {
-        return 32767;
-      } else {
-        return f | 0;
-      }
+      return fromFloatUncheckIntegerClamped$2(a * b);
     }) : (function (a, b) {
       return fromIntClamped$2(Math.imul(a, b));
     });
@@ -4879,40 +4753,40 @@ if (0 < Js_int.min || 65535 > Js_int.max) {
 
 var isInt32$3 = 0 === Js_int.min && 65535 === Js_int.max;
 
+function fromIntUnsafe$3(i) {
+  return i | 0;
+}
+
 var fromInt$3 = isInt32$3 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= 0 && i <= 65535) {
-        return i;
+        return i | 0;
       }
       
     });
 
 var fromIntExn$3 = isInt32$3 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= 0 && i <= 65535) {
-        return i;
+        return i | 0;
       } else {
         return ResNumber__Utils.raiseOverflow(i, IntRange$3);
       }
     });
 
 var fromIntClamped$3 = isInt32$3 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i < 0) {
         return 0;
       } else if (i > 65535) {
         return 65535;
       } else {
-        return i;
+        return i | 0;
       }
     });
-
-function fromIntUnsafe$3(i) {
-  return i;
-}
 
 function toInt$3(i) {
   return i;
@@ -5090,14 +4964,14 @@ function maxManyUnsafe$3(arr) {
 
 function fromFloatUncheckInteger$3(f) {
   if (f >= 0 && f <= 65535) {
-    return f;
+    return f | 0;
   }
   
 }
 
 function fromFloatUncheckIntegerExn$3(f) {
   if (f >= 0 && f <= 65535) {
-    return f;
+    return f | 0;
   } else {
     return ResNumber__Utils.raiseOverflow(f, IntRange$3);
   }
@@ -5109,7 +4983,7 @@ function fromFloatUncheckIntegerClamped$3(f) {
   } else if (f > 65535) {
     return 65535;
   } else {
-    return f;
+    return f | 0;
   }
 }
 
@@ -5168,35 +5042,19 @@ function mulUnsafe$3(a, b) {
 }
 
 var mul$3 = isMulMaybeOverflow$3 ? (function (a, b) {
-      var f = a * b;
-      if (f >= 0 && f <= 65535) {
-        return f | 0;
-      }
-      
+      return fromFloatUncheckInteger$3(a * b);
     }) : (function (a, b) {
       return fromInt$3(Math.imul(a, b));
     });
 
 var mulExn$3 = isMulMaybeOverflow$3 ? (function (a, b) {
-      var f = a * b;
-      if (f >= 0 && f <= 65535) {
-        return f | 0;
-      } else {
-        return ResNumber__Utils.raiseOverflow(f, IntRange$3);
-      }
+      return fromFloatUncheckIntegerExn$3(a * b);
     }) : (function (a, b) {
       return fromIntExn$3(Math.imul(a, b));
     });
 
 var mulClamped$3 = isMulMaybeOverflow$3 ? (function (a, b) {
-      var f = a * b;
-      if (f < 0) {
-        return 0;
-      } else if (f > 65535) {
-        return 65535;
-      } else {
-        return f | 0;
-      }
+      return fromFloatUncheckIntegerClamped$3(a * b);
     }) : (function (a, b) {
       return fromIntClamped$3(Math.imul(a, b));
     });
@@ -5485,40 +5343,40 @@ if (Js_int.min < Js_int.min || Js_int.max > Js_int.max) {
 
 var isInt32$4 = Js_int.min === Js_int.min && Js_int.max === Js_int.max;
 
+function fromIntUnsafe$4(i) {
+  return i | 0;
+}
+
 var fromInt$4 = isInt32$4 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= Js_int.min && i <= Js_int.max) {
-        return i;
+        return i | 0;
       }
       
     });
 
 var fromIntExn$4 = isInt32$4 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i >= Js_int.min && i <= Js_int.max) {
-        return i;
+        return i | 0;
       } else {
         return ResNumber__Utils.raiseOverflow(i, IntRange$4);
       }
     });
 
 var fromIntClamped$4 = isInt32$4 ? (function (i) {
-      return i;
+      return i | 0;
     }) : (function (i) {
       if (i < Js_int.min) {
         return Js_int.min;
       } else if (i > Js_int.max) {
         return Js_int.max;
       } else {
-        return i;
+        return i | 0;
       }
     });
-
-function fromIntUnsafe$4(i) {
-  return i;
-}
 
 function toInt$4(i) {
   return i;
@@ -5700,14 +5558,14 @@ function maxManyUnsafe$4(arr) {
 
 function fromFloatUncheckInteger$4(f) {
   if (f >= Js_int.min && f <= Js_int.max) {
-    return f;
+    return f | 0;
   }
   
 }
 
 function fromFloatUncheckIntegerExn$4(f) {
   if (f >= Js_int.min && f <= Js_int.max) {
-    return f;
+    return f | 0;
   } else {
     return ResNumber__Utils.raiseOverflow(f, IntRange$4);
   }
@@ -5719,7 +5577,7 @@ function fromFloatUncheckIntegerClamped$4(f) {
   } else if (f > Js_int.max) {
     return Js_int.max;
   } else {
-    return f;
+    return f | 0;
   }
 }
 
@@ -5778,35 +5636,19 @@ function mulUnsafe$4(a, b) {
 }
 
 var mul$4 = isMulMaybeOverflow$4 ? (function (a, b) {
-      var f = a * b;
-      if (f >= Js_int.min && f <= Js_int.max) {
-        return f | 0;
-      }
-      
+      return fromFloatUncheckInteger$4(a * b);
     }) : (function (a, b) {
       return fromInt$4(Math.imul(a, b));
     });
 
 var mulExn$4 = isMulMaybeOverflow$4 ? (function (a, b) {
-      var f = a * b;
-      if (f >= Js_int.min && f <= Js_int.max) {
-        return f | 0;
-      } else {
-        return ResNumber__Utils.raiseOverflow(f, IntRange$4);
-      }
+      return fromFloatUncheckIntegerExn$4(a * b);
     }) : (function (a, b) {
       return fromIntExn$4(Math.imul(a, b));
     });
 
 var mulClamped$4 = isMulMaybeOverflow$4 ? (function (a, b) {
-      var f = a * b;
-      if (f < Js_int.min) {
-        return Js_int.min;
-      } else if (f > Js_int.max) {
-        return Js_int.max;
-      } else {
-        return f | 0;
-      }
+      return fromFloatUncheckIntegerClamped$4(a * b);
     }) : (function (a, b) {
       return fromIntClamped$4(Math.imul(a, b));
     });
@@ -6214,14 +6056,14 @@ if (0.0 < Number.MIN_SAFE_INTEGER || 4294967295.0 > Number.MAX_SAFE_INTEGER) {
 
 function fromInt$5(i) {
   if (i >= 0.0 && i <= 4294967295.0) {
-    return i;
+    return toUint32(i);
   }
   
 }
 
 function fromIntExn$5(i) {
   if (i >= 0.0 && i <= 4294967295.0) {
-    return i;
+    return toUint32(i);
   } else {
     return ResNumber__Utils.raiseOverflow(i, IntModule);
   }
@@ -6233,7 +6075,7 @@ function fromIntClamped$5(i) {
   } else if (i > 4294967295.0) {
     return 4294967295.0;
   } else {
-    return i;
+    return toUint32(i);
   }
 }
 
@@ -6422,14 +6264,14 @@ function maxManyUnsafe$5(arr) {
 
 function fromFloatUncheckInteger$5(f) {
   if (f >= 0.0 && f <= 4294967295.0) {
-    return f;
+    return toUint32(f);
   }
   
 }
 
 function fromFloatUncheckIntegerExn$5(f) {
   if (f >= 0.0 && f <= 4294967295.0) {
-    return f;
+    return toUint32(f);
   } else {
     return ResNumber__Utils.raiseOverflow(f, IntModule);
   }
@@ -6441,7 +6283,7 @@ function fromFloatUncheckIntegerClamped$5(f) {
   } else if (f > 4294967295.0) {
     return 4294967295.0;
   } else {
-    return f;
+    return toUint32(f);
   }
 }
 
@@ -6478,31 +6320,15 @@ function subUnsafe$5(a, b) {
 }
 
 function mul$5(a, b) {
-  var f = a * b;
-  if (f >= 0.0 && f <= 4294967295.0) {
-    return toUint32(f);
-  }
-  
+  return fromFloatUncheckInteger$5(a * b);
 }
 
 function mulExn$5(a, b) {
-  var f = a * b;
-  if (f >= 0.0 && f <= 4294967295.0) {
-    return toUint32(f);
-  } else {
-    return ResNumber__Utils.raiseOverflow(f, IntModule);
-  }
+  return fromFloatUncheckIntegerExn$5(a * b);
 }
 
 function mulClamped$5(a, b) {
-  var f = a * b;
-  if (f < 0.0) {
-    return 0.0;
-  } else if (f > 4294967295.0) {
-    return 4294967295.0;
-  } else {
-    return toUint32(f);
-  }
+  return fromFloatUncheckIntegerClamped$5(a * b);
 }
 
 function mulUnsafe$5(a, b) {

@@ -7,6 +7,7 @@ import * as TestUtils from "./TestUtils.bs.mjs";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
+import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
 
 var name = "Int8";
 
@@ -127,6 +128,7 @@ Ava("test " + name + " from float", (function (t) {
           t.deepEqual($$Number.Int8.fromFloatUnsafe(i), n, undefined);
         };
         testIsIntegerAndInRange(0);
+        testIsIntegerAndInRange(-0);
         testIsIntegerAndInRange(1);
         testIsIntegerAndInRange(100);
         testIsIntegerAndInRange(-128);
@@ -164,11 +166,13 @@ Ava("test " + name + " from float", (function (t) {
                 }));
           t.deepEqual($$Number.Int8.fromFloatClamped(f), $$Number.Int8.fromIntExn(value), undefined);
         };
-        var f = 100 + 0.5;
+        testIsNotInteger(100 + 0.5, 100);
+        var f = - 100 - 0.5;
         testIsNotInteger(f, f | 0);
-        var f$1 = - 100 - 0.5;
-        testIsNotInteger(f$1, f$1 | 0);
         testIsNotInteger(-128 + 0.1, -127);
+        testIsNotInteger(Number.NaN, 0);
+        testIsNotInteger(PervasivesU.neg_infinity, -128);
+        testIsNotInteger(PervasivesU.infinity, 127);
         testIsNotInteger(-128 - 0.1, -128);
         testIsNotInteger(127 + 0.1, 127);
         testIsNotInteger(127 - 0.1, 126);
@@ -193,6 +197,7 @@ Ava("test " + name + " from string", (function (t) {
           t.deepEqual($$Number.Int8.fromStringExn(s), n, undefined);
         };
         testInRange(0, "0");
+        testInRange(0, "-0");
         testInRange(1, "1");
         testInRange(100, String(100));
         testInRange(100, String(100 + 0.5));
@@ -225,11 +230,17 @@ Ava("test " + name + " from string", (function (t) {
         TestUtils.loop100Fn(function () {
               testOutOfRange(TestUtils.randomInt(Js_int.min, -128));
             });
-        var s = "foo";
-        t.deepEqual($$Number.Int8.fromString(s), undefined, undefined);
-        TestUtils.assertInvalidArgument(t, (function () {
-                return $$Number.Int8.fromStringExn(s);
-              }));
+        var testIsNotInteger = function (s) {
+          t.deepEqual($$Number.Int8.fromString(s), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int8.fromStringExn(s);
+                }));
+        };
+        testIsNotInteger("NaN");
+        testIsNotInteger("Infinity");
+        testIsNotInteger("-Infinity");
+        testIsNotInteger("foo");
+        testIsNotInteger("b1");
       }));
 
 Ava("test " + name + " to string", (function (t) {
@@ -237,7 +248,13 @@ Ava("test " + name + " to string", (function (t) {
           var s = String(i);
           t.deepEqual($$Number.Int8.toString($$Number.Int8.fromStringExn(s)), s, undefined);
         };
+        testToString(0);
+        testToString(1);
         testToString(100);
+        testToString(-128);
+        testToString(-127);
+        testToString(127);
+        testToString(126);
         TestUtils.loop100Fn(function () {
               testToString(TestUtils.randomInt(-128, 127));
             });
@@ -262,154 +279,154 @@ Ava("test " + name + " range", (function (t) {
       }));
 
 Ava("test " + name + " comparison", (function (t) {
-        var testCompare = function (min, max) {
-          var min$1 = $$Number.Int8.fromIntExn(min);
-          var max$1 = $$Number.Int8.fromIntExn(max);
+        var testCompare = function (less, greater) {
+          var less$1 = $$Number.Int8.fromIntExn(less);
+          var greater$1 = $$Number.Int8.fromIntExn(greater);
           var value = $$Number.Int8.fromIntExn(100);
           var minValue = $$Number.Int8.fromIntExn(-128);
           var maxValue = $$Number.Int8.fromIntExn(127);
-          t.deepEqual($$Number.Int8.compare(min$1, max$1), -1, undefined);
-          t.deepEqual($$Number.Int8.compare(max$1, min$1), 1, undefined);
-          t.deepEqual($$Number.Int8.compare(min$1, min$1), 0, undefined);
-          t.deepEqual($$Number.Int8.compare(max$1, max$1), 0, undefined);
-          t.deepEqual($$Number.Int8.compareExn(min$1, max$1), -1, undefined);
-          t.deepEqual($$Number.Int8.compareExn(max$1, min$1), 1, undefined);
-          t.deepEqual($$Number.Int8.compareExn(min$1, min$1), 0, undefined);
-          t.deepEqual($$Number.Int8.compareExn(max$1, max$1), 0, undefined);
-          t.true($$Number.Int8.eq(min$1, min$1), undefined);
-          t.true($$Number.Int8.eq(max$1, max$1), undefined);
-          t.false($$Number.Int8.eq(min$1, max$1), undefined);
-          t.false($$Number.Int8.eq(max$1, min$1), undefined);
-          t.true($$Number.Int8.ne(min$1, max$1), undefined);
-          t.true($$Number.Int8.ne(max$1, min$1), undefined);
-          t.false($$Number.Int8.ne(min$1, min$1), undefined);
-          t.false($$Number.Int8.ne(max$1, max$1), undefined);
-          t.true($$Number.Int8.lt(min$1, max$1), undefined);
-          t.false($$Number.Int8.lt(max$1, min$1), undefined);
-          t.false($$Number.Int8.lt(min$1, min$1), undefined);
-          t.false($$Number.Int8.lt(max$1, max$1), undefined);
-          t.true($$Number.Int8.le(min$1, max$1), undefined);
-          t.false($$Number.Int8.le(max$1, min$1), undefined);
-          t.true($$Number.Int8.le(min$1, min$1), undefined);
-          t.true($$Number.Int8.le(max$1, max$1), undefined);
-          t.true($$Number.Int8.gt(max$1, min$1), undefined);
-          t.false($$Number.Int8.gt(min$1, max$1), undefined);
-          t.false($$Number.Int8.gt(min$1, min$1), undefined);
-          t.false($$Number.Int8.gt(max$1, max$1), undefined);
-          t.true($$Number.Int8.ge(max$1, min$1), undefined);
-          t.false($$Number.Int8.ge(min$1, max$1), undefined);
-          t.true($$Number.Int8.ge(min$1, min$1), undefined);
-          t.true($$Number.Int8.ge(max$1, max$1), undefined);
-          t.deepEqual($$Number.Int8.min(min$1, max$1), min$1, undefined);
-          t.deepEqual($$Number.Int8.min(max$1, min$1), min$1, undefined);
-          t.deepEqual($$Number.Int8.min(min$1, min$1), min$1, undefined);
-          t.deepEqual($$Number.Int8.min(max$1, max$1), max$1, undefined);
-          t.deepEqual($$Number.Int8.minMany([min$1]), Caml_option.some(min$1), undefined);
+          t.deepEqual($$Number.Int8.compare(less$1, greater$1), -1, undefined);
+          t.deepEqual($$Number.Int8.compare(greater$1, less$1), 1, undefined);
+          t.deepEqual($$Number.Int8.compare(less$1, less$1), 0, undefined);
+          t.deepEqual($$Number.Int8.compare(greater$1, greater$1), 0, undefined);
+          t.deepEqual($$Number.Int8.compareExn(less$1, greater$1), -1, undefined);
+          t.deepEqual($$Number.Int8.compareExn(greater$1, less$1), 1, undefined);
+          t.deepEqual($$Number.Int8.compareExn(less$1, less$1), 0, undefined);
+          t.deepEqual($$Number.Int8.compareExn(greater$1, greater$1), 0, undefined);
+          t.true($$Number.Int8.eq(less$1, less$1), undefined);
+          t.true($$Number.Int8.eq(greater$1, greater$1), undefined);
+          t.false($$Number.Int8.eq(less$1, greater$1), undefined);
+          t.false($$Number.Int8.eq(greater$1, less$1), undefined);
+          t.true($$Number.Int8.ne(less$1, greater$1), undefined);
+          t.true($$Number.Int8.ne(greater$1, less$1), undefined);
+          t.false($$Number.Int8.ne(less$1, less$1), undefined);
+          t.false($$Number.Int8.ne(greater$1, greater$1), undefined);
+          t.true($$Number.Int8.lt(less$1, greater$1), undefined);
+          t.false($$Number.Int8.lt(greater$1, less$1), undefined);
+          t.false($$Number.Int8.lt(less$1, less$1), undefined);
+          t.false($$Number.Int8.lt(greater$1, greater$1), undefined);
+          t.true($$Number.Int8.le(less$1, greater$1), undefined);
+          t.false($$Number.Int8.le(greater$1, less$1), undefined);
+          t.true($$Number.Int8.le(less$1, less$1), undefined);
+          t.true($$Number.Int8.le(greater$1, greater$1), undefined);
+          t.true($$Number.Int8.gt(greater$1, less$1), undefined);
+          t.false($$Number.Int8.gt(less$1, greater$1), undefined);
+          t.false($$Number.Int8.gt(less$1, less$1), undefined);
+          t.false($$Number.Int8.gt(greater$1, greater$1), undefined);
+          t.true($$Number.Int8.ge(greater$1, less$1), undefined);
+          t.false($$Number.Int8.ge(less$1, greater$1), undefined);
+          t.true($$Number.Int8.ge(less$1, less$1), undefined);
+          t.true($$Number.Int8.ge(greater$1, greater$1), undefined);
+          t.deepEqual($$Number.Int8.min(less$1, greater$1), less$1, undefined);
+          t.deepEqual($$Number.Int8.min(greater$1, less$1), less$1, undefined);
+          t.deepEqual($$Number.Int8.min(less$1, less$1), less$1, undefined);
+          t.deepEqual($$Number.Int8.min(greater$1, greater$1), greater$1, undefined);
+          t.deepEqual($$Number.Int8.minMany([less$1]), Caml_option.some(less$1), undefined);
           t.deepEqual($$Number.Int8.minMany([
-                    min$1,
-                    max$1
-                  ]), Caml_option.some(min$1), undefined);
+                    less$1,
+                    greater$1
+                  ]), Caml_option.some(less$1), undefined);
           t.deepEqual($$Number.Int8.minMany([
-                    max$1,
-                    min$1
-                  ]), Caml_option.some(min$1), undefined);
+                    greater$1,
+                    less$1
+                  ]), Caml_option.some(less$1), undefined);
           t.deepEqual($$Number.Int8.minMany([
-                    min$1,
+                    less$1,
                     value,
-                    max$1,
+                    greater$1,
                     minValue,
                     maxValue
                   ]), Caml_option.some(minValue), undefined);
-          t.deepEqual($$Number.Int8.minManyExn([min$1]), min$1, undefined);
+          t.deepEqual($$Number.Int8.minManyExn([less$1]), less$1, undefined);
           t.deepEqual($$Number.Int8.minManyExn([
-                    min$1,
-                    max$1
-                  ]), min$1, undefined);
+                    less$1,
+                    greater$1
+                  ]), less$1, undefined);
           t.deepEqual($$Number.Int8.minManyExn([
-                    max$1,
-                    min$1
-                  ]), min$1, undefined);
+                    greater$1,
+                    less$1
+                  ]), less$1, undefined);
           t.deepEqual($$Number.Int8.minManyExn([
                     minValue,
                     maxValue,
-                    min$1,
+                    less$1,
                     value,
-                    max$1
+                    greater$1
                   ]), minValue, undefined);
-          t.deepEqual($$Number.Int8.minManyUnsafe([min$1]), min$1, undefined);
+          t.deepEqual($$Number.Int8.minManyUnsafe([less$1]), less$1, undefined);
           t.deepEqual($$Number.Int8.minManyUnsafe([
-                    min$1,
-                    max$1
-                  ]), min$1, undefined);
+                    less$1,
+                    greater$1
+                  ]), less$1, undefined);
           t.deepEqual($$Number.Int8.minManyUnsafe([
-                    max$1,
-                    min$1
-                  ]), min$1, undefined);
+                    greater$1,
+                    less$1
+                  ]), less$1, undefined);
           t.deepEqual($$Number.Int8.minManyUnsafe([
-                    min$1,
+                    less$1,
                     minValue,
                     maxValue,
                     value,
-                    max$1
+                    greater$1
                   ]), minValue, undefined);
-          t.deepEqual($$Number.Int8.max(min$1, max$1), max$1, undefined);
-          t.deepEqual($$Number.Int8.max(max$1, min$1), max$1, undefined);
-          t.deepEqual($$Number.Int8.max(min$1, min$1), min$1, undefined);
-          t.deepEqual($$Number.Int8.max(max$1, max$1), max$1, undefined);
-          t.deepEqual($$Number.Int8.maxMany([min$1]), Caml_option.some(min$1), undefined);
+          t.deepEqual($$Number.Int8.max(less$1, greater$1), greater$1, undefined);
+          t.deepEqual($$Number.Int8.max(greater$1, less$1), greater$1, undefined);
+          t.deepEqual($$Number.Int8.max(less$1, less$1), less$1, undefined);
+          t.deepEqual($$Number.Int8.max(greater$1, greater$1), greater$1, undefined);
+          t.deepEqual($$Number.Int8.maxMany([less$1]), Caml_option.some(less$1), undefined);
           t.deepEqual($$Number.Int8.maxMany([
-                    min$1,
-                    max$1
-                  ]), Caml_option.some(max$1), undefined);
+                    less$1,
+                    greater$1
+                  ]), Caml_option.some(greater$1), undefined);
           t.deepEqual($$Number.Int8.maxMany([
-                    max$1,
-                    min$1
-                  ]), Caml_option.some(max$1), undefined);
+                    greater$1,
+                    less$1
+                  ]), Caml_option.some(greater$1), undefined);
           t.deepEqual($$Number.Int8.maxMany([
-                    min$1,
+                    less$1,
                     value,
-                    max$1,
+                    greater$1,
                     minValue,
                     maxValue
                   ]), Caml_option.some(maxValue), undefined);
-          t.deepEqual($$Number.Int8.maxManyExn([min$1]), min$1, undefined);
+          t.deepEqual($$Number.Int8.maxManyExn([less$1]), less$1, undefined);
           t.deepEqual($$Number.Int8.maxManyExn([
-                    min$1,
-                    max$1
-                  ]), max$1, undefined);
+                    less$1,
+                    greater$1
+                  ]), greater$1, undefined);
           t.deepEqual($$Number.Int8.maxManyExn([
-                    max$1,
-                    min$1
-                  ]), max$1, undefined);
+                    greater$1,
+                    less$1
+                  ]), greater$1, undefined);
           t.deepEqual($$Number.Int8.maxManyExn([
                     minValue,
                     maxValue,
-                    min$1,
+                    less$1,
                     value,
-                    max$1
+                    greater$1
                   ]), maxValue, undefined);
-          t.deepEqual($$Number.Int8.maxManyUnsafe([min$1]), min$1, undefined);
+          t.deepEqual($$Number.Int8.maxManyUnsafe([less$1]), less$1, undefined);
           t.deepEqual($$Number.Int8.maxManyUnsafe([
-                    min$1,
-                    max$1
-                  ]), max$1, undefined);
+                    less$1,
+                    greater$1
+                  ]), greater$1, undefined);
           t.deepEqual($$Number.Int8.maxManyUnsafe([
-                    max$1,
-                    min$1
-                  ]), max$1, undefined);
+                    greater$1,
+                    less$1
+                  ]), greater$1, undefined);
           t.deepEqual($$Number.Int8.maxManyUnsafe([
-                    min$1,
+                    less$1,
                     minValue,
                     maxValue,
                     value,
-                    max$1
+                    greater$1
                   ]), maxValue, undefined);
         };
         testCompare(-7, 18);
         TestUtils.loop100Fn(function () {
-              var min = TestUtils.randomInt(-128, 127);
-              var max = TestUtils.randomInt(min + 1.0, 127 + 1.0);
-              testCompare(min, max);
+              var less = TestUtils.randomInt(-128, 127);
+              var greater = TestUtils.randomInt(less + 1.0, 127 + 1.0);
+              testCompare(less, greater);
             });
         var zero = $$Number.Int8.fromIntExn(0);
         var negZero = $$Number.Int8.fromIntExn(-0);
@@ -760,11 +777,16 @@ Ava("test " + name + " division", (function (t) {
         testNotDividedByZero(127, -2);
         testNotDividedByZero(-127, -2);
         testNotDividedByZero(126, -2);
-        var testDividedByZero = function (a) {
-          var a$1 = $$Number.Int8.fromIntExn(a);
-          t.deepEqual($$Number.Int8.div(a$1, $$Number.Int8.zero), undefined, undefined);
+        var testDividedByZero = function (i) {
+          var a = $$Number.Int8.fromIntExn(i);
+          t.deepEqual($$Number.Int8.div(a, $$Number.Int8.zero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Int8.divExn(a$1, $$Number.Int8.zero);
+                  return $$Number.Int8.divExn(a, $$Number.Int8.zero);
+                }));
+          var negZero = $$Number.Int8.fromIntExn(-0);
+          t.deepEqual($$Number.Int8.div(a, negZero), undefined, undefined);
+          TestUtils.assertDivisionByZero(t, (function () {
+                  return $$Number.Int8.divExn(a, negZero);
                 }));
         };
         testDividedByZero(0);
@@ -856,6 +878,11 @@ Ava("test " + name + " remainder", (function (t) {
           t.deepEqual($$Number.Int8.rem(a$1, $$Number.Int8.zero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
                   return $$Number.Int8.remExn(a$1, $$Number.Int8.zero);
+                }));
+          var negZero = $$Number.Int8.fromIntExn(-0);
+          t.deepEqual($$Number.Int8.rem(a$1, negZero), undefined, undefined);
+          TestUtils.assertDivisionByZero(t, (function () {
+                  return $$Number.Int8.remExn(a$1, negZero);
                 }));
         };
         testModByZero(0);
@@ -1402,15 +1429,15 @@ var value = 100;
 
 var valueNot = -101;
 
-var min = -7;
+var less = -7;
 
-var max = 18;
+var greater = 18;
 
-var minMaxAnd = 16;
+var lessGreaterAnd = 16;
 
-var minMaxOr = -5;
+var lessGreaterOr = -5;
 
-var minMaxXor = -21;
+var lessGreaterXor = -21;
 
 export {
   IntModule ,
@@ -1424,11 +1451,11 @@ export {
   valueNot ,
   valueShiftLeft ,
   valueRotateShiftLeft ,
-  min ,
-  max ,
-  minMaxAnd ,
-  minMaxOr ,
-  minMaxXor ,
+  less ,
+  greater ,
+  lessGreaterAnd ,
+  lessGreaterOr ,
+  lessGreaterXor ,
   randomValue ,
   randomLargerInt ,
   randomSmallerInt ,

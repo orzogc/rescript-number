@@ -17,12 +17,10 @@ module type Float = {
   include FloatMath with type t := t
 }
 
-let toInt32 = f => f->floatToIntUnsafe->lor(0)
-
 let raiseNaN = () => invalid_arg(`NaN`)
 
 let raiseOperationNaN = (a, b, s) =>
-  invalid_arg(`${a->Js.Float.toString} ${s} ${b->Js.Float.toString} = Nan`)
+  invalid_arg(`${a->Float.toString} ${s} ${b->Float.toString} = Nan`)
 
 module Float64: Float with type t = float = {
   type t = float
@@ -35,7 +33,7 @@ module Float64: Float with type t = float = {
 
   let maxValue = infinity
 
-  let toString = f => f->Js.Float.toString
+  let toString = f => f->Float.toString
 
   let fromIntUnsafe = i => i->Int.toFloat
 
@@ -45,7 +43,9 @@ module Float64: Float with type t = float = {
 
   let fromIntClamped = fromIntUnsafe
 
-  let toInt = f => f->isInteger && f->inInt32Range ? Some(f->floatToIntUnsafe) : None
+  let toIntUnsafe = f => f->floatToIntUnsafe->lor(0)
+
+  let toInt = f => f->isInteger && f->inInt32Range ? Some(f->toIntUnsafe) : None
 
   let toIntExn = f =>
     if !(f->isInteger) {
@@ -53,7 +53,7 @@ module Float64: Float with type t = float = {
     } else if !(f->inInt32Range) {
       raiseOverflow(f, module(Int32Range))
     } else {
-      f->floatToIntUnsafe
+      f->toIntUnsafe
     }
 
   let toIntClamped = f =>
@@ -62,10 +62,8 @@ module Float64: Float with type t = float = {
     } else if f > Int.max->Int.toFloat {
       Int.max
     } else {
-      f->truncate
+      f->toIntUnsafe
     }
-
-  let toIntUnsafe = f => f->toInt32
 
   let fromFloat = f => !(f->isNaN) ? Some(f) : None
 
@@ -75,7 +73,7 @@ module Float64: Float with type t = float = {
     | None => raiseNaN()
     }
 
-  let fromFloatClamped = f => !(f->isNaN) ? f : 0.0
+  let fromFloatClamped = f => !(f->isNaN) ? f : zero
 
   let fromFloatUnsafe = f => f
 
@@ -200,29 +198,25 @@ module Float64: Float with type t = float = {
 
   include Add
 
-  module Sub = {
-    let subUnsafe = (a, b) => a -. b
+  let subUnsafe = (a, b) => a -. b
 
-    let sub = (a, b) => {
-      let f = a->subUnsafe(b)
+  let sub = (a, b) => {
+    let f = a->subUnsafe(b)
 
-      !(f->isNaN) ? Some(f) : None
-    }
-
-    let subExn = (a, b) =>
-      switch a->sub(b) {
-      | Some(f) => f
-      | None => raiseOperationNaN(a, b, "-")
-      }
-
-    let subClamped = (a, b) =>
-      switch a->sub(b) {
-      | Some(f) => f
-      | None => zero
-      }
+    !(f->isNaN) ? Some(f) : None
   }
 
-  include Sub
+  let subExn = (a, b) =>
+    switch a->sub(b) {
+    | Some(f) => f
+    | None => raiseOperationNaN(a, b, "-")
+    }
+
+  let subClamped = (a, b) =>
+    switch a->sub(b) {
+    | Some(f) => f
+    | None => zero
+    }
 
   let mulUnsafe = (a, b) => a *. b
 
@@ -247,7 +241,7 @@ module Float64: Float with type t = float = {
   let divUnsafe = (a, b) => a /. b
 
   let div = (a, b) =>
-    if b !== 0.0 {
+    if b !== zero {
       let f = a->divUnsafe(b)
 
       !(f->isNaN) ? Some(f) : None
@@ -256,7 +250,7 @@ module Float64: Float with type t = float = {
     }
 
   let divExn = (a, b) =>
-    if b !== 0.0 {
+    if b !== zero {
       let f = a->divUnsafe(b)
 
       if f->isNaN {
@@ -271,7 +265,7 @@ module Float64: Float with type t = float = {
   let remUnsafe = (a, b) => a->mod_float(b)
 
   let rem = (a, b) =>
-    if b !== 0.0 {
+    if b !== zero {
       let f = a->remUnsafe(b)
 
       !(f->isNaN) ? Some(f) : None
@@ -280,7 +274,7 @@ module Float64: Float with type t = float = {
     }
 
   let remExn = (a, b) =>
-    if b !== 0.0 {
+    if b !== zero {
       let f = a->remUnsafe(b)
 
       if f->isNaN {
@@ -356,8 +350,9 @@ module Float64: Float with type t = float = {
 
   let int32minMinus1 = Int.min->Int.toFloat -. 1.0
 
-  let ceilInt = f =>
-    f > int32minMinus1 && f <= Int.max->Int.toFloat ? Some(f->ceil->floatToIntUnsafe) : None
+  let ceilIntUnsafe = f => f->ceil->toIntUnsafe
+
+  let ceilInt = f => f > int32minMinus1 && f <= Int.max->Int.toFloat ? Some(f->ceilIntUnsafe) : None
 
   let ceilIntExn = f =>
     switch f->ceilInt {
@@ -365,9 +360,14 @@ module Float64: Float with type t = float = {
     | None => raiseOverflow(f->ceil, module(Int32Range))
     }
 
-  let ceilIntClamped = f => f->Math.ceil_int
-
-  let ceilIntUnsafe = f => f->ceil->toInt32
+  let ceilIntClamped = f =>
+    if f < Int.min->Int.toFloat {
+      Int.min
+    } else if f > Int.max->Int.toFloat {
+      Int.max
+    } else {
+      f->ceilIntUnsafe
+    }
 
   let cos = f => f->Math.cos
 
@@ -381,8 +381,10 @@ module Float64: Float with type t = float = {
 
   let int32maxPlus1 = Int.max->Int.toFloat +. 1.0
 
+  let floorIntUnsafe = f => f->floor->toIntUnsafe
+
   let floorInt = f =>
-    f >= Int.min->Int.toFloat && f < int32maxPlus1 ? Some(f->floor->floatToIntUnsafe) : None
+    f >= Int.min->Int.toFloat && f < int32maxPlus1 ? Some(f->floorIntUnsafe) : None
 
   let floorIntExn = f =>
     switch f->floorInt {
@@ -390,9 +392,14 @@ module Float64: Float with type t = float = {
     | None => raiseOverflow(f->floor, module(Int32Range))
     }
 
-  let floorIntClamped = f => f->Math.floor_int
-
-  let floorIntUnsafe = f => f->floor->toInt32
+  let floorIntClamped = f =>
+    if f < Int.min->Int.toFloat {
+      Int.min
+    } else if f > Int.max->Int.toFloat {
+      Int.max
+    } else {
+      f->floorIntUnsafe
+    }
 
   let fround = f => f->Math.fround
 
@@ -420,8 +427,10 @@ module Float64: Float with type t = float = {
 
   let int32maxPlusHalf1 = Int.max->Int.toFloat +. 0.5
 
+  let roundIntUnsafe = f => f->Math.round->toIntUnsafe
+
   let roundInt = f =>
-    f >= int32minMinusHalf1 && f < int32maxPlusHalf1 ? Some(f->round->floatToIntUnsafe) : None
+    f >= int32minMinusHalf1 && f < int32maxPlusHalf1 ? Some(f->roundIntUnsafe) : None
 
   let roundIntExn = f =>
     switch f->roundInt {
@@ -435,10 +444,8 @@ module Float64: Float with type t = float = {
     } else if f > Int.max->Int.toFloat {
       Int.max
     } else {
-      f->round->floatToIntUnsafe
+      f->roundIntUnsafe
     }
-
-  let roundIntUnsafe = f => f->Math.round->toInt32
 
   let sin = f => f->Math.sin
 
@@ -452,8 +459,9 @@ module Float64: Float with type t = float = {
 
   let trunc = f => f->Math.trunc
 
-  let truncInt = f =>
-    f > int32minMinus1 && f < int32maxPlus1 ? Some(f->trunc->floatToIntUnsafe) : None
+  let truncIntUnsafe = f => f->trunc->toIntUnsafe
+
+  let truncInt = f => f > int32minMinus1 && f < int32maxPlus1 ? Some(f->truncIntUnsafe) : None
 
   let truncIntExn = f =>
     switch f->truncInt {
@@ -467,8 +475,6 @@ module Float64: Float with type t = float = {
     } else if f > Int.max->Int.toFloat {
       Int.max
     } else {
-      f->trunc->floatToIntUnsafe
+      f->truncIntUnsafe
     }
-
-  let truncIntUnsafe = f => f->trunc->toInt32
 }

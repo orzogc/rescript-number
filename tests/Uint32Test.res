@@ -89,15 +89,15 @@ let valueRotateShiftLeft = [
   1000000000.0,
 ]
 
-let min = 27852.0
+let less = 27852.0
 
-let max = 56331.0
+let greater = 56331.0
 
-let minMaxAnd = 19464.0
+let lessGreaterAnd = 19464.0
 
-let minMaxOr = 64719.0
+let lessGreaterOr = 64719.0
 
-let minMaxXor = 45255.0
+let lessGreaterXor = 45255.0
 
 let minInt = Js.Int.min
 
@@ -184,6 +184,7 @@ test(`test ${name} from float`, t => {
   }
 
   testIsIntegerAndInRange(0.0)
+  testIsIntegerAndInRange(-0.0)
   testIsIntegerAndInRange(1.0)
   testIsIntegerAndInRange(value)
   testIsIntegerAndInRange(minValue)
@@ -215,8 +216,10 @@ test(`test ${name} from float`, t => {
     t->Assert.deepEqual(IntModule.fromFloatClamped(f), IntModule.fromFloatExn(value), ())
   }
 
-  let f = value +. 0.5
-  testIsNotInteger(f, value)
+  testIsNotInteger(value +. 0.5, value)
+  testIsNotInteger(nan, 0.0)
+  testIsNotInteger(neg_infinity, minValue)
+  testIsNotInteger(infinity, maxValue)
   testIsNotInteger(minValue +. 0.1, minValue)
   testIsNotInteger(minValue -. 0.1, minValue)
   testIsNotInteger(maxValue +. 0.1, maxValue)
@@ -242,6 +245,7 @@ test(`test ${name} from string`, t => {
   }
 
   testInRange(0.0, "0")
+  testInRange(0.0, "-0")
   testInRange(1.0, "1")
   testInRange(value, value->Float.toString)
   testInRange(minValue, minValue->Float.toString)
@@ -265,9 +269,16 @@ test(`test ${name} from string`, t => {
   testOutOfRange(maxValue +. value)
   loop100Fn(() => testOutOfRange(randomNegativeInt()->Int.toFloat))
 
-  let s = "foo"
-  t->Assert.deepEqual(IntModule.fromString(s), None, ())
-  t->assertInvalidArgument(() => IntModule.fromStringExn(s))
+  let testIsNotInteger = s => {
+    t->Assert.deepEqual(IntModule.fromString(s), None, ())
+    t->assertInvalidArgument(() => IntModule.fromStringExn(s))
+  }
+
+  testIsNotInteger("NaN")
+  testIsNotInteger("Infinity")
+  testIsNotInteger("-Infinity")
+  testIsNotInteger("foo")
+  testIsNotInteger("b1")
 })
 
 test(`test ${name} to string`, t => {
@@ -276,7 +287,13 @@ test(`test ${name} to string`, t => {
     t->Assert.deepEqual(IntModule.fromStringExn(s)->IntModule.toString, s, ())
   }
 
+  testToString(0.0)
+  testToString(1.0)
   testToString(value)
+  testToString(minValue)
+  testToString(minValue +. 1.0)
+  testToString(maxValue)
+  testToString(maxValue -. 1.0)
   loop100Fn(() => testToString(randomValue()))
 })
 
@@ -298,112 +315,119 @@ test(`test ${name} range`, t => {
 })
 
 test(`test ${name} comparison`, t => {
-  let testCompare = (min, max) => {
-    let min = IntModule.fromFloatExn(min)
-    let max = IntModule.fromFloatExn(max)
+  let testCompare = (less, greater) => {
+    let less = IntModule.fromFloatExn(less)
+    let greater = IntModule.fromFloatExn(greater)
     let value = IntModule.fromFloatExn(value)
     let minValue = IntModule.fromFloatExn(minValue)
     let maxValue = IntModule.fromFloatExn(maxValue)
 
-    t->Assert.deepEqual(IntModule.compare(min, max), Some(Less), ())
-    t->Assert.deepEqual(IntModule.compare(max, min), Some(Greater), ())
-    t->Assert.deepEqual(IntModule.compare(min, min), Some(Equal), ())
-    t->Assert.deepEqual(IntModule.compare(max, max), Some(Equal), ())
+    t->Assert.deepEqual(IntModule.compare(less, greater), Some(Less), ())
+    t->Assert.deepEqual(IntModule.compare(greater, less), Some(Greater), ())
+    t->Assert.deepEqual(IntModule.compare(less, less), Some(Equal), ())
+    t->Assert.deepEqual(IntModule.compare(greater, greater), Some(Equal), ())
 
-    t->Assert.deepEqual(IntModule.compareExn(min, max), Less, ())
-    t->Assert.deepEqual(IntModule.compareExn(max, min), Greater, ())
-    t->Assert.deepEqual(IntModule.compareExn(min, min), Equal, ())
-    t->Assert.deepEqual(IntModule.compareExn(max, max), Equal, ())
+    t->Assert.deepEqual(IntModule.compareExn(less, greater), Less, ())
+    t->Assert.deepEqual(IntModule.compareExn(greater, less), Greater, ())
+    t->Assert.deepEqual(IntModule.compareExn(less, less), Equal, ())
+    t->Assert.deepEqual(IntModule.compareExn(greater, greater), Equal, ())
 
-    t->Assert.isTrue(min->IntModule.eq(min), ())
-    t->Assert.isTrue(max->IntModule.eq(max), ())
-    t->Assert.isFalse(min->IntModule.eq(max), ())
-    t->Assert.isFalse(max->IntModule.eq(min), ())
+    t->Assert.isTrue(less->IntModule.eq(less), ())
+    t->Assert.isTrue(greater->IntModule.eq(greater), ())
+    t->Assert.isFalse(less->IntModule.eq(greater), ())
+    t->Assert.isFalse(greater->IntModule.eq(less), ())
 
-    t->Assert.isTrue(min->IntModule.ne(max), ())
-    t->Assert.isTrue(max->IntModule.ne(min), ())
-    t->Assert.isFalse(min->IntModule.ne(min), ())
-    t->Assert.isFalse(max->IntModule.ne(max), ())
+    t->Assert.isTrue(less->IntModule.ne(greater), ())
+    t->Assert.isTrue(greater->IntModule.ne(less), ())
+    t->Assert.isFalse(less->IntModule.ne(less), ())
+    t->Assert.isFalse(greater->IntModule.ne(greater), ())
 
-    t->Assert.isTrue(min->IntModule.lt(max), ())
-    t->Assert.isFalse(max->IntModule.lt(min), ())
-    t->Assert.isFalse(min->IntModule.lt(min), ())
-    t->Assert.isFalse(max->IntModule.lt(max), ())
+    t->Assert.isTrue(less->IntModule.lt(greater), ())
+    t->Assert.isFalse(greater->IntModule.lt(less), ())
+    t->Assert.isFalse(less->IntModule.lt(less), ())
+    t->Assert.isFalse(greater->IntModule.lt(greater), ())
 
-    t->Assert.isTrue(min->IntModule.le(max), ())
-    t->Assert.isFalse(max->IntModule.le(min), ())
-    t->Assert.isTrue(min->IntModule.le(min), ())
-    t->Assert.isTrue(max->IntModule.le(max), ())
+    t->Assert.isTrue(less->IntModule.le(greater), ())
+    t->Assert.isFalse(greater->IntModule.le(less), ())
+    t->Assert.isTrue(less->IntModule.le(less), ())
+    t->Assert.isTrue(greater->IntModule.le(greater), ())
 
-    t->Assert.isTrue(max->IntModule.gt(min), ())
-    t->Assert.isFalse(min->IntModule.gt(max), ())
-    t->Assert.isFalse(min->IntModule.gt(min), ())
-    t->Assert.isFalse(max->IntModule.gt(max), ())
+    t->Assert.isTrue(greater->IntModule.gt(less), ())
+    t->Assert.isFalse(less->IntModule.gt(greater), ())
+    t->Assert.isFalse(less->IntModule.gt(less), ())
+    t->Assert.isFalse(greater->IntModule.gt(greater), ())
 
-    t->Assert.isTrue(max->IntModule.ge(min), ())
-    t->Assert.isFalse(min->IntModule.ge(max), ())
-    t->Assert.isTrue(min->IntModule.ge(min), ())
-    t->Assert.isTrue(max->IntModule.ge(max), ())
+    t->Assert.isTrue(greater->IntModule.ge(less), ())
+    t->Assert.isFalse(less->IntModule.ge(greater), ())
+    t->Assert.isTrue(less->IntModule.ge(less), ())
+    t->Assert.isTrue(greater->IntModule.ge(greater), ())
 
-    t->Assert.deepEqual(IntModule.min(min, max), min, ())
-    t->Assert.deepEqual(IntModule.min(max, min), min, ())
-    t->Assert.deepEqual(IntModule.min(min, min), min, ())
-    t->Assert.deepEqual(IntModule.min(max, max), max, ())
+    t->Assert.deepEqual(IntModule.min(less, greater), less, ())
+    t->Assert.deepEqual(IntModule.min(greater, less), less, ())
+    t->Assert.deepEqual(IntModule.min(less, less), less, ())
+    t->Assert.deepEqual(IntModule.min(greater, greater), greater, ())
 
-    t->Assert.deepEqual(IntModule.minMany([min]), Some(min), ())
-    t->Assert.deepEqual(IntModule.minMany([min, max]), Some(min), ())
-    t->Assert.deepEqual(IntModule.minMany([max, min]), Some(min), ())
+    t->Assert.deepEqual(IntModule.minMany([less]), Some(less), ())
+    t->Assert.deepEqual(IntModule.minMany([less, greater]), Some(less), ())
+    t->Assert.deepEqual(IntModule.minMany([greater, less]), Some(less), ())
     t->Assert.deepEqual(
-      IntModule.minMany([min, value, max, minValue, maxValue]),
+      IntModule.minMany([less, value, greater, minValue, maxValue]),
       Some(minValue),
       (),
     )
-    t->Assert.deepEqual(IntModule.minManyExn([min]), min, ())
-    t->Assert.deepEqual(IntModule.minManyExn([min, max]), min, ())
-    t->Assert.deepEqual(IntModule.minManyExn([max, min]), min, ())
-    t->Assert.deepEqual(IntModule.minManyExn([minValue, maxValue, min, value, max]), minValue, ())
-    t->Assert.deepEqual(IntModule.minManyUnsafe([min]), min, ())
-    t->Assert.deepEqual(IntModule.minManyUnsafe([min, max]), min, ())
-    t->Assert.deepEqual(IntModule.minManyUnsafe([max, min]), min, ())
+    t->Assert.deepEqual(IntModule.minManyExn([less]), less, ())
+    t->Assert.deepEqual(IntModule.minManyExn([less, greater]), less, ())
+    t->Assert.deepEqual(IntModule.minManyExn([greater, less]), less, ())
     t->Assert.deepEqual(
-      IntModule.minManyUnsafe([min, minValue, maxValue, value, max]),
+      IntModule.minManyExn([minValue, maxValue, less, value, greater]),
+      minValue,
+      (),
+    )
+    t->Assert.deepEqual(IntModule.minManyUnsafe([less]), less, ())
+    t->Assert.deepEqual(IntModule.minManyUnsafe([less, greater]), less, ())
+    t->Assert.deepEqual(IntModule.minManyUnsafe([greater, less]), less, ())
+    t->Assert.deepEqual(
+      IntModule.minManyUnsafe([less, minValue, maxValue, value, greater]),
       minValue,
       (),
     )
 
-    t->Assert.deepEqual(IntModule.max(min, max), max, ())
-    t->Assert.deepEqual(IntModule.max(max, min), max, ())
-    t->Assert.deepEqual(IntModule.max(min, min), min, ())
-    t->Assert.deepEqual(IntModule.max(max, max), max, ())
+    t->Assert.deepEqual(IntModule.max(less, greater), greater, ())
+    t->Assert.deepEqual(IntModule.max(greater, less), greater, ())
+    t->Assert.deepEqual(IntModule.max(less, less), less, ())
+    t->Assert.deepEqual(IntModule.max(greater, greater), greater, ())
 
-    t->Assert.deepEqual(IntModule.maxMany([min]), Some(min), ())
-    t->Assert.deepEqual(IntModule.maxMany([min, max]), Some(max), ())
-    t->Assert.deepEqual(IntModule.maxMany([max, min]), Some(max), ())
+    t->Assert.deepEqual(IntModule.maxMany([less]), Some(less), ())
+    t->Assert.deepEqual(IntModule.maxMany([less, greater]), Some(greater), ())
+    t->Assert.deepEqual(IntModule.maxMany([greater, less]), Some(greater), ())
     t->Assert.deepEqual(
-      IntModule.maxMany([min, value, max, minValue, maxValue]),
+      IntModule.maxMany([less, value, greater, minValue, maxValue]),
       Some(maxValue),
       (),
     )
-    t->Assert.deepEqual(IntModule.maxManyExn([min]), min, ())
-    t->Assert.deepEqual(IntModule.maxManyExn([min, max]), max, ())
-    t->Assert.deepEqual(IntModule.maxManyExn([max, min]), max, ())
-    t->Assert.deepEqual(IntModule.maxManyExn([minValue, maxValue, min, value, max]), maxValue, ())
-    t->Assert.deepEqual(IntModule.maxManyUnsafe([min]), min, ())
-    t->Assert.deepEqual(IntModule.maxManyUnsafe([min, max]), max, ())
-    t->Assert.deepEqual(IntModule.maxManyUnsafe([max, min]), max, ())
+    t->Assert.deepEqual(IntModule.maxManyExn([less]), less, ())
+    t->Assert.deepEqual(IntModule.maxManyExn([less, greater]), greater, ())
+    t->Assert.deepEqual(IntModule.maxManyExn([greater, less]), greater, ())
     t->Assert.deepEqual(
-      IntModule.maxManyUnsafe([min, minValue, maxValue, value, max]),
+      IntModule.maxManyExn([minValue, maxValue, less, value, greater]),
+      maxValue,
+      (),
+    )
+    t->Assert.deepEqual(IntModule.maxManyUnsafe([less]), less, ())
+    t->Assert.deepEqual(IntModule.maxManyUnsafe([less, greater]), greater, ())
+    t->Assert.deepEqual(IntModule.maxManyUnsafe([greater, less]), greater, ())
+    t->Assert.deepEqual(
+      IntModule.maxManyUnsafe([less, minValue, maxValue, value, greater]),
       maxValue,
       (),
     )
   }
 
-  testCompare(min, max)
-
+  testCompare(less, greater)
   loop100Fn(() => {
-    let min = randomValue()
-    let max = randomFloat(min +. 1.0, maxValue +. 1.0)->Js.Math.floor_float
-    testCompare(min, max)
+    let less = randomValue()
+    let greater = randomFloat(less +. 1.0, maxValue +. 1.0)->Js.Math.floor_float
+    testCompare(less, greater)
   })
 
   let zero = IntModule.fromFloatExn(0.0)
@@ -454,6 +478,7 @@ test(`test ${name} addition`, t => {
       IntModule.zero->IntModule.addUnsafe(a),
       (),
     )
+
     t->Assert.deepEqual(b->IntModule.add(IntModule.zero), Some(b), ())
     t->Assert.deepEqual(b->IntModule.add(IntModule.zero), IntModule.zero->IntModule.add(b), ())
     t->Assert.deepEqual(b->IntModule.addExn(IntModule.zero), b, ())
@@ -476,7 +501,7 @@ test(`test ${name} addition`, t => {
     )
   }
 
-  testInRange(min, max)
+  testInRange(less, greater)
   testInRange(minValue, 0.0)
   testInRange(maxValue, 0.0)
   testInRange(minValue, 1.0)
@@ -545,7 +570,7 @@ test(`test ${name} subtraction`, t => {
     t->Assert.deepEqual(b->IntModule.subUnsafe(IntModule.zero), b, ())
   }
 
-  testInRange(max, min)
+  testInRange(greater, less)
   testInRange(minValue, 0.0)
   testInRange(maxValue, 0.0)
   testInRange(maxValue, 1.0)
@@ -674,7 +699,7 @@ test(`test ${name} multiplication`, t => {
     )
   }
 
-  testInRange(min, max)
+  testInRange(less, greater)
   testInRange(minValue, 0.0)
   testInRange(maxValue, 0.0)
   testInRange(minValue, 1.0)
@@ -747,28 +772,31 @@ test(`test ${name} division`, t => {
     t->Assert.deepEqual(b->IntModule.divUnsafe(IntModule.one), b, ())
   }
 
-  testNotDividedByZero(min, max)
-  testNotDividedByZero(minValue, min)
-  testNotDividedByZero(minValue, max)
-  testNotDividedByZero(maxValue, min)
-  testNotDividedByZero(maxValue, max)
-  testNotDividedByZero(min, 2.0)
-  testNotDividedByZero(max, 2.0)
+  testNotDividedByZero(less, greater)
+  testNotDividedByZero(minValue, less)
+  testNotDividedByZero(minValue, greater)
+  testNotDividedByZero(maxValue, less)
+  testNotDividedByZero(maxValue, greater)
+  testNotDividedByZero(less, 2.0)
+  testNotDividedByZero(greater, 2.0)
   testNotDividedByZero(minValue, 2.0)
   testNotDividedByZero(maxValue, 2.0)
   testNotDividedByZero(minValue +. 1.0, 2.0)
   testNotDividedByZero(maxValue -. 1.0, 2.0)
 
-  let testDividedByZero = a => {
-    let a = IntModule.fromFloatExn(a)
+  let testDividedByZero = i => {
+    let a = IntModule.fromFloatExn(i)
     t->Assert.deepEqual(a->IntModule.div(IntModule.zero), None, ())
     t->assertDivisionByZero(() => a->IntModule.divExn(IntModule.zero))
+    let negZero = IntModule.fromIntExn(%raw(`-0`))
+    t->Assert.deepEqual(a->IntModule.div(negZero), None, ())
+    t->assertDivisionByZero(() => a->IntModule.divExn(negZero))
   }
 
   testDividedByZero(0.0)
   testDividedByZero(1.0)
-  testDividedByZero(min)
-  testDividedByZero(max)
+  testDividedByZero(less)
+  testDividedByZero(greater)
   testDividedByZero(value)
   testDividedByZero(minValue)
   testDividedByZero(maxValue)
@@ -797,6 +825,7 @@ test(`test ${name} remainder`, t => {
       t->Assert.deepEqual(IntModule.zero->IntModule.remExn(a), IntModule.zero, ())
       t->Assert.deepEqual(IntModule.zero->IntModule.remUnsafe(a), IntModule.zero, ())
     }
+
     if b !== 0.0 {
       let result = IntModule.fromFloatExn(a->mod_float(b)->toUint32)
       let a = IntModule.fromFloatExn(a)
@@ -819,13 +848,13 @@ test(`test ${name} remainder`, t => {
     t->Assert.deepEqual(b->IntModule.remUnsafe(IntModule.one), IntModule.zero, ())
   }
 
-  testNotModByZero(min, max)
-  testNotModByZero(minValue, min)
-  testNotModByZero(minValue, max)
-  testNotModByZero(maxValue, min)
-  testNotModByZero(maxValue, max)
-  testNotModByZero(min, 2.0)
-  testNotModByZero(max, 2.0)
+  testNotModByZero(less, greater)
+  testNotModByZero(minValue, less)
+  testNotModByZero(minValue, greater)
+  testNotModByZero(maxValue, less)
+  testNotModByZero(maxValue, greater)
+  testNotModByZero(less, 2.0)
+  testNotModByZero(greater, 2.0)
   testNotModByZero(minValue, 2.0)
   testNotModByZero(maxValue, 2.0)
   testNotModByZero(minValue +. 1.0, 2.0)
@@ -835,12 +864,15 @@ test(`test ${name} remainder`, t => {
     let a = IntModule.fromFloatExn(a)
     t->Assert.deepEqual(a->IntModule.rem(IntModule.zero), None, ())
     t->assertDivisionByZero(() => a->IntModule.remExn(IntModule.zero))
+    let negZero = IntModule.fromIntExn(%raw(`-0`))
+    t->Assert.deepEqual(a->IntModule.rem(negZero), None, ())
+    t->assertDivisionByZero(() => a->IntModule.remExn(negZero))
   }
 
   testModByZero(0.0)
   testModByZero(1.0)
-  testModByZero(min)
-  testModByZero(max)
+  testModByZero(less)
+  testModByZero(greater)
   testModByZero(value)
   testModByZero(minValue)
   testModByZero(maxValue)
@@ -865,15 +897,15 @@ test(`test ${name} sum`, t => {
     t->Assert.deepEqual(arr->IntModule.sumUnsafe, result, ())
   }
 
-  testInRange([min])
-  testInRange([max])
+  testInRange([less])
+  testInRange([greater])
   testInRange([minValue])
   testInRange([maxValue])
   testInRange([minValue +. 1.0])
   testInRange([maxValue -. 1.0])
-  testInRange([min, max])
-  testInRange([max, min])
-  testInRange([min, value, max])
+  testInRange([less, greater])
+  testInRange([greater, less])
+  testInRange([less, value, greater])
   testInRange([minValue, maxValue])
 
   t->Assert.deepEqual(IntModule.sum([]), None, ())
@@ -889,7 +921,7 @@ test(`test ${name} sum`, t => {
   testOutOfRange([1.0, maxValue])
   testOutOfRange([maxValue, value])
   testOutOfRange([value, maxValue])
-  testOutOfRange([maxValue, max -. min, value])
+  testOutOfRange([maxValue, greater -. less, value])
 
   loop100Fn(() => {
     let a = randomValue()
@@ -988,7 +1020,7 @@ test(`test ${name} bitwise`, t => {
   assertAnd(value, valueNot, 0.0)
   assertAnd(minValue, maxValue, 0.0)
   assertAnd(minValue +. 1.0, maxValue -. 1.0, 0.0)
-  assertAnd(min, max, minMaxAnd)
+  assertAnd(less, greater, lessGreaterAnd)
   loop100Fn(() => {
     let value = randomValue()
     assertAnd(value, value, value)
@@ -1009,7 +1041,7 @@ test(`test ${name} bitwise`, t => {
     t->Assert.deepEqual(b->IntModule.lor(a), value, ())
   }
 
-  assertOr(min, max, minMaxOr)
+  assertOr(less, greater, lessGreaterOr)
   assertOr(value, valueNot, maxValue)
   assertOr(minValue, maxValue, maxValue)
   assertOr(minValue +. 1.0, maxValue -. 1.0, maxValue)
@@ -1033,7 +1065,7 @@ test(`test ${name} bitwise`, t => {
     t->Assert.deepEqual(b->IntModule.lxor(a), value, ())
   }
 
-  assertXor(min, max, minMaxXor)
+  assertXor(less, greater, lessGreaterXor)
   assertXor(value, valueNot, maxValue)
   assertXor(minValue, maxValue, maxValue)
   assertXor(minValue +. 1.0, maxValue -. 1.0, maxValue)
@@ -1146,8 +1178,8 @@ test(`test ${name} integer math`, t => {
   }
 
   t->Assert.deepEqual(
-    IntModule.fromFloatExn(min)->IntModule.imul(IntModule.fromFloatExn(max)),
-    IntModule.fromFloatExn(min *. max),
+    IntModule.fromFloatExn(less)->IntModule.imul(IntModule.fromFloatExn(greater)),
+    IntModule.fromFloatExn(less *. greater),
     (),
   )
 

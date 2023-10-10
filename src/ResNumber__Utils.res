@@ -10,6 +10,9 @@ external maxSafeInteger: float = "MAX_SAFE_INTEGER"
 external isInteger: float => bool = "isInteger"
 
 @scope("Number") @val
+external isFinite: float => bool = "isFinite"
+
+@scope("Number") @val
 external isNaN: float => bool = "isNaN"
 
 @val

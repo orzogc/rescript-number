@@ -4,6 +4,13 @@ let minSafeInteger = ResNumber__Utils.minSafeInteger
 
 let maxSafeInteger = ResNumber__Utils.maxSafeInteger
 
+let isInteger = ResNumber__Utils.isInteger
+
+let isFinite = ResNumber__Utils.isFinite
+
+@scope("Object") @val
+external objectIs: ('a, 'a) => bool = "is"
+
 let assertException = (t, f) =>
   try {
     f()->ignore
@@ -55,3 +62,5 @@ let randomNegativeInt = () => randomInt(Js.Int.min->Js.Int.toFloat, 0.0)
 
 @warning("-27")
 let intToUint32 = (i: int): float => %raw(`i >>> 0`)
+
+let isNegZero = f => objectIs(f, -0.0)

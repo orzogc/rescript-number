@@ -9,6 +9,14 @@ var minSafeInteger = Number.MIN_SAFE_INTEGER;
 
 var maxSafeInteger = Number.MAX_SAFE_INTEGER;
 
+function isInteger(prim) {
+  return Number.isInteger(prim);
+}
+
+function $$isFinite(prim) {
+  return Number.isFinite(prim);
+}
+
 function assertException(t, f) {
   try {
     f(undefined);
@@ -99,9 +107,15 @@ function intToUint32(i) {
   return (i >>> 0);
 }
 
+function isNegZero(f) {
+  return Object.is(f, -0.0);
+}
+
 export {
   minSafeInteger ,
   maxSafeInteger ,
+  isInteger ,
+  $$isFinite ,
   assertException ,
   assertOverflow ,
   assertInvalidArgument ,
@@ -114,5 +128,6 @@ export {
   randomPositiveInt ,
   randomNegativeInt ,
   intToUint32 ,
+  isNegZero ,
 }
 /* minSafeInteger Not a pure module */

@@ -9,23 +9,12 @@ var minSafeInteger = Number.MIN_SAFE_INTEGER;
 
 var maxSafeInteger = Number.MAX_SAFE_INTEGER;
 
-function isInteger(prim) {
-  return Number.isInteger(prim);
-}
-
 function $$isFinite(prim) {
   return Number.isFinite(prim);
 }
 
-function assertException(t, f) {
-  try {
-    f(undefined);
-    return t.fail("it should raise an exception");
-  }
-  catch (exn){
-    t.pass(undefined);
-    return ;
-  }
+function isInteger(prim) {
+  return Number.isInteger(prim);
 }
 
 function assertOverflow(t, f) {
@@ -114,9 +103,8 @@ function isNegZero(f) {
 export {
   minSafeInteger ,
   maxSafeInteger ,
-  isInteger ,
   $$isFinite ,
-  assertException ,
+  isInteger ,
   assertOverflow ,
   assertInvalidArgument ,
   assertDivisionByZero ,

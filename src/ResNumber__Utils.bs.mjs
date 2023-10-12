@@ -17,14 +17,6 @@ function inInt32Range(f) {
   }
 }
 
-function stringToInt(s) {
-  var i = parseInt(s);
-  if (!Number.isNaN(i) && inInt32Range(i)) {
-    return i | 0;
-  }
-  
-}
-
 function stringToFloat(s) {
   var f = parseFloat(s);
   if (!Number.isNaN(f)) {
@@ -55,7 +47,6 @@ function raiseEmptyArray() {
 export {
   Int32Range ,
   inInt32Range ,
-  stringToInt ,
   stringToFloat ,
   raiseOverflow ,
   raiseEmptyArray ,

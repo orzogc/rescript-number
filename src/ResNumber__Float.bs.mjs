@@ -6,10 +6,6 @@ import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 import * as ResNumber__Utils from "./ResNumber__Utils.bs.mjs";
 import * as ResNumber__Operation from "./ResNumber__Operation.bs.mjs";
 
-function raiseOperationNaN(a, b, s) {
-  return PervasivesU.invalid_arg(a.toString() + " " + s + " " + b.toString() + " = Nan");
-}
-
 function toString(f) {
   return f.toString();
 }
@@ -41,7 +37,7 @@ function toIntExn(f) {
       return ResNumber__Utils.raiseOverflow(f, ResNumber__Utils.Int32Range);
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -63,11 +59,10 @@ function fromFloat(f) {
 }
 
 function fromFloatExn(f) {
-  var v = fromFloat(f);
-  if (v !== undefined) {
-    return v;
-  } else {
+  if (Number.isNaN(f)) {
     return PervasivesU.invalid_arg("NaN");
+  } else {
+    return f;
   }
 }
 
@@ -94,6 +89,34 @@ function fromStringExn(s) {
   } else {
     return PervasivesU.invalid_arg("the string is not a float number: " + s);
   }
+}
+
+function toStringWithRadixExn(f, radix) {
+  return f.toString(radix);
+}
+
+function toExponential(f) {
+  return f.toExponential();
+}
+
+function toExponentialWithPrecisionExn(f, digits) {
+  return f.toExponential(digits);
+}
+
+function toPrecision(f) {
+  return f.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn(f, digits) {
+  return f.toPrecision(digits);
+}
+
+function toFixed(f) {
+  return f.toFixed();
+}
+
+function toFixedWithPrecisionExn(f, digits) {
+  return f.toFixed(digits);
 }
 
 function compare(a, b) {
@@ -148,26 +171,22 @@ function min(a, b) {
 
 function minMany(arr) {
   var len = arr.length;
-  if (len <= 0) {
-    return ;
-  }
-  var f = len === 1 ? arr[0] : Caml_splice_call.spliceApply(Math.min, [arr]);
-  if (!Number.isNaN(f)) {
-    return f;
+  if (len > 0) {
+    return len === 1 ? arr[0] : Caml_splice_call.spliceApply(Math.min, [arr]);
   }
   
 }
 
 function minManyExn(arr) {
   var len = arr.length;
-  if (len <= 0) {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
-  }
-  var f = len === 1 ? arr[0] : Caml_splice_call.spliceApply(Math.min, [arr]);
-  if (Number.isNaN(f)) {
-    return PervasivesU.invalid_arg("NaN");
+  if (len > 0) {
+    if (len === 1) {
+      return arr[0];
+    } else {
+      return Caml_splice_call.spliceApply(Math.min, [arr]);
+    }
   } else {
-    return f;
+    return ResNumber__Utils.raiseEmptyArray(undefined);
   }
 }
 
@@ -185,26 +204,22 @@ function max(a, b) {
 
 function maxMany(arr) {
   var len = arr.length;
-  if (len <= 0) {
-    return ;
-  }
-  var f = len === 1 ? arr[0] : Caml_splice_call.spliceApply(Math.max, [arr]);
-  if (!Number.isNaN(f)) {
-    return f;
+  if (len > 0) {
+    return len === 1 ? arr[0] : Caml_splice_call.spliceApply(Math.max, [arr]);
   }
   
 }
 
 function maxManyExn(arr) {
   var len = arr.length;
-  if (len <= 0) {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
-  }
-  var f = len === 1 ? arr[0] : Caml_splice_call.spliceApply(Math.max, [arr]);
-  if (Number.isNaN(f)) {
-    return PervasivesU.invalid_arg("NaN");
+  if (len > 0) {
+    if (len === 1) {
+      return arr[0];
+    } else {
+      return Caml_splice_call.spliceApply(Math.max, [arr]);
+    }
   } else {
-    return f;
+    return ResNumber__Utils.raiseEmptyArray(undefined);
   }
 }
 
@@ -217,29 +232,15 @@ function addUnsafe(a, b) {
 }
 
 function add(a, b) {
-  var f = a + b;
-  if (!Number.isNaN(f)) {
-    return f;
-  }
-  
+  return fromFloat(a + b);
 }
 
 function addExn(a, b) {
-  var f = add(a, b);
-  if (f !== undefined) {
-    return f;
-  } else {
-    return raiseOperationNaN(a, b, "+");
-  }
+  return fromFloatExn(a + b);
 }
 
 function addClamped(a, b) {
-  var f = add(a, b);
-  if (f !== undefined) {
-    return f;
-  } else {
-    return 0.0;
-  }
+  return fromFloatClamped(a + b);
 }
 
 function subUnsafe(a, b) {
@@ -247,29 +248,15 @@ function subUnsafe(a, b) {
 }
 
 function sub(a, b) {
-  var f = a - b;
-  if (!Number.isNaN(f)) {
-    return f;
-  }
-  
+  return fromFloat(a - b);
 }
 
 function subExn(a, b) {
-  var f = sub(a, b);
-  if (f !== undefined) {
-    return f;
-  } else {
-    return raiseOperationNaN(a, b, "-");
-  }
+  return fromFloatExn(a - b);
 }
 
 function subClamped(a, b) {
-  var f = sub(a, b);
-  if (f !== undefined) {
-    return f;
-  } else {
-    return 0.0;
-  }
+  return fromFloatClamped(a - b);
 }
 
 function mulUnsafe(a, b) {
@@ -277,29 +264,15 @@ function mulUnsafe(a, b) {
 }
 
 function mul(a, b) {
-  var f = a * b;
-  if (!Number.isNaN(f)) {
-    return f;
-  }
-  
+  return fromFloat(a * b);
 }
 
 function mulExn(a, b) {
-  var f = mul(a, b);
-  if (f !== undefined) {
-    return f;
-  } else {
-    return raiseOperationNaN(a, b, "*");
-  }
+  return fromFloatExn(a * b);
 }
 
 function mulClamped(a, b) {
-  var f = mul(a, b);
-  if (f !== undefined) {
-    return f;
-  } else {
-    return 0.0;
-  }
+  return fromFloatClamped(a * b);
 }
 
 function divUnsafe(a, b) {
@@ -307,24 +280,15 @@ function divUnsafe(a, b) {
 }
 
 function div(a, b) {
-  if (b === 0.0) {
-    return ;
-  }
-  var f = a / b;
-  if (!Number.isNaN(f)) {
-    return f;
+  if (b !== 0.0) {
+    return fromFloat(a / b);
   }
   
 }
 
 function divExn(a, b) {
   if (b !== 0.0) {
-    var f = a / b;
-    if (Number.isNaN(f)) {
-      return raiseOperationNaN(a, b, "/");
-    } else {
-      return f;
-    }
+    return fromFloatExn(a / b);
   }
   throw {
         RE_EXN_ID: "Division_by_zero",
@@ -337,24 +301,15 @@ function remUnsafe(a, b) {
 }
 
 function rem(a, b) {
-  if (b === 0.0) {
-    return ;
-  }
-  var f = a % b;
-  if (!Number.isNaN(f)) {
-    return f;
+  if (b !== 0.0) {
+    return fromFloat(a % b);
   }
   
 }
 
 function remExn(a, b) {
   if (b !== 0.0) {
-    var f = a % b;
-    if (Number.isNaN(f)) {
-      return raiseOperationNaN(a, b, "%");
-    } else {
-      return f;
-    }
+    return fromFloatExn(a % b);
   }
   throw {
         RE_EXN_ID: "Division_by_zero",
@@ -374,19 +329,11 @@ function negUnsafe(f) {
 }
 
 function neg(f) {
-  if (!Number.isNaN(f)) {
-    return - f;
-  }
-  
+  return fromFloat(- f);
 }
 
 function negExn(f) {
-  var v = neg(f);
-  if (v !== undefined) {
-    return v;
-  } else {
-    return PervasivesU.invalid_arg("NaN");
-  }
+  return fromFloatExn(- f);
 }
 
 function absUnsafe(f) {
@@ -394,19 +341,11 @@ function absUnsafe(f) {
 }
 
 function abs(f) {
-  if (!Number.isNaN(f)) {
-    return Math.abs(f);
-  }
-  
+  return fromFloat(Math.abs(f));
 }
 
 function absExn(f) {
-  var v = abs(f);
-  if (v !== undefined) {
-    return v;
-  } else {
-    return PervasivesU.invalid_arg("NaN");
-  }
+  return fromFloatExn(Math.abs(f));
 }
 
 function sign(f) {
@@ -439,16 +378,40 @@ function signRaw(f) {
   return Math.sign(f);
 }
 
-function acos(f) {
+function acosUnsafe(f) {
   return Math.acos(f);
 }
 
-function acosh(f) {
+function acos(f) {
+  return fromFloat(Math.acos(f));
+}
+
+function acosExn(f) {
+  return fromFloatExn(Math.acos(f));
+}
+
+function acoshUnsafe(f) {
   return Math.acosh(f);
 }
 
-function asin(f) {
+function acosh(f) {
+  return fromFloat(Math.acosh(f));
+}
+
+function acoshExn(f) {
+  return fromFloatExn(Math.acosh(f));
+}
+
+function asinUnsafe(f) {
   return Math.asin(f);
+}
+
+function asin(f) {
+  return fromFloat(Math.asin(f));
+}
+
+function asinExn(f) {
+  return fromFloatExn(Math.asin(f));
 }
 
 function asinh(f) {
@@ -463,8 +426,16 @@ function atan2(y, x) {
   return Math.atan2(y, x);
 }
 
-function atanh(f) {
+function atanhUnsafe(f) {
   return Math.atanh(f);
+}
+
+function atanh(f) {
+  return fromFloat(Math.atanh(f));
+}
+
+function atanhExn(f) {
+  return fromFloatExn(Math.atanh(f));
 }
 
 function cbrt(f) {
@@ -507,8 +478,16 @@ function ceilIntClamped(f) {
   }
 }
 
-function cos(f) {
+function cosUnsafe(f) {
   return Math.cos(f);
+}
+
+function cos(f) {
+  return fromFloat(Math.cos(f));
+}
+
+function cosExn(f) {
+  return fromFloatExn(Math.cos(f));
 }
 
 function cosh(f) {
@@ -571,24 +550,64 @@ function hypotMany(arr) {
   return Caml_splice_call.spliceApply(Math.hypot, [arr]);
 }
 
-function log(f) {
+function logUnsafe(f) {
   return Math.log(f);
 }
 
-function log10(f) {
+function log(f) {
+  return fromFloat(Math.log(f));
+}
+
+function logExn(f) {
+  return fromFloatExn(Math.log(f));
+}
+
+function log10Unsafe(f) {
   return Math.log10(f);
 }
 
-function log1p(f) {
+function log10(f) {
+  return fromFloat(Math.log10(f));
+}
+
+function log10Exn(f) {
+  return fromFloatExn(Math.log10(f));
+}
+
+function log1pUnsafe(f) {
   return Math.log1p(f);
 }
 
-function log2(f) {
+function log1p(f) {
+  return fromFloat(Math.log1p(f));
+}
+
+function log1pExn(f) {
+  return fromFloatExn(Math.log1p(f));
+}
+
+function log2Unsafe(f) {
   return Math.log2(f);
 }
 
-function pow(base, exp) {
+function log2(f) {
+  return fromFloat(Math.log2(f));
+}
+
+function log2Exn(f) {
+  return fromFloatExn(Math.log2(f));
+}
+
+function powUnsafe(base, exp) {
   return Math.pow(base, exp);
+}
+
+function pow(base, exp) {
+  return fromFloat(Math.pow(base, exp));
+}
+
+function powExn(base, exp) {
+  return fromFloatExn(Math.pow(base, exp));
 }
 
 function random() {
@@ -637,20 +656,44 @@ function roundIntClamped(f) {
   }
 }
 
-function sin(f) {
+function sinUnsafe(f) {
   return Math.sin(f);
+}
+
+function sin(f) {
+  return fromFloat(Math.sin(f));
+}
+
+function sinExn(f) {
+  return fromFloatExn(Math.sin(f));
 }
 
 function sinh(f) {
   return Math.sinh(f);
 }
 
-function sqrt(f) {
+function sqrtUnsafe(f) {
   return Math.sqrt(f);
 }
 
-function tan(f) {
+function sqrt(f) {
+  return fromFloat(Math.sqrt(f));
+}
+
+function sqrtExn(f) {
+  return fromFloatExn(Math.sqrt(f));
+}
+
+function tanUnsafe(f) {
   return Math.tan(f);
+}
+
+function tan(f) {
+  return fromFloat(Math.tan(f));
+}
+
+function tanExn(f) {
+  return fromFloatExn(Math.tan(f));
 }
 
 function tanh(f) {
@@ -691,6 +734,22 @@ function truncIntClamped(f) {
   }
 }
 
+function $$isFinite(prim) {
+  return Number.isFinite(prim);
+}
+
+function isInteger(prim) {
+  return Number.isInteger(prim);
+}
+
+function $$isNaN(prim) {
+  return Number.isNaN(prim);
+}
+
+function isSafeInteger(prim) {
+  return Number.isSafeInteger(prim);
+}
+
 var Float64_sum = include.sum;
 
 var Float64_sumExn = include.sumExn;
@@ -714,6 +773,13 @@ var Float64 = {
   fromString: ResNumber__Utils.stringToFloat,
   fromStringExn: fromStringExn,
   toString: toString,
+  toStringWithRadixExn: toStringWithRadixExn,
+  toExponential: toExponential,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+  toPrecision: toPrecision,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+  toFixed: toFixed,
+  toFixedWithPrecisionExn: toFixedWithPrecisionExn,
   zero: 0.0,
   one: 1.0,
   minValue: PervasivesU.neg_infinity,
@@ -765,12 +831,20 @@ var Float64 = {
   signExn: signExn,
   signRaw: signRaw,
   acos: acos,
+  acosExn: acosExn,
+  acosUnsafe: acosUnsafe,
   acosh: acosh,
+  acoshExn: acoshExn,
+  acoshUnsafe: acoshUnsafe,
   asin: asin,
+  asinExn: asinExn,
+  asinUnsafe: asinUnsafe,
   asinh: asinh,
   atan: atan,
   atan2: atan2,
   atanh: atanh,
+  atanhExn: atanhExn,
+  atanhUnsafe: atanhUnsafe,
   cbrt: cbrt,
   ceil: ceil,
   ceilInt: ceilInt,
@@ -778,6 +852,8 @@ var Float64 = {
   ceilIntClamped: ceilIntClamped,
   ceilIntUnsafe: ceilIntUnsafe,
   cos: cos,
+  cosExn: cosExn,
+  cosUnsafe: cosUnsafe,
   cosh: cosh,
   exp: exp,
   expm1: expm1,
@@ -790,10 +866,20 @@ var Float64 = {
   hypot: hypot,
   hypotMany: hypotMany,
   log: log,
+  logExn: logExn,
+  logUnsafe: logUnsafe,
   log10: log10,
+  log10Exn: log10Exn,
+  log10Unsafe: log10Unsafe,
   log1p: log1p,
+  log1pExn: log1pExn,
+  log1pUnsafe: log1pUnsafe,
   log2: log2,
+  log2Exn: log2Exn,
+  log2Unsafe: log2Unsafe,
   pow: pow,
+  powExn: powExn,
+  powUnsafe: powUnsafe,
   random: random,
   randomRange: randomRange,
   round: round,
@@ -802,15 +888,25 @@ var Float64 = {
   roundIntClamped: roundIntClamped,
   roundIntUnsafe: roundIntUnsafe,
   sin: sin,
+  sinExn: sinExn,
+  sinUnsafe: sinUnsafe,
   sinh: sinh,
   sqrt: sqrt,
+  sqrtExn: sqrtExn,
+  sqrtUnsafe: sqrtUnsafe,
   tan: tan,
+  tanExn: tanExn,
+  tanUnsafe: tanUnsafe,
   tanh: tanh,
   trunc: trunc,
   truncInt: truncInt,
   truncIntExn: truncIntExn,
   truncIntClamped: truncIntClamped,
-  truncIntUnsafe: truncIntUnsafe
+  truncIntUnsafe: truncIntUnsafe,
+  $$isFinite: $$isFinite,
+  isInteger: isInteger,
+  $$isNaN: $$isNaN,
+  isSafeInteger: isSafeInteger
 };
 
 export {

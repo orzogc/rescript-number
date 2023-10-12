@@ -9,6 +9,8 @@ module type Integer = {
 
   include NumberConversion with type t := t
 
+  include IntegerFromString with type t := t
+
   include Number with type t := t
 
   include NumberIncDec with type t := t

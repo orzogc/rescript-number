@@ -109,23 +109,23 @@ Ava("test " + name + " to int", (function (t) {
       }));
 
 Ava("test " + name + " from float", (function (t) {
-        var testNotNan = function (f) {
+        var testNotNaN = function (f) {
           var n = $$Number.Float64.fromFloatExn(f);
           t.deepEqual($$Number.Float64.fromFloat(f), Caml_option.some(n), undefined);
           t.deepEqual($$Number.Float64.fromFloatExn(f), n, undefined);
           t.deepEqual($$Number.Float64.fromFloatClamped(f), n, undefined);
           t.deepEqual($$Number.Float64.fromFloatUnsafe(f), n, undefined);
         };
-        testNotNan(0.0);
-        testNotNan(-0.0);
-        testNotNan(1.0);
-        testNotNan(12345678.9);
-        testNotNan(Js_int.min);
-        testNotNan(Js_int.max);
-        testNotNan(PervasivesU.neg_infinity);
-        testNotNan(PervasivesU.infinity);
+        testNotNaN(0.0);
+        testNotNaN(-0.0);
+        testNotNaN(1.0);
+        testNotNaN(12345678.9);
+        testNotNaN(Js_int.min);
+        testNotNaN(Js_int.max);
+        testNotNaN(PervasivesU.neg_infinity);
+        testNotNaN(PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              testNotNan(randomValue(undefined));
+              testNotNaN(randomValue(undefined));
             });
         t.deepEqual($$Number.Float64.fromFloat(Number.NaN), undefined, undefined);
         TestUtils.assertInvalidArgument(t, (function () {
@@ -153,22 +153,22 @@ Ava("test " + name + " to float", (function (t) {
       }));
 
 Ava("test " + name + " from string", (function (t) {
-        var testNotNan = function (f, s) {
+        var testNotNaN = function (f, s) {
           var n = $$Number.Float64.fromFloatExn(f);
           t.deepEqual($$Number.Float64.fromString(s), Caml_option.some(n), undefined);
           t.deepEqual($$Number.Float64.fromStringExn(s), n, undefined);
         };
-        testNotNan(0.0, "0");
-        testNotNan(-0.0, "-0");
-        testNotNan(1.0, "1");
-        testNotNan(12345678.9, String(12345678.9));
-        testNotNan(Js_int.min, String(Js_int.min));
-        testNotNan(Js_int.max, String(Js_int.max));
-        testNotNan(PervasivesU.neg_infinity, String(PervasivesU.neg_infinity));
-        testNotNan(PervasivesU.infinity, String(PervasivesU.infinity));
+        testNotNaN(0.0, "0");
+        testNotNaN(-0.0, "-0");
+        testNotNaN(1.0, "1");
+        testNotNaN(12345678.9, String(12345678.9));
+        testNotNaN(Js_int.min, String(Js_int.min));
+        testNotNaN(Js_int.max, String(Js_int.max));
+        testNotNaN(PervasivesU.neg_infinity, String(PervasivesU.neg_infinity));
+        testNotNaN(PervasivesU.infinity, String(PervasivesU.infinity));
         TestUtils.loop100Fn(function () {
               var n = randomValue(undefined);
-              testNotNan(n, String(n));
+              testNotNaN(n, String(n));
             });
         var testIsNotFloat = function (s) {
           t.deepEqual($$Number.Float64.fromString(s), undefined, undefined);
@@ -182,21 +182,80 @@ Ava("test " + name + " from string", (function (t) {
       }));
 
 Ava("test " + name + " to string", (function (t) {
+        var testFn = function (fn) {
+          fn(0.0);
+          fn(-0.0);
+          fn(1.0);
+          fn(12345678.9);
+          fn(Js_int.min);
+          fn(Js_int.max);
+          fn(PervasivesU.neg_infinity);
+          fn(PervasivesU.infinity);
+          TestUtils.loop100Fn(function () {
+                fn(randomValue(undefined));
+              });
+        };
         var testToString = function (f) {
           var s = String(f);
           t.deepEqual($$Number.Float64.toString($$Number.Float64.fromFloatExn(f)), s, undefined);
         };
-        testToString(0.0);
-        testToString(-0.0);
-        testToString(1.0);
-        testToString(12345678.9);
-        testToString(Js_int.min);
-        testToString(Js_int.max);
-        testToString(PervasivesU.neg_infinity);
-        testToString(PervasivesU.infinity);
-        TestUtils.loop100Fn(function () {
-              testToString(randomValue(undefined));
-            });
+        testFn(testToString);
+        var testToExponential = function (f) {
+          var s = f.toExponential();
+          var n = $$Number.Float64.fromFloatExn(f);
+          t.deepEqual($$Number.Float64.toExponential(n), s, undefined);
+          for(var digits = 0; digits <= 100; ++digits){
+            var s$1 = f.toExponential(digits);
+            t.deepEqual($$Number.Float64.toExponentialWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          if (f !== PervasivesU.neg_infinity && f !== PervasivesU.infinity) {
+            t.throws((function () {
+                    return $$Number.Float64.toExponentialWithPrecisionExn(n, -1);
+                  }), undefined, undefined);
+            t.throws((function () {
+                    return $$Number.Float64.toExponentialWithPrecisionExn(n, 101);
+                  }), undefined, undefined);
+            return ;
+          }
+          
+        };
+        testFn(testToExponential);
+        var testToPrecision = function (f) {
+          var s = f.toPrecision();
+          var n = $$Number.Float64.fromFloatExn(f);
+          t.deepEqual($$Number.Float64.toPrecision(n), s, undefined);
+          for(var digits = 1; digits <= 100; ++digits){
+            var s$1 = f.toPrecision(digits);
+            t.deepEqual($$Number.Float64.toPrecisionWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          if (f !== PervasivesU.neg_infinity && f !== PervasivesU.infinity) {
+            t.throws((function () {
+                    return $$Number.Float64.toPrecisionWithPrecisionExn(n, 0);
+                  }), undefined, undefined);
+            t.throws((function () {
+                    return $$Number.Float64.toPrecisionWithPrecisionExn(n, 101);
+                  }), undefined, undefined);
+            return ;
+          }
+          
+        };
+        testFn(testToPrecision);
+        var testToFixed = function (f) {
+          var s = f.toFixed();
+          var n = $$Number.Float64.fromFloatExn(f);
+          t.deepEqual($$Number.Float64.toFixed(n), s, undefined);
+          for(var digits = 0; digits <= 100; ++digits){
+            var s$1 = f.toFixed(digits);
+            t.deepEqual($$Number.Float64.toFixedWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Float64.toFixedWithPrecisionExn(n, -1);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Float64.toFixedWithPrecisionExn(n, 101);
+                }), undefined, undefined);
+        };
+        testFn(testToFixed);
       }));
 
 Ava("test " + name + " zero", (function (t) {
@@ -384,7 +443,7 @@ Ava("test " + name + " comparison", (function (t) {
       }));
 
 Ava("test " + name + " addition", (function (t) {
-        var testNotNan = function (a, b) {
+        var testNotNaN = function (a, b) {
           if (TestUtils.$$isFinite(a)) {
             var negA = $$Number.Float64.fromFloatExn(- a);
             var a$1 = $$Number.Float64.fromFloatExn(a);
@@ -439,24 +498,24 @@ Ava("test " + name + " addition", (function (t) {
           t.deepEqual($$Number.Float64.addUnsafe(b$2, $$Number.Float64.zero), result$2, undefined);
           t.deepEqual($$Number.Float64.addUnsafe(b$2, $$Number.Float64.zero), $$Number.Float64.addUnsafe($$Number.Float64.zero, b$2), undefined);
         };
-        testNotNan(0.0, -0.0);
-        testNotNan(-56248.7954, 87934.1968);
-        testNotNan(Js_int.min, -1.0);
-        testNotNan(Js_int.max, 1.0);
-        testNotNan(PervasivesU.neg_infinity, 0.0);
-        testNotNan(PervasivesU.neg_infinity, -0.0);
-        testNotNan(PervasivesU.neg_infinity, 1.0);
-        testNotNan(PervasivesU.neg_infinity, -1.0);
-        testNotNan(PervasivesU.neg_infinity, PervasivesU.neg_infinity);
-        testNotNan(PervasivesU.infinity, 0.0);
-        testNotNan(PervasivesU.infinity, -0.0);
-        testNotNan(PervasivesU.infinity, 1.0);
-        testNotNan(PervasivesU.infinity, -1.0);
-        testNotNan(PervasivesU.infinity, PervasivesU.infinity);
+        testNotNaN(0.0, -0.0);
+        testNotNaN(-56248.7954, 87934.1968);
+        testNotNaN(Js_int.min, -1.0);
+        testNotNaN(Js_int.max, 1.0);
+        testNotNaN(PervasivesU.neg_infinity, 0.0);
+        testNotNaN(PervasivesU.neg_infinity, -0.0);
+        testNotNaN(PervasivesU.neg_infinity, 1.0);
+        testNotNaN(PervasivesU.neg_infinity, -1.0);
+        testNotNaN(PervasivesU.neg_infinity, PervasivesU.neg_infinity);
+        testNotNaN(PervasivesU.infinity, 0.0);
+        testNotNaN(PervasivesU.infinity, -0.0);
+        testNotNaN(PervasivesU.infinity, 1.0);
+        testNotNaN(PervasivesU.infinity, -1.0);
+        testNotNaN(PervasivesU.infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              testNotNan(a, b);
+              testNotNaN(a, b);
             });
         var a = PervasivesU.infinity;
         var b = PervasivesU.neg_infinity;
@@ -475,7 +534,7 @@ Ava("test " + name + " addition", (function (t) {
       }));
 
 Ava("test " + name + " subtraction", (function (t) {
-        var testNotNan = function (a, b) {
+        var testNotNaN = function (a, b) {
           if (TestUtils.$$isFinite(a)) {
             var a$1 = $$Number.Float64.fromFloatExn(a);
             t.deepEqual($$Number.Float64.sub(a$1, a$1), Caml_option.some($$Number.Float64.zero), undefined);
@@ -506,39 +565,39 @@ Ava("test " + name + " subtraction", (function (t) {
           t.deepEqual($$Number.Float64.subClamped(b$2, $$Number.Float64.zero), b$2, undefined);
           t.deepEqual($$Number.Float64.subUnsafe(b$2, $$Number.Float64.zero), b$2, undefined);
         };
-        testNotNan(0.0, -0.0);
-        testNotNan(-56248.7954, 87934.1968);
-        testNotNan(87934.1968, -56248.7954);
-        testNotNan(Js_int.min, 1.0);
-        testNotNan(Js_int.max, -1.0);
-        testNotNan(PervasivesU.neg_infinity, 0.0);
-        testNotNan(PervasivesU.neg_infinity, -0.0);
-        testNotNan(PervasivesU.neg_infinity, 1.0);
-        testNotNan(PervasivesU.neg_infinity, -1.0);
-        testNotNan(PervasivesU.neg_infinity, 12345678.9);
-        testNotNan(PervasivesU.infinity, 0.0);
-        testNotNan(PervasivesU.infinity, -0.0);
-        testNotNan(PervasivesU.infinity, 1.0);
-        testNotNan(PervasivesU.infinity, -1.0);
-        testNotNan(PervasivesU.infinity, 12345678.9);
-        testNotNan(PervasivesU.neg_infinity, PervasivesU.infinity);
-        testNotNan(PervasivesU.infinity, PervasivesU.neg_infinity);
-        testNotNan(0.0, PervasivesU.neg_infinity);
-        testNotNan(-0.0, PervasivesU.neg_infinity);
-        testNotNan(1.0, PervasivesU.neg_infinity);
-        testNotNan(-1.0, PervasivesU.neg_infinity);
-        testNotNan(12345678.9, PervasivesU.neg_infinity);
-        testNotNan(0.0, PervasivesU.infinity);
-        testNotNan(-0.0, PervasivesU.infinity);
-        testNotNan(1.0, PervasivesU.infinity);
-        testNotNan(-1.0, PervasivesU.infinity);
-        testNotNan(12345678.9, PervasivesU.infinity);
+        testNotNaN(0.0, -0.0);
+        testNotNaN(-56248.7954, 87934.1968);
+        testNotNaN(87934.1968, -56248.7954);
+        testNotNaN(Js_int.min, 1.0);
+        testNotNaN(Js_int.max, -1.0);
+        testNotNaN(PervasivesU.neg_infinity, 0.0);
+        testNotNaN(PervasivesU.neg_infinity, -0.0);
+        testNotNaN(PervasivesU.neg_infinity, 1.0);
+        testNotNaN(PervasivesU.neg_infinity, -1.0);
+        testNotNaN(PervasivesU.neg_infinity, 12345678.9);
+        testNotNaN(PervasivesU.infinity, 0.0);
+        testNotNaN(PervasivesU.infinity, -0.0);
+        testNotNaN(PervasivesU.infinity, 1.0);
+        testNotNaN(PervasivesU.infinity, -1.0);
+        testNotNaN(PervasivesU.infinity, 12345678.9);
+        testNotNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
+        testNotNaN(PervasivesU.infinity, PervasivesU.neg_infinity);
+        testNotNaN(0.0, PervasivesU.neg_infinity);
+        testNotNaN(-0.0, PervasivesU.neg_infinity);
+        testNotNaN(1.0, PervasivesU.neg_infinity);
+        testNotNaN(-1.0, PervasivesU.neg_infinity);
+        testNotNaN(12345678.9, PervasivesU.neg_infinity);
+        testNotNaN(0.0, PervasivesU.infinity);
+        testNotNaN(-0.0, PervasivesU.infinity);
+        testNotNaN(1.0, PervasivesU.infinity);
+        testNotNaN(-1.0, PervasivesU.infinity);
+        testNotNaN(12345678.9, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              testNotNan(a, b);
+              testNotNaN(a, b);
             });
-        var testNan = function (a, b) {
+        var testNaN = function (a, b) {
           var a$1 = $$Number.Float64.fromFloatExn(a);
           var b$1 = $$Number.Float64.fromFloatExn(b);
           t.deepEqual($$Number.Float64.sub(a$1, b$1), undefined, undefined);
@@ -547,12 +606,12 @@ Ava("test " + name + " subtraction", (function (t) {
                 }));
           t.deepEqual($$Number.Float64.subClamped(a$1, b$1), $$Number.Float64.zero, undefined);
         };
-        testNan(PervasivesU.neg_infinity, PervasivesU.neg_infinity);
-        testNan(PervasivesU.infinity, PervasivesU.infinity);
+        testNaN(PervasivesU.neg_infinity, PervasivesU.neg_infinity);
+        testNaN(PervasivesU.infinity, PervasivesU.infinity);
       }));
 
 Ava("test " + name + " multiplication", (function (t) {
-        var testNotNan = function (a, b) {
+        var testNotNaN = function (a, b) {
           if (TestUtils.$$isFinite(a)) {
             var result = $$Number.Float64.fromFloatExn(a * 0.0);
             var a$1 = $$Number.Float64.fromFloatExn(a);
@@ -605,22 +664,22 @@ Ava("test " + name + " multiplication", (function (t) {
           t.deepEqual($$Number.Float64.mulUnsafe(b$2, $$Number.Float64.one), b$2, undefined);
           t.deepEqual($$Number.Float64.mulUnsafe(b$2, $$Number.Float64.one), $$Number.Float64.mulUnsafe($$Number.Float64.one, b$2), undefined);
         };
-        testNotNan(0.0, -1.0);
-        testNotNan(-0.0, 1.0);
-        testNotNan(-56248.7954, 87934.1968);
-        testNotNan(Js_int.min, 12345678.9);
-        testNotNan(Js_int.max, 12345678.9);
-        testNotNan(PervasivesU.neg_infinity, 12345678.9);
-        testNotNan(PervasivesU.neg_infinity, - 12345678.9);
-        testNotNan(PervasivesU.infinity, 12345678.9);
-        testNotNan(PervasivesU.infinity, - 12345678.9);
-        testNotNan(PervasivesU.neg_infinity, PervasivesU.infinity);
+        testNotNaN(0.0, -1.0);
+        testNotNaN(-0.0, 1.0);
+        testNotNaN(-56248.7954, 87934.1968);
+        testNotNaN(Js_int.min, 12345678.9);
+        testNotNaN(Js_int.max, 12345678.9);
+        testNotNaN(PervasivesU.neg_infinity, 12345678.9);
+        testNotNaN(PervasivesU.neg_infinity, - 12345678.9);
+        testNotNaN(PervasivesU.infinity, 12345678.9);
+        testNotNaN(PervasivesU.infinity, - 12345678.9);
+        testNotNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              testNotNan(a, b);
+              testNotNaN(a, b);
             });
-        var testNan = function (a, b) {
+        var testNaN = function (a, b) {
           var a$1 = $$Number.Float64.fromFloatExn(a);
           var b$1 = $$Number.Float64.fromFloatExn(b);
           t.deepEqual($$Number.Float64.mul(a$1, b$1), undefined, undefined);
@@ -634,12 +693,12 @@ Ava("test " + name + " multiplication", (function (t) {
           t.deepEqual($$Number.Float64.mulClamped(a$1, b$1), $$Number.Float64.zero, undefined);
           t.deepEqual($$Number.Float64.mulClamped(b$1, a$1), $$Number.Float64.zero, undefined);
         };
-        testNan(PervasivesU.neg_infinity, 0.0);
-        testNan(PervasivesU.infinity, 0.0);
+        testNaN(PervasivesU.neg_infinity, 0.0);
+        testNaN(PervasivesU.infinity, 0.0);
       }));
 
 Ava("test " + name + " division", (function (t) {
-        var testNotNan = function (a, b) {
+        var testNotNaN = function (a, b) {
           if (a !== 0.0) {
             var result = $$Number.Float64.fromFloatExn(b / a);
             var a$1 = $$Number.Float64.fromFloatExn(a);
@@ -682,14 +741,14 @@ Ava("test " + name + " division", (function (t) {
           t.deepEqual($$Number.Float64.divExn(b$3, negOne), negB, undefined);
           t.deepEqual($$Number.Float64.divUnsafe(b$3, negOne), negB, undefined);
         };
-        testNotNan(-56248.7954, 87934.1968);
-        testNotNan(Js_int.min, Js_int.max);
-        testNotNan(Js_int.min, -56248.7954);
-        testNotNan(Js_int.max, 87934.1968);
-        testNotNan(PervasivesU.neg_infinity, -56248.7954);
-        testNotNan(PervasivesU.neg_infinity, 87934.1968);
-        testNotNan(PervasivesU.infinity, -56248.7954);
-        testNotNan(PervasivesU.infinity, 87934.1968);
+        testNotNaN(-56248.7954, 87934.1968);
+        testNotNaN(Js_int.min, Js_int.max);
+        testNotNaN(Js_int.min, -56248.7954);
+        testNotNaN(Js_int.max, 87934.1968);
+        testNotNaN(PervasivesU.neg_infinity, -56248.7954);
+        testNotNaN(PervasivesU.neg_infinity, 87934.1968);
+        testNotNaN(PervasivesU.infinity, -56248.7954);
+        testNotNaN(PervasivesU.infinity, 87934.1968);
         var testDividedByZero = function (f) {
           var a = $$Number.Float64.fromFloatExn(f);
           t.deepEqual($$Number.Float64.div(a, $$Number.Float64.zero), undefined, undefined);
@@ -715,11 +774,11 @@ Ava("test " + name + " division", (function (t) {
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              testNotNan(a, b);
+              testNotNaN(a, b);
               testDividedByZero(a);
               testDividedByZero(b);
             });
-        var testNan = function (a, b) {
+        var testNaN = function (a, b) {
           var a$1 = $$Number.Float64.fromFloatExn(a);
           var b$1 = $$Number.Float64.fromFloatExn(b);
           t.deepEqual($$Number.Float64.div(a$1, b$1), undefined, undefined);
@@ -727,12 +786,12 @@ Ava("test " + name + " division", (function (t) {
                   return $$Number.Float64.divExn(a$1, b$1);
                 }));
         };
-        testNan(PervasivesU.neg_infinity, PervasivesU.infinity);
-        testNan(PervasivesU.infinity, PervasivesU.neg_infinity);
+        testNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
+        testNaN(PervasivesU.infinity, PervasivesU.neg_infinity);
       }));
 
 Ava("test " + name + " remainder", (function (t) {
-        var testNotNan = function (a, b) {
+        var testNotNaN = function (a, b) {
           if (a !== 0.0) {
             var result = $$Number.Float64.fromFloatExn(b % a);
             var a$1 = $$Number.Float64.fromFloatExn(a);
@@ -757,10 +816,10 @@ Ava("test " + name + " remainder", (function (t) {
           t.deepEqual($$Number.Float64.remExn($$Number.Float64.zero, b$2), $$Number.Float64.zero, undefined);
           t.deepEqual($$Number.Float64.remUnsafe($$Number.Float64.zero, b$2), $$Number.Float64.zero, undefined);
         };
-        testNotNan(-56248.7954, 87934.1968);
-        testNotNan(Js_int.min, Js_int.max);
-        testNotNan(Js_int.min, -56248.7954);
-        testNotNan(Js_int.max, 87934.1968);
+        testNotNaN(-56248.7954, 87934.1968);
+        testNotNaN(Js_int.min, Js_int.max);
+        testNotNaN(Js_int.min, -56248.7954);
+        testNotNaN(Js_int.max, 87934.1968);
         var testModByZero = function (f) {
           var a = $$Number.Float64.fromFloatExn(f);
           t.deepEqual($$Number.Float64.rem(a, $$Number.Float64.zero), undefined, undefined);
@@ -786,11 +845,11 @@ Ava("test " + name + " remainder", (function (t) {
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              testNotNan(a, b);
+              testNotNaN(a, b);
               testModByZero(a);
               testModByZero(b);
             });
-        var testNan = function (a, b) {
+        var testNaN = function (a, b) {
           var a$1 = $$Number.Float64.fromFloatExn(a);
           var b$1 = $$Number.Float64.fromFloatExn(b);
           t.deepEqual($$Number.Float64.rem(a$1, b$1), undefined, undefined);
@@ -798,20 +857,20 @@ Ava("test " + name + " remainder", (function (t) {
                   return $$Number.Float64.remExn(a$1, b$1);
                 }));
         };
-        testNan(PervasivesU.neg_infinity, 1.0);
-        testNan(PervasivesU.neg_infinity, 12345678.9);
-        testNan(PervasivesU.neg_infinity, Js_int.min);
-        testNan(PervasivesU.neg_infinity, Js_int.max);
-        testNan(PervasivesU.neg_infinity, PervasivesU.infinity);
-        testNan(PervasivesU.infinity, 1.0);
-        testNan(PervasivesU.infinity, 12345678.9);
-        testNan(PervasivesU.infinity, Js_int.min);
-        testNan(PervasivesU.infinity, Js_int.max);
-        testNan(PervasivesU.infinity, PervasivesU.neg_infinity);
+        testNaN(PervasivesU.neg_infinity, 1.0);
+        testNaN(PervasivesU.neg_infinity, 12345678.9);
+        testNaN(PervasivesU.neg_infinity, Js_int.min);
+        testNaN(PervasivesU.neg_infinity, Js_int.max);
+        testNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
+        testNaN(PervasivesU.infinity, 1.0);
+        testNaN(PervasivesU.infinity, 12345678.9);
+        testNaN(PervasivesU.infinity, Js_int.min);
+        testNaN(PervasivesU.infinity, Js_int.max);
+        testNaN(PervasivesU.infinity, PervasivesU.neg_infinity);
       }));
 
 Ava("test " + name + " sum", (function (t) {
-        var testNotNan = function (arr) {
+        var testNotNaN = function (arr) {
           var result = $$Number.Float64.fromFloatExn(Belt_Array.reduce(arr, 0.0, (function (acc, v) {
                       return acc + v;
                     })));
@@ -822,41 +881,44 @@ Ava("test " + name + " sum", (function (t) {
           t.deepEqual($$Number.Float64.sumExn(arr$1), result, undefined);
           t.deepEqual($$Number.Float64.sumUnsafe(arr$1), result, undefined);
         };
-        testNotNan([-56248.7954]);
-        testNotNan([87934.1968]);
-        testNotNan([Js_int.min]);
-        testNotNan([Js_int.max]);
-        testNotNan([PervasivesU.neg_infinity]);
-        testNotNan([PervasivesU.infinity]);
-        testNotNan([
+        testNotNaN([-56248.7954]);
+        testNotNaN([87934.1968]);
+        testNotNaN([Js_int.min]);
+        testNotNaN([Js_int.max]);
+        testNotNaN([PervasivesU.neg_infinity]);
+        testNotNaN([PervasivesU.infinity]);
+        testNotNaN([
               -56248.7954,
               87934.1968
             ]);
-        testNotNan([
+        testNotNaN([
               87934.1968,
               -56248.7954
             ]);
-        testNotNan([
+        testNotNaN([
               -56248.7954,
               Js_int.min,
+              0.0,
               12345678.9,
               Js_int.max,
-              87934.1968
+              1.0,
+              87934.1968,
+              -0.0
             ]);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              testNotNan([a]);
-              testNotNan([b]);
-              testNotNan([
+              testNotNaN([a]);
+              testNotNaN([b]);
+              testNotNaN([
                     a,
                     b
                   ]);
-              testNotNan([
+              testNotNaN([
                     b,
                     a
                   ]);
-              testNotNan([
+              testNotNaN([
                     a,
                     12345678.9,
                     Js_int.max,
@@ -864,7 +926,7 @@ Ava("test " + name + " sum", (function (t) {
                     b
                   ]);
             });
-        var testNan = function (arr) {
+        var testNaN = function (arr) {
           var arr$1 = Belt_Array.mapU(arr, (function (i) {
                   return $$Number.Float64.fromFloatExn(i);
                 }));
@@ -873,20 +935,161 @@ Ava("test " + name + " sum", (function (t) {
                   return $$Number.Float64.sumExn(arr$1);
                 }));
         };
-        testNan([
+        testNaN([
               PervasivesU.neg_infinity,
               PervasivesU.infinity
             ]);
-        testNan([
+        testNaN([
               12345678.9,
               PervasivesU.neg_infinity,
               PervasivesU.infinity
             ]);
-        testNan([
+        testNaN([
               PervasivesU.neg_infinity,
               PervasivesU.infinity,
               12345678.9
             ]);
+        t.deepEqual($$Number.Float64.sum([]), undefined, undefined);
+        TestUtils.assertInvalidArgument(t, (function () {
+                return $$Number.Float64.sumExn([]);
+              }));
+      }));
+
+Ava("test " + name + " signed math", (function (t) {
+        var testNeg = function (f) {
+          var a = $$Number.Float64.fromFloatExn(f);
+          var b = $$Number.Float64.fromFloatExn(- f);
+          t.deepEqual($$Number.Float64.neg(a), Caml_option.some(b), undefined);
+          t.deepEqual($$Number.Float64.negExn(a), b, undefined);
+          t.deepEqual($$Number.Float64.negUnsafe(a), b, undefined);
+          t.deepEqual($$Number.Float64.neg(b), Caml_option.some(a), undefined);
+          t.deepEqual($$Number.Float64.negExn(b), a, undefined);
+          t.deepEqual($$Number.Float64.negUnsafe(b), a, undefined);
+        };
+        testNeg(0.0);
+        testNeg(-0.0);
+        testNeg(1.0);
+        testNeg(12345678.9);
+        testNeg(Js_int.min);
+        testNeg(Js_int.max);
+        testNeg(PervasivesU.neg_infinity);
+        testNeg(PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testNeg(randomValue(undefined));
+            });
+        var testAbs = function (f) {
+          var a = $$Number.Float64.fromFloatExn(f);
+          var b = $$Number.Float64.fromFloatExn(Math.abs(f));
+          t.deepEqual($$Number.Float64.abs(a), Caml_option.some(b), undefined);
+          t.deepEqual($$Number.Float64.absExn(a), b, undefined);
+          t.deepEqual($$Number.Float64.absUnsafe(a), b, undefined);
+          t.deepEqual($$Number.Float64.abs(b), Caml_option.some(b), undefined);
+          t.deepEqual($$Number.Float64.absExn(b), b, undefined);
+          t.deepEqual($$Number.Float64.absUnsafe(b), b, undefined);
+        };
+        testAbs(0.0);
+        testAbs(-0.0);
+        testAbs(-1.0);
+        testAbs(- 12345678.9);
+        testAbs(Js_int.min);
+        testAbs(- Js_int.max);
+        testAbs(PervasivesU.neg_infinity);
+        testAbs(PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testAbs(randomValue(undefined));
+            });
+        var testSign = function (f) {
+          var test_ = function (f) {
+            var n = $$Number.Float64.fromFloatExn(f);
+            var result = f < 0.0 ? -1 : (
+                f > 0.0 ? 1 : 0
+              );
+            var raw = Math.sign(f);
+            t.deepEqual($$Number.Float64.sign(n), result, undefined);
+            t.deepEqual($$Number.Float64.signExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.signRaw(n), raw, undefined);
+          };
+          test_(f);
+          test_(- f);
+        };
+        testSign(0.0);
+        testSign(-0.0);
+        testSign(1.0);
+        testSign(12345678.9);
+        testSign(PervasivesU.neg_infinity);
+        testSign(PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testSign(randomValue(undefined));
+            });
+      }));
+
+Ava("test " + name + " float extra", (function (t) {
+        var testIsFinite = function (f, result) {
+          t.deepEqual($$Number.Float64.$$isFinite($$Number.Float64.fromFloatExn(f)), result, undefined);
+        };
+        testIsFinite(0.0, true);
+        testIsFinite(-0.0, true);
+        testIsFinite(1.0, true);
+        testIsFinite(12345678.9, true);
+        testIsFinite(Js_int.min, true);
+        testIsFinite(Js_int.max, true);
+        testIsFinite(PervasivesU.neg_infinity, false);
+        testIsFinite(PervasivesU.infinity, false);
+        TestUtils.loop100Fn(function () {
+              testIsFinite(randomValue(undefined), true);
+            });
+        t.deepEqual($$Number.Float64.$$isFinite($$Number.Float64.fromFloatUnsafe(Number.NaN)), false, undefined);
+        var testIsInteger = function (f, result) {
+          t.deepEqual($$Number.Float64.isInteger($$Number.Float64.fromFloatExn(f)), result, undefined);
+        };
+        testIsInteger(0.0, true);
+        testIsInteger(-0.0, true);
+        testIsInteger(1.0, true);
+        testIsInteger(1e55, true);
+        testIsInteger(12345678.9, false);
+        testIsInteger(Js_int.min, true);
+        testIsInteger(Js_int.max, true);
+        testIsInteger(PervasivesU.neg_infinity, false);
+        testIsInteger(PervasivesU.infinity, false);
+        TestUtils.loop100Fn(function () {
+              testIsInteger(TestUtils.randomInt(Js_int.min, Js_int.max), true);
+            });
+        TestUtils.loop100Fn(function () {
+              testIsInteger(randomSmallerInt(undefined), true);
+            });
+        TestUtils.loop100Fn(function () {
+              testIsInteger(randomLargerInt(undefined), true);
+            });
+        var testIsNotNaN = function (f) {
+          t.deepEqual($$Number.Float64.$$isNaN($$Number.Float64.fromFloatExn(f)), false, undefined);
+        };
+        testIsNotNaN(0.0);
+        testIsNotNaN(-0.0);
+        testIsNotNaN(1.0);
+        testIsNotNaN(12345678.9);
+        testIsNotNaN(Js_int.min);
+        testIsNotNaN(Js_int.max);
+        testIsNotNaN(PervasivesU.neg_infinity);
+        testIsNotNaN(PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testIsNotNaN(randomValue(undefined));
+            });
+        t.deepEqual($$Number.Float64.$$isNaN($$Number.Float64.fromFloatUnsafe(Number.NaN)), true, undefined);
+        var testIsSafeInteger = function (f, result) {
+          t.deepEqual($$Number.Float64.isSafeInteger($$Number.Float64.fromFloatExn(f)), result, undefined);
+        };
+        testIsSafeInteger(0.0, true);
+        testIsSafeInteger(-0.0, true);
+        testIsSafeInteger(1.0, true);
+        testIsSafeInteger(1e55, false);
+        testIsSafeInteger(12345678.9, false);
+        testIsSafeInteger(Js_int.min, true);
+        testIsSafeInteger(Js_int.max, true);
+        testIsSafeInteger(PervasivesU.neg_infinity, false);
+        testIsSafeInteger(PervasivesU.infinity, false);
+        TestUtils.loop100Fn(function () {
+              testIsSafeInteger(TestUtils.randomInt(Js_int.min, Js_int.max), true);
+            });
       }));
 
 var FloatModule;

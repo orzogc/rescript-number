@@ -211,6 +211,17 @@ Ava("test " + name + " from string", (function (t) {
           var n = $$Number.Int16.fromIntExn(i);
           t.deepEqual($$Number.Int16.fromString(s), Caml_option.some(n), undefined);
           t.deepEqual($$Number.Int16.fromStringExn(s), n, undefined);
+          for(var radix = 2; radix <= 36; ++radix){
+            var s$1 = i.toString(radix);
+            t.deepEqual($$Number.Int16.fromStringWithRadix(s$1, radix), Caml_option.some(n), undefined);
+            t.deepEqual($$Number.Int16.fromStringWithRadixExn(s$1, radix), n, undefined);
+          }
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, 1);
+                }));
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, 37);
+                }));
         };
         testInRange(0, "0");
         testInRange(0, "-0");
@@ -232,8 +243,23 @@ Ava("test " + name + " from string", (function (t) {
         var testOutOfRange = function (f) {
           var s = String(f);
           t.deepEqual($$Number.Int16.fromString(s), undefined, undefined);
-          TestUtils.assertException(t, (function () {
+          TestUtils.assertOverflow(t, (function () {
                   return $$Number.Int16.fromStringExn(s);
+                }));
+          for(var radix = 2; radix <= 36; ++radix){
+            var s$1 = f.toString(radix);
+            t.deepEqual($$Number.Int16.fromStringWithRadix(s$1, radix), undefined, undefined);
+            TestUtils.assertOverflow(t, (function(radix,s$1){
+                return function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s$1, radix);
+                }
+                }(radix,s$1)));
+          }
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, 1);
+                }));
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, 37);
                 }));
         };
         testOutOfRange(-32768 - 1.0);
@@ -251,6 +277,20 @@ Ava("test " + name + " from string", (function (t) {
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Int16.fromStringExn(s);
                 }));
+          for(var radix = 2; radix <= 10; ++radix){
+            t.deepEqual($$Number.Int16.fromStringWithRadix(s, radix), undefined, undefined);
+            TestUtils.assertInvalidArgument(t, (function(radix){
+                return function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, radix);
+                }
+                }(radix)));
+          }
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, 1);
+                }));
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Int16.fromStringWithRadixExn(s, 37);
+                }));
         };
         testIsNotInteger("NaN");
         testIsNotInteger("Infinity");
@@ -260,20 +300,66 @@ Ava("test " + name + " from string", (function (t) {
       }));
 
 Ava("test " + name + " to string", (function (t) {
+        var testFn = function (fn) {
+          fn(0);
+          fn(1);
+          fn(10000);
+          fn(-32768);
+          fn(-32767);
+          fn(32767);
+          fn(32766);
+          TestUtils.loop100Fn(function () {
+                fn(TestUtils.randomInt(-32768, 32767));
+              });
+        };
         var testToString = function (i) {
           var s = String(i);
-          t.deepEqual($$Number.Int16.toString($$Number.Int16.fromStringExn(s)), s, undefined);
+          var n = $$Number.Int16.fromIntExn(i);
+          t.deepEqual($$Number.Int16.toString(n), s, undefined);
+          for(var radix = 2; radix <= 36; ++radix){
+            var s$1 = i.toString(radix);
+            t.deepEqual($$Number.Int16.toStringWithRadixExn(n, radix), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Int16.toStringWithRadixExn(n, 1);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Int16.toStringWithRadixExn(n, 37);
+                }), undefined, undefined);
         };
-        testToString(0);
-        testToString(1);
-        testToString(10000);
-        testToString(-32768);
-        testToString(-32767);
-        testToString(32767);
-        testToString(32766);
-        TestUtils.loop100Fn(function () {
-              testToString(TestUtils.randomInt(-32768, 32767));
-            });
+        testFn(testToString);
+        var testToExponential = function (i) {
+          var s = i.toExponential();
+          var n = $$Number.Int16.fromIntExn(i);
+          t.deepEqual($$Number.Int16.toExponential(n), s, undefined);
+          for(var digits = 0; digits <= 100; ++digits){
+            var s$1 = i.toExponential(digits);
+            t.deepEqual($$Number.Int16.toExponentialWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Int16.toExponentialWithPrecisionExn(n, -1);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Int16.toExponentialWithPrecisionExn(n, 101);
+                }), undefined, undefined);
+        };
+        testFn(testToExponential);
+        var testToPrecision = function (i) {
+          var s = i.toPrecision();
+          var n = $$Number.Int16.fromIntExn(i);
+          t.deepEqual($$Number.Int16.toPrecision(n), s, undefined);
+          for(var digits = 1; digits <= 100; ++digits){
+            var s$1 = i.toPrecision(digits);
+            t.deepEqual($$Number.Int16.toPrecisionWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Int16.toPrecisionWithPrecisionExn(n, 0);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Int16.toPrecisionWithPrecisionExn(n, 101);
+                }), undefined, undefined);
+        };
+        testFn(testToPrecision);
       }));
 
 Ava("test " + name + " zero", (function (t) {
@@ -947,7 +1033,9 @@ Ava("test " + name + " sum", (function (t) {
             ]);
         testInRange([
               -73,
+              0,
               10000,
+              1,
               382
             ]);
         testInRange([
@@ -1350,6 +1438,7 @@ Ava("test " + name + " signed math", (function (t) {
           t.deepEqual($$Number.Int16.negUnsafe(b), a, undefined);
         };
         testNegInRange(0);
+        testNegInRange(-0);
         testNegInRange(1);
         testNegInRange(10000);
         testNegInRange(-32767);
@@ -1382,6 +1471,7 @@ Ava("test " + name + " signed math", (function (t) {
           t.deepEqual($$Number.Int16.absUnsafe(b), b, undefined);
         };
         testAbsInRange(0);
+        testAbsInRange(-0);
         testAbsInRange(-1);
         testAbsInRange(-10000);
         testAbsInRange(-32767);
@@ -1403,27 +1493,32 @@ Ava("test " + name + " signed math", (function (t) {
               }
             });
         var testSign = function (i) {
-          var n = $$Number.Int16.fromIntExn(i);
-          var result = i < 0 ? -1 : (
-              i > 0 ? 1 : 0
-            );
-          var raw = i < 0 ? -1.0 : (
-              i > 0 ? 1.0 : 0.0
-            );
-          t.deepEqual($$Number.Int16.sign(n), result, undefined);
-          t.deepEqual($$Number.Int16.signExn(n), result, undefined);
-          t.deepEqual($$Number.Int16.signRaw(n), raw, undefined);
+          var test_ = function (i) {
+            var n = $$Number.Int16.fromIntExn(i);
+            var result = i < 0 ? -1 : (
+                i > 0 ? 1 : 0
+              );
+            var raw = i < 0 ? -1.0 : (
+                i > 0 ? 1.0 : 0.0
+              );
+            t.deepEqual($$Number.Int16.sign(n), result, undefined);
+            t.deepEqual($$Number.Int16.signExn(n), result, undefined);
+            t.deepEqual($$Number.Int16.signRaw(n), raw, undefined);
+          };
+          test_(i);
+          if (i !== -32768) {
+            return test_(-i | 0);
+          }
+          
         };
         testSign(0);
+        testSign(-0);
         testSign(1);
-        testSign(-1);
         testSign(10000);
-        testSign(-10000);
         testSign(-32768);
         testSign(-32767);
         testSign(32767);
         testSign(32766);
-        testSign(-32767);
         TestUtils.loop100Fn(function () {
               testSign(TestUtils.randomInt(-32768, 32767));
             });

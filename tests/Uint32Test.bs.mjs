@@ -234,11 +234,23 @@ Ava("test " + name + " from string", (function (t) {
           var n = $$Number.Uint32.fromFloatExn(f);
           t.deepEqual($$Number.Uint32.fromString(s), Caml_option.some(n), undefined);
           t.deepEqual($$Number.Uint32.fromStringExn(s), n, undefined);
+          for(var radix = 2; radix <= 36; ++radix){
+            var s$1 = f.toString(radix);
+            t.deepEqual($$Number.Uint32.fromStringWithRadix(s$1, radix), Caml_option.some(n), undefined);
+            t.deepEqual($$Number.Uint32.fromStringWithRadixExn(s$1, radix), n, undefined);
+          }
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, 1);
+                }));
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, 37);
+                }));
         };
         testInRange(0.0, "0");
         testInRange(0.0, "-0");
         testInRange(1.0, "1");
         testInRange(2000000000.0, String(2000000000.0));
+        testInRange(2000000000.0, String(2000000000.0 + 0.5));
         testInRange(0.0, String(0.0));
         testInRange(4294967295.0, String(4294967295.0));
         testInRange(0.0 + 1.0, String(0.0 + 1.0));
@@ -250,8 +262,23 @@ Ava("test " + name + " from string", (function (t) {
         var testOutOfRange = function (f) {
           var s = String(f);
           t.deepEqual($$Number.Uint32.fromString(s), undefined, undefined);
-          TestUtils.assertException(t, (function () {
+          TestUtils.assertOverflow(t, (function () {
                   return $$Number.Uint32.fromStringExn(s);
+                }));
+          for(var radix = 2; radix <= 36; ++radix){
+            var s$1 = f.toString(radix);
+            t.deepEqual($$Number.Uint32.fromStringWithRadix(s$1, radix), undefined, undefined);
+            TestUtils.assertOverflow(t, (function(radix,s$1){
+                return function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s$1, radix);
+                }
+                }(radix,s$1)));
+          }
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, 1);
+                }));
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, 37);
                 }));
         };
         testOutOfRange(0.0 - 1.0);
@@ -266,6 +293,20 @@ Ava("test " + name + " from string", (function (t) {
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Uint32.fromStringExn(s);
                 }));
+          for(var radix = 2; radix <= 10; ++radix){
+            t.deepEqual($$Number.Uint32.fromStringWithRadix(s, radix), undefined, undefined);
+            TestUtils.assertInvalidArgument(t, (function(radix){
+                return function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, radix);
+                }
+                }(radix)));
+          }
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, 1);
+                }));
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Uint32.fromStringWithRadixExn(s, 37);
+                }));
         };
         testIsNotInteger("NaN");
         testIsNotInteger("Infinity");
@@ -275,20 +316,66 @@ Ava("test " + name + " from string", (function (t) {
       }));
 
 Ava("test " + name + " to string", (function (t) {
+        var testFn = function (fn) {
+          fn(0.0);
+          fn(1.0);
+          fn(2000000000.0);
+          fn(0.0);
+          fn(0.0 + 1.0);
+          fn(4294967295.0);
+          fn(4294967295.0 - 1.0);
+          TestUtils.loop100Fn(function () {
+                fn(randomValue(undefined));
+              });
+        };
         var testToString = function (f) {
           var s = String(f);
-          t.deepEqual($$Number.Uint32.toString($$Number.Uint32.fromStringExn(s)), s, undefined);
+          var n = $$Number.Uint32.fromFloatExn(f);
+          t.deepEqual($$Number.Uint32.toString(n), s, undefined);
+          for(var radix = 2; radix <= 36; ++radix){
+            var s$1 = f.toString(radix);
+            t.deepEqual($$Number.Uint32.toStringWithRadixExn(n, radix), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Uint32.toStringWithRadixExn(n, 1);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Uint32.toStringWithRadixExn(n, 37);
+                }), undefined, undefined);
         };
-        testToString(0.0);
-        testToString(1.0);
-        testToString(2000000000.0);
-        testToString(0.0);
-        testToString(0.0 + 1.0);
-        testToString(4294967295.0);
-        testToString(4294967295.0 - 1.0);
-        TestUtils.loop100Fn(function () {
-              testToString(randomValue(undefined));
-            });
+        testFn(testToString);
+        var testToExponential = function (f) {
+          var s = f.toExponential();
+          var n = $$Number.Uint32.fromFloatExn(f);
+          t.deepEqual($$Number.Uint32.toExponential(n), s, undefined);
+          for(var digits = 0; digits <= 100; ++digits){
+            var s$1 = f.toExponential(digits);
+            t.deepEqual($$Number.Uint32.toExponentialWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Uint32.toExponentialWithPrecisionExn(n, -1);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Uint32.toExponentialWithPrecisionExn(n, 101);
+                }), undefined, undefined);
+        };
+        testFn(testToExponential);
+        var testToPrecision = function (f) {
+          var s = f.toPrecision();
+          var n = $$Number.Uint32.fromFloatExn(f);
+          t.deepEqual($$Number.Uint32.toPrecision(n), s, undefined);
+          for(var digits = 1; digits <= 100; ++digits){
+            var s$1 = f.toPrecision(digits);
+            t.deepEqual($$Number.Uint32.toPrecisionWithPrecisionExn(n, digits), s$1, undefined);
+          }
+          t.throws((function () {
+                  return $$Number.Uint32.toPrecisionWithPrecisionExn(n, 0);
+                }), undefined, undefined);
+          t.throws((function () {
+                  return $$Number.Uint32.toPrecisionWithPrecisionExn(n, 101);
+                }), undefined, undefined);
+        };
+        testFn(testToPrecision);
       }));
 
 Ava("test " + name + " zero", (function (t) {
@@ -869,7 +956,9 @@ Ava("test " + name + " sum", (function (t) {
             ]);
         testInRange([
               27852.0,
+              0.0,
               2000000000.0,
+              1.0,
               56331.0
             ]);
         testInRange([

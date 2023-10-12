@@ -7,20 +7,33 @@ open ResNumber__Operation
 open ResNumber__Others
 open ResNumber__Utils
 
+module type FloatExtra = {
+  type t
+
+  let isFinite: t => bool
+
+  let isInteger: t => bool
+
+  let isNaN: t => bool
+
+  let isSafeInteger: t => bool
+}
+
 module type Float = {
   type t
 
   include NumberConversion with type t := t
 
+  include FloatToString with type t := t
+
   include Number with type t := t
 
   include FloatMath with type t := t
+
+  include FloatExtra with type t := t
 }
 
 let raiseNaN = () => invalid_arg(`NaN`)
-
-let raiseOperationNaN = (a, b, s) =>
-  invalid_arg(`${a->Float.toString} ${s} ${b->Float.toString} = Nan`)
 
 module Float64: Float with type t = float = {
   type t = float
@@ -49,7 +62,7 @@ module Float64: Float with type t = float = {
 
   let toIntExn = f =>
     if !(f->isInteger) {
-      invalid_arg(`float number ${f->toString} is not a integer`)
+      invalid_arg(`float number ${f->toString} is not an integer`)
     } else if !(f->inInt32Range) {
       raiseOverflow(f, module(Int32Range))
     } else {
@@ -67,11 +80,7 @@ module Float64: Float with type t = float = {
 
   let fromFloat = f => !(f->isNaN) ? Some(f) : None
 
-  let fromFloatExn = f =>
-    switch f->fromFloat {
-    | Some(v) => v
-    | None => raiseNaN()
-    }
+  let fromFloatExn = f => !(f->isNaN) ? f : raiseNaN()
 
   let fromFloatClamped = f => !(f->isNaN) ? f : zero
 
@@ -86,6 +95,20 @@ module Float64: Float with type t = float = {
     | Some(f) => f
     | None => invalid_arg(`the string is not a float number: ${s}`)
     }
+
+  let toStringWithRadixExn = (f, ~radix) => f->Float.toStringWithRadix(~radix)
+
+  let toExponential = f => f->Float.toExponential
+
+  let toExponentialWithPrecisionExn = (f, ~digits) => f->Float.toExponentialWithPrecision(~digits)
+
+  let toPrecision = f => f->Float.toPrecision
+
+  let toPrecisionWithPrecisionExn = (f, ~digits) => f->Float.toPrecisionWithPrecision(~digits)
+
+  let toFixed = f => f->Float.toFixed
+
+  let toFixedWithPrecisionExn = (f, ~digits) => f->Float.toFixedWithPrecision(~digits)
 
   let compare = (a, b) =>
     !(a->isNaN) && !(b->isNaN)
@@ -124,9 +147,7 @@ module Float64: Float with type t = float = {
     let len = arr->Array2.length
 
     if len > 0 {
-      let f = len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.minMany_float
-
-      !(f->isNaN) ? Some(f) : None
+      Some(len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.minMany_float)
     } else {
       None
     }
@@ -136,9 +157,7 @@ module Float64: Float with type t = float = {
     let len = arr->Array2.length
 
     if len > 0 {
-      let f = len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.minMany_float
-
-      !(f->isNaN) ? f : raiseNaN()
+      len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.minMany_float
     } else {
       raiseEmptyArray()
     }
@@ -152,9 +171,7 @@ module Float64: Float with type t = float = {
     let len = arr->Array2.length
 
     if len > 0 {
-      let f = len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.maxMany_float
-
-      !(f->isNaN) ? Some(f) : None
+      Some(len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.maxMany_float)
     } else {
       None
     }
@@ -164,9 +181,7 @@ module Float64: Float with type t = float = {
     let len = arr->Array2.length
 
     if len > 0 {
-      let f = len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.maxMany_float
-
-      !(f->isNaN) ? f : raiseNaN()
+      len === 1 ? arr->Array2.unsafe_get(0) : arr->Math.maxMany_float
     } else {
       raiseEmptyArray()
     }
@@ -177,114 +192,42 @@ module Float64: Float with type t = float = {
   module Add = {
     let addUnsafe = (a, b) => a +. b
 
-    let add = (a, b) => {
-      let f = a->addUnsafe(b)
+    let add = (a, b) => a->addUnsafe(b)->fromFloat
 
-      !(f->isNaN) ? Some(f) : None
-    }
+    let addExn = (a, b) => a->addUnsafe(b)->fromFloatExn
 
-    let addExn = (a, b) =>
-      switch a->add(b) {
-      | Some(f) => f
-      | None => raiseOperationNaN(a, b, "+")
-      }
-
-    let addClamped = (a, b) =>
-      switch a->add(b) {
-      | Some(f) => f
-      | None => zero
-      }
+    let addClamped = (a, b) => a->addUnsafe(b)->fromFloatClamped
   }
 
   include Add
 
   let subUnsafe = (a, b) => a -. b
 
-  let sub = (a, b) => {
-    let f = a->subUnsafe(b)
+  let sub = (a, b) => a->subUnsafe(b)->fromFloat
 
-    !(f->isNaN) ? Some(f) : None
-  }
+  let subExn = (a, b) => a->subUnsafe(b)->fromFloatExn
 
-  let subExn = (a, b) =>
-    switch a->sub(b) {
-    | Some(f) => f
-    | None => raiseOperationNaN(a, b, "-")
-    }
-
-  let subClamped = (a, b) =>
-    switch a->sub(b) {
-    | Some(f) => f
-    | None => zero
-    }
+  let subClamped = (a, b) => a->subUnsafe(b)->fromFloatClamped
 
   let mulUnsafe = (a, b) => a *. b
 
-  let mul = (a, b) => {
-    let f = a->mulUnsafe(b)
+  let mul = (a, b) => a->mulUnsafe(b)->fromFloat
 
-    !(f->isNaN) ? Some(f) : None
-  }
+  let mulExn = (a, b) => a->mulUnsafe(b)->fromFloatExn
 
-  let mulExn = (a, b) =>
-    switch a->mul(b) {
-    | Some(f) => f
-    | None => raiseOperationNaN(a, b, "*")
-    }
-
-  let mulClamped = (a, b) =>
-    switch a->mul(b) {
-    | Some(f) => f
-    | None => zero
-    }
+  let mulClamped = (a, b) => a->mulUnsafe(b)->fromFloatClamped
 
   let divUnsafe = (a, b) => a /. b
 
-  let div = (a, b) =>
-    if b !== zero {
-      let f = a->divUnsafe(b)
+  let div = (a, b) => b !== zero ? a->divUnsafe(b)->fromFloat : None
 
-      !(f->isNaN) ? Some(f) : None
-    } else {
-      None
-    }
-
-  let divExn = (a, b) =>
-    if b !== zero {
-      let f = a->divUnsafe(b)
-
-      if f->isNaN {
-        raiseOperationNaN(a, b, "/")
-      } else {
-        f
-      }
-    } else {
-      raise(Division_by_zero)
-    }
+  let divExn = (a, b) => b !== zero ? a->divUnsafe(b)->fromFloatExn : raise(Division_by_zero)
 
   let remUnsafe = (a, b) => a->mod_float(b)
 
-  let rem = (a, b) =>
-    if b !== zero {
-      let f = a->remUnsafe(b)
+  let rem = (a, b) => b !== zero ? a->remUnsafe(b)->fromFloat : None
 
-      !(f->isNaN) ? Some(f) : None
-    } else {
-      None
-    }
-
-  let remExn = (a, b) =>
-    if b !== zero {
-      let f = a->remUnsafe(b)
-
-      if f->isNaN {
-        raiseOperationNaN(a, b, "%")
-      } else {
-        f
-      }
-    } else {
-      raise(Division_by_zero)
-    }
+  let remExn = (a, b) => b !== zero ? a->remUnsafe(b)->fromFloatExn : raise(Division_by_zero)
 
   include (
     MakeNumberSum({
@@ -296,23 +239,15 @@ module Float64: Float with type t = float = {
 
   let negUnsafe = f => -.f
 
-  let neg = f => !(f->isNaN) ? Some(f->negUnsafe) : None
+  let neg = f => f->negUnsafe->fromFloat
 
-  let negExn = f =>
-    switch f->neg {
-    | Some(v) => v
-    | None => raiseNaN()
-    }
+  let negExn = f => f->negUnsafe->fromFloatExn
 
   let absUnsafe = f => f->abs_float
 
-  let abs = f => !(f->isNaN) ? Some(f->absUnsafe) : None
+  let abs = f => f->absUnsafe->fromFloat
 
-  let absExn = f =>
-    switch f->abs {
-    | Some(v) => v
-    | None => raiseNaN()
-    }
+  let absExn = f => f->absUnsafe->fromFloatExn
 
   let sign = f =>
     switch f->Math.sign_float {
@@ -330,11 +265,23 @@ module Float64: Float with type t = float = {
 
   let signRaw = f => f->Math.sign_float
 
-  let acos = f => f->Math.acos
+  let acosUnsafe = f => f->Math.acos
 
-  let acosh = f => f->Math.acosh
+  let acos = f => f->acosUnsafe->fromFloat
 
-  let asin = f => f->Math.asin
+  let acosExn = f => f->acosUnsafe->fromFloatExn
+
+  let acoshUnsafe = f => f->Math.acosh
+
+  let acosh = f => f->acoshUnsafe->fromFloat
+
+  let acoshExn = f => f->acoshUnsafe->fromFloatExn
+
+  let asinUnsafe = f => f->Math.asin
+
+  let asin = f => f->asinUnsafe->fromFloat
+
+  let asinExn = f => f->asinUnsafe->fromFloatExn
 
   let asinh = f => f->Math.asinh
 
@@ -342,7 +289,11 @@ module Float64: Float with type t = float = {
 
   let atan2 = (~y, ~x) => PervasivesU.atan2(y, x)
 
-  let atanh = f => f->Math.atanh
+  let atanhUnsafe = f => f->Math.atanh
+
+  let atanh = f => f->atanhUnsafe->fromFloat
+
+  let atanhExn = f => f->atanhUnsafe->fromFloatExn
 
   let cbrt = f => f->Math.cbrt
 
@@ -369,7 +320,11 @@ module Float64: Float with type t = float = {
       f->ceilIntUnsafe
     }
 
-  let cos = f => f->Math.cos
+  let cosUnsafe = f => f->Math.cos
+
+  let cos = f => f->cosUnsafe->fromFloat
+
+  let cosExn = f => f->cosUnsafe->fromFloatExn
 
   let cosh = f => f->Math.cosh
 
@@ -407,15 +362,35 @@ module Float64: Float with type t = float = {
 
   let hypotMany = arr => arr->Math.hypotMany
 
-  let log = f => f->Math.log
+  let logUnsafe = f => f->Math.log
 
-  let log10 = f => f->Math.log10
+  let log = f => f->logUnsafe->fromFloat
 
-  let log1p = f => f->Math.log1p
+  let logExn = f => f->logUnsafe->fromFloatExn
 
-  let log2 = f => f->Math.log2
+  let log10Unsafe = f => f->Math.log10
 
-  let pow = (~base, ~exp) => Math.pow_float(~base, ~exp)
+  let log10 = f => f->log10Unsafe->fromFloat
+
+  let log10Exn = f => f->log10Unsafe->fromFloatExn
+
+  let log1pUnsafe = f => f->Math.log1p
+
+  let log1p = f => f->log1pUnsafe->fromFloat
+
+  let log1pExn = f => f->log1pUnsafe->fromFloatExn
+
+  let log2Unsafe = f => f->Math.log2
+
+  let log2 = f => f->log2Unsafe->fromFloat
+
+  let log2Exn = f => f->log2Unsafe->fromFloatExn
+
+  let powUnsafe = (~base, ~exp) => Math.pow_float(~base, ~exp)
+
+  let pow = (~base, ~exp) => powUnsafe(~base, ~exp)->fromFloat
+
+  let powExn = (~base, ~exp) => powUnsafe(~base, ~exp)->fromFloatExn
 
   let random = () => Math.random()
 
@@ -447,13 +422,25 @@ module Float64: Float with type t = float = {
       f->roundIntUnsafe
     }
 
-  let sin = f => f->Math.sin
+  let sinUnsafe = f => f->Math.sin
+
+  let sin = f => f->sinUnsafe->fromFloat
+
+  let sinExn = f => f->sinUnsafe->fromFloatExn
 
   let sinh = f => f->Math.sinh
 
-  let sqrt = f => f->Math.sqrt
+  let sqrtUnsafe = f => f->Math.sqrt
 
-  let tan = f => f->Math.tan
+  let sqrt = f => f->sqrtUnsafe->fromFloat
+
+  let sqrtExn = f => f->sqrtUnsafe->fromFloatExn
+
+  let tanUnsafe = f => f->Math.tan
+
+  let tan = f => f->tanUnsafe->fromFloat
+
+  let tanExn = f => f->tanUnsafe->fromFloatExn
 
   let tanh = f => f->Math.tanh
 
@@ -477,4 +464,12 @@ module Float64: Float with type t = float = {
     } else {
       f->truncIntUnsafe
     }
+
+  let isFinite = isFinite
+
+  let isInteger = isInteger
+
+  let isNaN = isNaN
+
+  let isSafeInteger = isSafeInteger
 }

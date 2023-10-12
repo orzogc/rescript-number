@@ -52,6 +52,16 @@ module type NumberToString = {
   type t
 
   let toString: t => string
+
+  let toStringWithRadixExn: (t, ~radix: int) => string
+
+  let toExponential: t => string
+
+  let toExponentialWithPrecisionExn: (t, ~digits: int) => string
+
+  let toPrecision: t => string
+
+  let toPrecisionWithPrecisionExn: (t, ~digits: int) => string
 }
 
 module type NumberConversion = {
@@ -68,4 +78,20 @@ module type NumberConversion = {
   include NumberFromString with type t := t
 
   include NumberToString with type t := t
+}
+
+module type IntegerFromString = {
+  type t
+
+  let fromStringWithRadix: (string, ~radix: int) => option<t>
+
+  let fromStringWithRadixExn: (string, ~radix: int) => t
+}
+
+module type FloatToString = {
+  type t
+
+  let toFixed: t => string
+
+  let toFixedWithPrecisionExn: (t, ~digits: int) => string
 }

@@ -41,11 +41,23 @@ module type FloatMath = {
 
   include SignedMath with type t := t
 
-  let acos: t => t
+  let acos: t => option<t>
 
-  let acosh: t => t
+  let acosExn: t => t
 
-  let asin: t => t
+  let acosUnsafe: t => t
+
+  let acosh: t => option<t>
+
+  let acoshExn: t => t
+
+  let acoshUnsafe: t => t
+
+  let asin: t => option<t>
+
+  let asinExn: t => t
+
+  let asinUnsafe: t => t
 
   let asinh: t => t
 
@@ -53,7 +65,11 @@ module type FloatMath = {
 
   let atan2: (~y: t, ~x: t) => t
 
-  let atanh: t => t
+  let atanh: t => option<t>
+
+  let atanhExn: t => t
+
+  let atanhUnsafe: t => t
 
   let cbrt: t => t
 
@@ -67,7 +83,11 @@ module type FloatMath = {
 
   let ceilIntUnsafe: t => int
 
-  let cos: t => t
+  let cos: t => option<t>
+
+  let cosExn: t => t
+
+  let cosUnsafe: t => t
 
   let cosh: t => t
 
@@ -91,15 +111,35 @@ module type FloatMath = {
 
   let hypotMany: array<t> => t
 
-  let log: t => t
+  let log: t => option<t>
 
-  let log10: t => t
+  let logExn: t => t
 
-  let log1p: t => t
+  let logUnsafe: t => t
 
-  let log2: t => t
+  let log10: t => option<t>
 
-  let pow: (~base: t, ~exp: t) => t
+  let log10Exn: t => t
+
+  let log10Unsafe: t => t
+
+  let log1p: t => option<t>
+
+  let log1pExn: t => t
+
+  let log1pUnsafe: t => t
+
+  let log2: t => option<t>
+
+  let log2Exn: t => t
+
+  let log2Unsafe: t => t
+
+  let pow: (~base: t, ~exp: t) => option<t>
+
+  let powExn: (~base: t, ~exp: t) => t
+
+  let powUnsafe: (~base: t, ~exp: t) => t
 
   let random: unit => t
 
@@ -115,13 +155,25 @@ module type FloatMath = {
 
   let roundIntUnsafe: t => int
 
-  let sin: t => t
+  let sin: t => option<t>
+
+  let sinExn: t => t
+
+  let sinUnsafe: t => t
 
   let sinh: t => t
 
-  let sqrt: t => t
+  let sqrt: t => option<t>
 
-  let tan: t => t
+  let sqrtExn: t => t
+
+  let sqrtUnsafe: t => t
+
+  let tan: t => option<t>
+
+  let tanExn: t => t
+
+  let tanUnsafe: t => t
 
   let tanh: t => t
 

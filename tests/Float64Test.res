@@ -107,7 +107,7 @@ test(`test ${name} to int`, t => {
 })
 
 test(`test ${name} from float`, t => {
-  let testNotNan = f => {
+  let testNotNaN = f => {
     let n = FloatModule.fromFloatExn(f)
     t->Assert.deepEqual(FloatModule.fromFloat(f), Some(n), ())
     t->Assert.deepEqual(FloatModule.fromFloatExn(f), n, ())
@@ -115,15 +115,15 @@ test(`test ${name} from float`, t => {
     t->Assert.deepEqual(FloatModule.fromFloatUnsafe(f), n, ())
   }
 
-  testNotNan(0.0)
-  testNotNan(-0.0)
-  testNotNan(1.0)
-  testNotNan(value)
-  testNotNan(minIntFloat)
-  testNotNan(maxIntFloat)
-  testNotNan(minValue)
-  testNotNan(maxValue)
-  loop100Fn(() => testNotNan(randomValue()))
+  testNotNaN(0.0)
+  testNotNaN(-0.0)
+  testNotNaN(1.0)
+  testNotNaN(value)
+  testNotNaN(minIntFloat)
+  testNotNaN(maxIntFloat)
+  testNotNaN(minValue)
+  testNotNaN(maxValue)
+  loop100Fn(() => testNotNaN(randomValue()))
 
   t->Assert.deepEqual(FloatModule.fromFloat(nan), None, ())
   t->assertInvalidArgument(() => FloatModule.fromFloatExn(nan))
@@ -148,23 +148,23 @@ test(`test ${name} to float`, t => {
 })
 
 test(`test ${name} from string`, t => {
-  let testNotNan = (f, s) => {
+  let testNotNaN = (f, s) => {
     let n = FloatModule.fromFloatExn(f)
     t->Assert.deepEqual(FloatModule.fromString(s), Some(n), ())
     t->Assert.deepEqual(FloatModule.fromStringExn(s), n, ())
   }
 
-  testNotNan(0.0, "0")
-  testNotNan(-0.0, "-0")
-  testNotNan(1.0, "1")
-  testNotNan(value, value->Float.toString)
-  testNotNan(minIntFloat, minIntFloat->Float.toString)
-  testNotNan(maxIntFloat, maxIntFloat->Float.toString)
-  testNotNan(minValue, minValue->Float.toString)
-  testNotNan(maxValue, maxValue->Float.toString)
+  testNotNaN(0.0, "0")
+  testNotNaN(-0.0, "-0")
+  testNotNaN(1.0, "1")
+  testNotNaN(value, value->Float.toString)
+  testNotNaN(minIntFloat, minIntFloat->Float.toString)
+  testNotNaN(maxIntFloat, maxIntFloat->Float.toString)
+  testNotNaN(minValue, minValue->Float.toString)
+  testNotNaN(maxValue, maxValue->Float.toString)
   loop100Fn(() => {
     let n = randomValue()
-    testNotNan(n, n->Float.toString)
+    testNotNaN(n, n->Float.toString)
   })
 
   let testIsNotFloat = s => {
@@ -178,20 +178,73 @@ test(`test ${name} from string`, t => {
 })
 
 test(`test ${name} to string`, t => {
+  let testFn = fn => {
+    fn(0.0)
+    fn(-0.0)
+    fn(1.0)
+    fn(value)
+    fn(minIntFloat)
+    fn(maxIntFloat)
+    fn(minValue)
+    fn(maxValue)
+    loop100Fn(() => fn(randomValue()))
+  }
+
   let testToString = f => {
     let s = f->Float.toString
     t->Assert.deepEqual(FloatModule.fromFloatExn(f)->FloatModule.toString, s, ())
   }
 
-  testToString(0.0)
-  testToString(-0.0)
-  testToString(1.0)
-  testToString(value)
-  testToString(minIntFloat)
-  testToString(maxIntFloat)
-  testToString(minValue)
-  testToString(maxValue)
-  loop100Fn(() => testToString(randomValue()))
+  testFn(testToString)
+
+  let testToExponential = f => {
+    let s = f->Js.Float.toExponential
+    let n = FloatModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->FloatModule.toExponential, s, ())
+
+    for digits in 0 to 100 {
+      let s = f->Js.Float.toExponentialWithPrecision(~digits)
+      t->Assert.deepEqual(n->FloatModule.toExponentialWithPrecisionExn(~digits), s, ())
+    }
+    if f !== minValue && f !== maxValue {
+      t->Assert.throws(() => n->FloatModule.toExponentialWithPrecisionExn(~digits=-1), ())
+      t->Assert.throws(() => n->FloatModule.toExponentialWithPrecisionExn(~digits=101), ())
+    }
+  }
+
+  testFn(testToExponential)
+
+  let testToPrecision = f => {
+    let s = f->Js.Float.toPrecision
+    let n = FloatModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->FloatModule.toPrecision, s, ())
+
+    for digits in 1 to 100 {
+      let s = f->Js.Float.toPrecisionWithPrecision(~digits)
+      t->Assert.deepEqual(n->FloatModule.toPrecisionWithPrecisionExn(~digits), s, ())
+    }
+    if f !== minValue && f !== maxValue {
+      t->Assert.throws(() => n->FloatModule.toPrecisionWithPrecisionExn(~digits=0), ())
+      t->Assert.throws(() => n->FloatModule.toPrecisionWithPrecisionExn(~digits=101), ())
+    }
+  }
+
+  testFn(testToPrecision)
+
+  let testToFixed = f => {
+    let s = f->Js.Float.toFixed
+    let n = FloatModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->FloatModule.toFixed, s, ())
+
+    for digits in 0 to 100 {
+      let s = f->Js.Float.toFixedWithPrecision(~digits)
+      t->Assert.deepEqual(n->FloatModule.toFixedWithPrecisionExn(~digits), s, ())
+    }
+    t->Assert.throws(() => n->FloatModule.toFixedWithPrecisionExn(~digits=-1), ())
+    t->Assert.throws(() => n->FloatModule.toFixedWithPrecisionExn(~digits=101), ())
+  }
+
+  testFn(testToFixed)
 })
 
 test(`test ${name} zero`, t => {
@@ -342,7 +395,7 @@ test(`test ${name} comparison`, t => {
 })
 
 test(`test ${name} addition`, t => {
-  let testNotNan = (a, b) => {
+  let testNotNaN = (a, b) => {
     if a->isFinite {
       let negA = FloatModule.fromFloatExn(-.a)
       let a = FloatModule.fromFloatExn(a)
@@ -435,27 +488,27 @@ test(`test ${name} addition`, t => {
     )
   }
 
-  testNotNan(0.0, -0.0)
-  testNotNan(less, greater)
-  testNotNan(minIntFloat, -1.0)
-  testNotNan(maxIntFloat, 1.0)
-  testNotNan(minValue, 0.0)
-  testNotNan(minValue, -0.0)
-  testNotNan(minValue, 1.0)
-  testNotNan(minValue, -1.0)
-  testNotNan(minValue, minValue)
-  testNotNan(maxValue, 0.0)
-  testNotNan(maxValue, -0.0)
-  testNotNan(maxValue, 1.0)
-  testNotNan(maxValue, -1.0)
-  testNotNan(maxValue, maxValue)
+  testNotNaN(0.0, -0.0)
+  testNotNaN(less, greater)
+  testNotNaN(minIntFloat, -1.0)
+  testNotNaN(maxIntFloat, 1.0)
+  testNotNaN(minValue, 0.0)
+  testNotNaN(minValue, -0.0)
+  testNotNaN(minValue, 1.0)
+  testNotNaN(minValue, -1.0)
+  testNotNaN(minValue, minValue)
+  testNotNaN(maxValue, 0.0)
+  testNotNaN(maxValue, -0.0)
+  testNotNaN(maxValue, 1.0)
+  testNotNaN(maxValue, -1.0)
+  testNotNaN(maxValue, maxValue)
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotNan(a, b)
+    testNotNaN(a, b)
   })
 
-  let testNan = (a, b) => {
+  let testNaN = (a, b) => {
     let a = FloatModule.fromFloatExn(a)
     let b = FloatModule.fromFloatExn(b)
     t->Assert.deepEqual(a->FloatModule.add(b), None, ())
@@ -466,11 +519,11 @@ test(`test ${name} addition`, t => {
     t->Assert.deepEqual(b->FloatModule.addClamped(a), FloatModule.zero, ())
   }
 
-  testNan(maxValue, minValue)
+  testNaN(maxValue, minValue)
 })
 
 test(`test ${name} subtraction`, t => {
-  let testNotNan = (a, b) => {
+  let testNotNaN = (a, b) => {
     if a->isFinite {
       let a = FloatModule.fromFloatExn(a)
       t->Assert.deepEqual(a->FloatModule.sub(a), Some(FloatModule.zero), ())
@@ -506,40 +559,40 @@ test(`test ${name} subtraction`, t => {
     t->Assert.deepEqual(b->FloatModule.subUnsafe(FloatModule.zero), b, ())
   }
 
-  testNotNan(0.0, -0.0)
-  testNotNan(less, greater)
-  testNotNan(greater, less)
-  testNotNan(minIntFloat, 1.0)
-  testNotNan(maxIntFloat, -1.0)
-  testNotNan(minValue, 0.0)
-  testNotNan(minValue, -0.0)
-  testNotNan(minValue, 1.0)
-  testNotNan(minValue, -1.0)
-  testNotNan(minValue, value)
-  testNotNan(maxValue, 0.0)
-  testNotNan(maxValue, -0.0)
-  testNotNan(maxValue, 1.0)
-  testNotNan(maxValue, -1.0)
-  testNotNan(maxValue, value)
-  testNotNan(minValue, maxValue)
-  testNotNan(maxValue, minValue)
-  testNotNan(0.0, minValue)
-  testNotNan(-0.0, minValue)
-  testNotNan(1.0, minValue)
-  testNotNan(-1.0, minValue)
-  testNotNan(value, minValue)
-  testNotNan(0.0, maxValue)
-  testNotNan(-0.0, maxValue)
-  testNotNan(1.0, maxValue)
-  testNotNan(-1.0, maxValue)
-  testNotNan(value, maxValue)
+  testNotNaN(0.0, -0.0)
+  testNotNaN(less, greater)
+  testNotNaN(greater, less)
+  testNotNaN(minIntFloat, 1.0)
+  testNotNaN(maxIntFloat, -1.0)
+  testNotNaN(minValue, 0.0)
+  testNotNaN(minValue, -0.0)
+  testNotNaN(minValue, 1.0)
+  testNotNaN(minValue, -1.0)
+  testNotNaN(minValue, value)
+  testNotNaN(maxValue, 0.0)
+  testNotNaN(maxValue, -0.0)
+  testNotNaN(maxValue, 1.0)
+  testNotNaN(maxValue, -1.0)
+  testNotNaN(maxValue, value)
+  testNotNaN(minValue, maxValue)
+  testNotNaN(maxValue, minValue)
+  testNotNaN(0.0, minValue)
+  testNotNaN(-0.0, minValue)
+  testNotNaN(1.0, minValue)
+  testNotNaN(-1.0, minValue)
+  testNotNaN(value, minValue)
+  testNotNaN(0.0, maxValue)
+  testNotNaN(-0.0, maxValue)
+  testNotNaN(1.0, maxValue)
+  testNotNaN(-1.0, maxValue)
+  testNotNaN(value, maxValue)
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotNan(a, b)
+    testNotNaN(a, b)
   })
 
-  let testNan = (a, b) => {
+  let testNaN = (a, b) => {
     let a = FloatModule.fromFloatExn(a)
     let b = FloatModule.fromFloatExn(b)
     t->Assert.deepEqual(a->FloatModule.sub(b), None, ())
@@ -547,12 +600,12 @@ test(`test ${name} subtraction`, t => {
     t->Assert.deepEqual(a->FloatModule.subClamped(b), FloatModule.zero, ())
   }
 
-  testNan(minValue, minValue)
-  testNan(maxValue, maxValue)
+  testNaN(minValue, minValue)
+  testNaN(maxValue, maxValue)
 })
 
 test(`test ${name} multiplication`, t => {
-  let testNotNan = (a, b) => {
+  let testNotNaN = (a, b) => {
     if a->isFinite {
       let result = FloatModule.fromFloatExn(a *. 0.0)
       let a = FloatModule.fromFloatExn(a)
@@ -674,23 +727,23 @@ test(`test ${name} multiplication`, t => {
     )
   }
 
-  testNotNan(0.0, -1.0)
-  testNotNan(-0.0, 1.0)
-  testNotNan(less, greater)
-  testNotNan(minIntFloat, value)
-  testNotNan(maxIntFloat, value)
-  testNotNan(minValue, value)
-  testNotNan(minValue, -.value)
-  testNotNan(maxValue, value)
-  testNotNan(maxValue, -.value)
-  testNotNan(minValue, maxValue)
+  testNotNaN(0.0, -1.0)
+  testNotNaN(-0.0, 1.0)
+  testNotNaN(less, greater)
+  testNotNaN(minIntFloat, value)
+  testNotNaN(maxIntFloat, value)
+  testNotNaN(minValue, value)
+  testNotNaN(minValue, -.value)
+  testNotNaN(maxValue, value)
+  testNotNaN(maxValue, -.value)
+  testNotNaN(minValue, maxValue)
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotNan(a, b)
+    testNotNaN(a, b)
   })
 
-  let testNan = (a, b) => {
+  let testNaN = (a, b) => {
     let a = FloatModule.fromFloatExn(a)
     let b = FloatModule.fromFloatExn(b)
     t->Assert.deepEqual(a->FloatModule.mul(b), None, ())
@@ -701,12 +754,12 @@ test(`test ${name} multiplication`, t => {
     t->Assert.deepEqual(b->FloatModule.mulClamped(a), FloatModule.zero, ())
   }
 
-  testNan(minValue, 0.0)
-  testNan(maxValue, 0.0)
+  testNaN(minValue, 0.0)
+  testNaN(maxValue, 0.0)
 })
 
 test(`test ${name} division`, t => {
-  let testNotNan = (a, b) => {
+  let testNotNaN = (a, b) => {
     if a !== 0.0 {
       let result = FloatModule.fromFloatExn(b /. a)
       let a = FloatModule.fromFloatExn(a)
@@ -755,14 +808,14 @@ test(`test ${name} division`, t => {
     t->Assert.deepEqual(b->FloatModule.divUnsafe(negOne), negB, ())
   }
 
-  testNotNan(less, greater)
-  testNotNan(minIntFloat, maxIntFloat)
-  testNotNan(minIntFloat, less)
-  testNotNan(maxIntFloat, greater)
-  testNotNan(minValue, less)
-  testNotNan(minValue, greater)
-  testNotNan(maxValue, less)
-  testNotNan(maxValue, greater)
+  testNotNaN(less, greater)
+  testNotNaN(minIntFloat, maxIntFloat)
+  testNotNaN(minIntFloat, less)
+  testNotNaN(maxIntFloat, greater)
+  testNotNaN(minValue, less)
+  testNotNaN(minValue, greater)
+  testNotNaN(maxValue, less)
+  testNotNaN(maxValue, greater)
 
   let testDividedByZero = f => {
     let a = FloatModule.fromFloatExn(f)
@@ -787,24 +840,24 @@ test(`test ${name} division`, t => {
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotNan(a, b)
+    testNotNaN(a, b)
     testDividedByZero(a)
     testDividedByZero(b)
   })
 
-  let testNan = (a, b) => {
+  let testNaN = (a, b) => {
     let a = FloatModule.fromFloatExn(a)
     let b = FloatModule.fromFloatExn(b)
     t->Assert.deepEqual(a->FloatModule.div(b), None, ())
     t->assertInvalidArgument(() => a->FloatModule.divExn(b))
   }
 
-  testNan(minValue, maxValue)
-  testNan(maxValue, minValue)
+  testNaN(minValue, maxValue)
+  testNaN(maxValue, minValue)
 })
 
 test(`test ${name} remainder`, t => {
-  let testNotNan = (a, b) => {
+  let testNotNaN = (a, b) => {
     if a !== 0.0 {
       let result = FloatModule.fromFloatExn(b->mod_float(a))
       let a = FloatModule.fromFloatExn(a)
@@ -830,10 +883,10 @@ test(`test ${name} remainder`, t => {
     }
   }
 
-  testNotNan(less, greater)
-  testNotNan(minIntFloat, maxIntFloat)
-  testNotNan(minIntFloat, less)
-  testNotNan(maxIntFloat, greater)
+  testNotNaN(less, greater)
+  testNotNaN(minIntFloat, maxIntFloat)
+  testNotNaN(minIntFloat, less)
+  testNotNaN(maxIntFloat, greater)
 
   let testModByZero = f => {
     let a = FloatModule.fromFloatExn(f)
@@ -858,32 +911,32 @@ test(`test ${name} remainder`, t => {
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotNan(a, b)
+    testNotNaN(a, b)
     testModByZero(a)
     testModByZero(b)
   })
 
-  let testNan = (a, b) => {
+  let testNaN = (a, b) => {
     let a = FloatModule.fromFloatExn(a)
     let b = FloatModule.fromFloatExn(b)
     t->Assert.deepEqual(a->FloatModule.rem(b), None, ())
     t->assertInvalidArgument(() => a->FloatModule.remExn(b))
   }
 
-  testNan(minValue, 1.0)
-  testNan(minValue, value)
-  testNan(minValue, minIntFloat)
-  testNan(minValue, maxIntFloat)
-  testNan(minValue, maxValue)
-  testNan(maxValue, 1.0)
-  testNan(maxValue, value)
-  testNan(maxValue, minIntFloat)
-  testNan(maxValue, maxIntFloat)
-  testNan(maxValue, minValue)
+  testNaN(minValue, 1.0)
+  testNaN(minValue, value)
+  testNaN(minValue, minIntFloat)
+  testNaN(minValue, maxIntFloat)
+  testNaN(minValue, maxValue)
+  testNaN(maxValue, 1.0)
+  testNaN(maxValue, value)
+  testNaN(maxValue, minIntFloat)
+  testNaN(maxValue, maxIntFloat)
+  testNaN(maxValue, minValue)
 })
 
 test(`test ${name} sum`, t => {
-  let testNotNan = arr => {
+  let testNotNaN = arr => {
     let result = FloatModule.fromFloatExn(arr->Array.reduce(0.0, (acc, v) => acc +. v))
     let arr = arr->Array.mapU(f => FloatModule.fromFloatExn(f))
     t->Assert.deepEqual(arr->FloatModule.sum, Some(result), ())
@@ -891,32 +944,167 @@ test(`test ${name} sum`, t => {
     t->Assert.deepEqual(arr->FloatModule.sumUnsafe, result, ())
   }
 
-  testNotNan([less])
-  testNotNan([greater])
-  testNotNan([minIntFloat])
-  testNotNan([maxIntFloat])
-  testNotNan([minValue])
-  testNotNan([maxValue])
-  testNotNan([less, greater])
-  testNotNan([greater, less])
-  testNotNan([less, minIntFloat, value, maxIntFloat, greater])
+  testNotNaN([less])
+  testNotNaN([greater])
+  testNotNaN([minIntFloat])
+  testNotNaN([maxIntFloat])
+  testNotNaN([minValue])
+  testNotNaN([maxValue])
+  testNotNaN([less, greater])
+  testNotNaN([greater, less])
+  testNotNaN([less, minIntFloat, 0.0, value, maxIntFloat, 1.0, greater, -0.0])
   loop100Fn(() => {
     let a = randomValue()
     let b = randomValue()
-    testNotNan([a])
-    testNotNan([b])
-    testNotNan([a, b])
-    testNotNan([b, a])
-    testNotNan([a, value, maxIntFloat, minIntFloat, b])
+    testNotNaN([a])
+    testNotNaN([b])
+    testNotNaN([a, b])
+    testNotNaN([b, a])
+    testNotNaN([a, value, maxIntFloat, minIntFloat, b])
   })
 
-  let testNan = arr => {
+  let testNaN = arr => {
     let arr = arr->Array.mapU(i => FloatModule.fromFloatExn(i))
     t->Assert.deepEqual(arr->FloatModule.sum, None, ())
     t->assertInvalidArgument(() => arr->FloatModule.sumExn)
   }
 
-  testNan([minValue, maxValue])
-  testNan([value, minValue, maxValue])
-  testNan([minValue, maxValue, value])
+  testNaN([minValue, maxValue])
+  testNaN([value, minValue, maxValue])
+  testNaN([minValue, maxValue, value])
+
+  t->Assert.deepEqual(FloatModule.sum([]), None, ())
+  t->assertInvalidArgument(() => FloatModule.sumExn([]))
+})
+
+test(`test ${name} signed math`, t => {
+  let testNeg = f => {
+    let a = FloatModule.fromFloatExn(f)
+    let b = FloatModule.fromFloatExn(-.f)
+    t->Assert.deepEqual(a->FloatModule.neg, Some(b), ())
+    t->Assert.deepEqual(a->FloatModule.negExn, b, ())
+    t->Assert.deepEqual(a->FloatModule.negUnsafe, b, ())
+    t->Assert.deepEqual(b->FloatModule.neg, Some(a), ())
+    t->Assert.deepEqual(b->FloatModule.negExn, a, ())
+    t->Assert.deepEqual(b->FloatModule.negUnsafe, a, ())
+  }
+
+  testNeg(0.0)
+  testNeg(-0.0)
+  testNeg(1.0)
+  testNeg(value)
+  testNeg(minIntFloat)
+  testNeg(maxIntFloat)
+  testNeg(minValue)
+  testNeg(maxValue)
+  loop100Fn(() => testNeg(randomValue()))
+
+  let testAbs = f => {
+    let a = FloatModule.fromFloatExn(f)
+    let b = FloatModule.fromFloatExn(f->Js.Math.abs_float)
+    t->Assert.deepEqual(a->FloatModule.abs, Some(b), ())
+    t->Assert.deepEqual(a->FloatModule.absExn, b, ())
+    t->Assert.deepEqual(a->FloatModule.absUnsafe, b, ())
+    t->Assert.deepEqual(b->FloatModule.abs, Some(b), ())
+    t->Assert.deepEqual(b->FloatModule.absExn, b, ())
+    t->Assert.deepEqual(b->FloatModule.absUnsafe, b, ())
+  }
+
+  testAbs(0.0)
+  testAbs(-0.0)
+  testAbs(-1.0)
+  testAbs(-.value)
+  testAbs(minIntFloat)
+  testAbs(-.maxIntFloat)
+  testAbs(minValue)
+  testAbs(maxValue)
+  loop100Fn(() => testAbs(randomValue()))
+
+  let testSign = f => {
+    let test_ = f => {
+      let n = FloatModule.fromFloatExn(f)
+      let result = if f < 0.0 {
+        Number.Negative
+      } else if f > 0.0 {
+        Number.Positive
+      } else {
+        Number.Zero
+      }
+      let raw = f->Js.Math.sign_float
+      t->Assert.deepEqual(n->FloatModule.sign, Some(result), ())
+      t->Assert.deepEqual(n->FloatModule.signExn, result, ())
+      t->Assert.deepEqual(n->FloatModule.signRaw, raw, ())
+    }
+
+    test_(f)
+    test_(-.f)
+  }
+
+  testSign(0.0)
+  testSign(-0.0)
+  testSign(1.0)
+  testSign(value)
+  testSign(minValue)
+  testSign(maxValue)
+  loop100Fn(() => testSign(randomValue()))
+})
+
+test(`test ${name} float extra`, t => {
+  let testIsFinite = (f, result) =>
+    t->Assert.deepEqual(FloatModule.fromFloatExn(f)->FloatModule.isFinite, result, ())
+
+  testIsFinite(0.0, true)
+  testIsFinite(-0.0, true)
+  testIsFinite(1.0, true)
+  testIsFinite(value, true)
+  testIsFinite(minIntFloat, true)
+  testIsFinite(maxIntFloat, true)
+  testIsFinite(minValue, false)
+  testIsFinite(maxValue, false)
+  loop100Fn(() => testIsFinite(randomValue(), true))
+  t->Assert.deepEqual(FloatModule.fromFloatUnsafe(nan)->FloatModule.isFinite, false, ())
+
+  let testIsInteger = (f, result) =>
+    t->Assert.deepEqual(FloatModule.fromFloatExn(f)->FloatModule.isInteger, result, ())
+
+  testIsInteger(0.0, true)
+  testIsInteger(-0.0, true)
+  testIsInteger(1.0, true)
+  testIsInteger(1e55, true)
+  testIsInteger(value, false)
+  testIsInteger(minIntFloat, true)
+  testIsInteger(maxIntFloat, true)
+  testIsInteger(minValue, false)
+  testIsInteger(maxValue, false)
+  loop100Fn(() => testIsInteger(randomInt32()->Int.toFloat, true))
+  loop100Fn(() => testIsInteger(randomSmallerInt(), true))
+  loop100Fn(() => testIsInteger(randomLargerInt(), true))
+
+  let testIsNotNaN = f =>
+    t->Assert.deepEqual(FloatModule.fromFloatExn(f)->FloatModule.isNaN, false, ())
+
+  testIsNotNaN(0.0)
+  testIsNotNaN(-0.0)
+  testIsNotNaN(1.0)
+  testIsNotNaN(value)
+  testIsNotNaN(minIntFloat)
+  testIsNotNaN(maxIntFloat)
+  testIsNotNaN(minValue)
+  testIsNotNaN(maxValue)
+  loop100Fn(() => testIsNotNaN(randomValue()))
+  t->Assert.deepEqual(FloatModule.fromFloatUnsafe(nan)->FloatModule.isNaN, true, ())
+
+  let testIsSafeInteger = (f, result) =>
+    t->Assert.deepEqual(FloatModule.fromFloatExn(f)->FloatModule.isSafeInteger, result, ())
+
+  testIsSafeInteger(0.0, true)
+  testIsSafeInteger(-0.0, true)
+  testIsSafeInteger(1.0, true)
+  testIsSafeInteger(1e55, false)
+  testIsSafeInteger(value, false)
+  testIsSafeInteger(minIntFloat, true)
+  testIsSafeInteger(maxIntFloat, true)
+  testIsSafeInteger(minValue, false)
+  testIsSafeInteger(maxValue, false)
+  loop100Fn(() => testIsSafeInteger(randomInt32()->Int.toFloat, true))
 })

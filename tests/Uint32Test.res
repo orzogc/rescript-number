@@ -242,12 +242,21 @@ test(`test ${name} from string`, t => {
     let n = IntModule.fromFloatExn(f)
     t->Assert.deepEqual(IntModule.fromString(s), Some(n), ())
     t->Assert.deepEqual(IntModule.fromStringExn(s), n, ())
+
+    for radix in 2 to 36 {
+      let s = f->Js.Float.toStringWithRadix(~radix)
+      t->Assert.deepEqual(IntModule.fromStringWithRadix(s, ~radix), Some(n), ())
+      t->Assert.deepEqual(IntModule.fromStringWithRadixExn(s, ~radix), n, ())
+    }
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=1))
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=37))
   }
 
   testInRange(0.0, "0")
   testInRange(0.0, "-0")
   testInRange(1.0, "1")
   testInRange(value, value->Float.toString)
+  testInRange(value, (value +. 0.5)->Float.toString)
   testInRange(minValue, minValue->Float.toString)
   testInRange(maxValue, maxValue->Float.toString)
   testInRange(minValue +. 1.0, (minValue +. 1.0)->Float.toString)
@@ -260,7 +269,15 @@ test(`test ${name} from string`, t => {
   let testOutOfRange = f => {
     let s = f->Float.toString
     t->Assert.deepEqual(IntModule.fromString(s), None, ())
-    t->assertException(() => IntModule.fromStringExn(s))
+    t->assertOverflow(() => IntModule.fromStringExn(s))
+
+    for radix in 2 to 36 {
+      let s = f->Js.Float.toStringWithRadix(~radix)
+      t->Assert.deepEqual(IntModule.fromStringWithRadix(s, ~radix), None, ())
+      t->assertOverflow(() => IntModule.fromStringWithRadixExn(s, ~radix))
+    }
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=1))
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=37))
   }
 
   testOutOfRange(minValue -. 1.0)
@@ -272,6 +289,13 @@ test(`test ${name} from string`, t => {
   let testIsNotInteger = s => {
     t->Assert.deepEqual(IntModule.fromString(s), None, ())
     t->assertInvalidArgument(() => IntModule.fromStringExn(s))
+
+    for radix in 2 to 10 {
+      t->Assert.deepEqual(IntModule.fromStringWithRadix(s, ~radix), None, ())
+      t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix))
+    }
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=1))
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=37))
   }
 
   testIsNotInteger("NaN")
@@ -282,19 +306,61 @@ test(`test ${name} from string`, t => {
 })
 
 test(`test ${name} to string`, t => {
-  let testToString = f => {
-    let s = f->Float.toString
-    t->Assert.deepEqual(IntModule.fromStringExn(s)->IntModule.toString, s, ())
+  let testFn = fn => {
+    fn(0.0)
+    fn(1.0)
+    fn(value)
+    fn(minValue)
+    fn(minValue +. 1.0)
+    fn(maxValue)
+    fn(maxValue -. 1.0)
+    loop100Fn(() => fn(randomValue()))
   }
 
-  testToString(0.0)
-  testToString(1.0)
-  testToString(value)
-  testToString(minValue)
-  testToString(minValue +. 1.0)
-  testToString(maxValue)
-  testToString(maxValue -. 1.0)
-  loop100Fn(() => testToString(randomValue()))
+  let testToString = f => {
+    let s = f->Float.toString
+    let n = IntModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->IntModule.toString, s, ())
+
+    for radix in 2 to 36 {
+      let s = f->Js.Float.toStringWithRadix(~radix)
+      t->Assert.deepEqual(n->IntModule.toStringWithRadixExn(~radix), s, ())
+    }
+    t->Assert.throws(() => n->IntModule.toStringWithRadixExn(~radix=1), ())
+    t->Assert.throws(() => n->IntModule.toStringWithRadixExn(~radix=37), ())
+  }
+
+  testFn(testToString)
+
+  let testToExponential = f => {
+    let s = f->Js.Float.toExponential
+    let n = IntModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->IntModule.toExponential, s, ())
+
+    for digits in 0 to 100 {
+      let s = f->Js.Float.toExponentialWithPrecision(~digits)
+      t->Assert.deepEqual(n->IntModule.toExponentialWithPrecisionExn(~digits), s, ())
+    }
+    t->Assert.throws(() => n->IntModule.toExponentialWithPrecisionExn(~digits=-1), ())
+    t->Assert.throws(() => n->IntModule.toExponentialWithPrecisionExn(~digits=101), ())
+  }
+
+  testFn(testToExponential)
+
+  let testToPrecision = f => {
+    let s = f->Js.Float.toPrecision
+    let n = IntModule.fromFloatExn(f)
+    t->Assert.deepEqual(n->IntModule.toPrecision, s, ())
+
+    for digits in 1 to 100 {
+      let s = f->Js.Float.toPrecisionWithPrecision(~digits)
+      t->Assert.deepEqual(n->IntModule.toPrecisionWithPrecisionExn(~digits), s, ())
+    }
+    t->Assert.throws(() => n->IntModule.toPrecisionWithPrecisionExn(~digits=0), ())
+    t->Assert.throws(() => n->IntModule.toPrecisionWithPrecisionExn(~digits=101), ())
+  }
+
+  testFn(testToPrecision)
 })
 
 test(`test ${name} zero`, t => {
@@ -905,7 +971,7 @@ test(`test ${name} sum`, t => {
   testInRange([maxValue -. 1.0])
   testInRange([less, greater])
   testInRange([greater, less])
-  testInRange([less, value, greater])
+  testInRange([less, 0.0, value, 1.0, greater])
   testInRange([minValue, maxValue])
 
   t->Assert.deepEqual(IntModule.sum([]), None, ())

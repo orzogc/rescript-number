@@ -21,7 +21,7 @@ function MakeIntegerConversion(IntModule) {
     PervasivesU.invalid_arg("minValue " + minValue.toString() + " is greater than maxValue " + maxValue.toString());
   }
   if (minValue < Number.MIN_SAFE_INTEGER || maxValue > Number.MAX_SAFE_INTEGER) {
-    PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
+    PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
   }
   var fromIntUnsafe = IntModule.fromIntUnsafe;
   var fromInt = function (i) {
@@ -86,7 +86,7 @@ function MakeIntegerConversion(IntModule) {
         return fromFloatUnsafe(f);
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -102,19 +102,34 @@ function MakeIntegerConversion(IntModule) {
     return f;
   };
   var fromString = function (s) {
-    var f = ResNumber__Utils.stringToFloat(s);
-    if (f !== undefined) {
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
       return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var f = ResNumber__Utils.stringToFloat(s);
-    if (f !== undefined) {
-      return fromFloatExn(f);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   return {
           fromInt: fromInt,
@@ -132,7 +147,12 @@ function MakeIntegerConversion(IntModule) {
           toFloat: toFloat,
           fromString: fromString,
           fromStringExn: fromStringExn,
-          toString: toString
+          toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn
         };
 }
 
@@ -175,7 +195,7 @@ function MakeInteger(IntModule) {
     PervasivesU.invalid_arg("minValue " + minValue.toString() + " is greater than maxValue " + maxValue.toString());
   }
   if (minValue < Number.MIN_SAFE_INTEGER || maxValue > Number.MAX_SAFE_INTEGER) {
-    PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", max range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
+    PervasivesU.invalid_arg("the range of integer overflows, minValue: " + minValue.toString() + ", maxValue: " + maxValue.toString() + ", range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
   }
   var fromIntUnsafe = IntModule.fromIntUnsafe;
   var fromInt = function (i) {
@@ -240,7 +260,7 @@ function MakeInteger(IntModule) {
         return fromFloatUnsafe(f);
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -256,25 +276,81 @@ function MakeInteger(IntModule) {
     return f;
   };
   var fromString = function (s) {
-    var f = ResNumber__Utils.stringToFloat(s);
-    if (f !== undefined) {
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
       return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var f = ResNumber__Utils.stringToFloat(s);
-    if (f !== undefined) {
-      return fromFloatExn(f);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   var minValue$1 = IntModule.minValue;
   var maxValue$1 = IntModule.maxValue;
   if (minValue$1 > 0.0 || maxValue$1 < 1.0) {
     PervasivesU.invalid_arg((0.0).toString() + " and " + (1.0).toString() + " must be between minValue " + minValue$1.toString() + " and maxValue " + maxValue$1.toString());
   }
+  var fromFloatUncheckInteger = function (f) {
+    if (f >= minValue$1 && f <= maxValue$1) {
+      return fromFloatUnsafe(f);
+    }
+    
+  };
+  var fromFloatUncheckIntegerExn = function (f) {
+    if (f >= minValue$1 && f <= maxValue$1) {
+      return fromFloatUnsafe(f);
+    } else {
+      return ResNumber__Utils.raiseOverflow(f, IntModule);
+    }
+  };
+  var fromFloatUncheckIntegerClamped = function (f) {
+    if (f < minValue$1) {
+      return minValue$1;
+    } else if (f > maxValue$1) {
+      return maxValue$1;
+    } else {
+      return fromFloatUnsafe(f);
+    }
+  };
+  var fromStringWithRadix = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (!Number.isNaN(f)) {
+      return fromFloatUncheckInteger(f);
+    }
+    
+  };
+  var fromStringWithRadixExn = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (Number.isNaN(f)) {
+      if (radix >= 2 && radix <= 36) {
+        return PervasivesU.invalid_arg("the string is not an integer: " + s);
+      } else {
+        return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+      }
+    } else {
+      return fromFloatUncheckIntegerExn(f);
+    }
+  };
   var compareExn = function (a, b) {
     if (a < b) {
       return -1;
@@ -362,28 +438,6 @@ function MakeInteger(IntModule) {
   };
   var maxManyUnsafe = function (arr) {
     return fromFloatUnsafe(Caml_splice_call.spliceApply(Math.max, [arr]));
-  };
-  var fromFloatUncheckInteger = function (f) {
-    if (f >= minValue$1 && f <= maxValue$1) {
-      return fromFloatUnsafe(f);
-    }
-    
-  };
-  var fromFloatUncheckIntegerExn = function (f) {
-    if (f >= minValue$1 && f <= maxValue$1) {
-      return fromFloatUnsafe(f);
-    } else {
-      return ResNumber__Utils.raiseOverflow(f, IntModule);
-    }
-  };
-  var fromFloatUncheckIntegerClamped = function (f) {
-    if (f < minValue$1) {
-      return minValue$1;
-    } else if (f > maxValue$1) {
-      return maxValue$1;
-    } else {
-      return fromFloatUnsafe(f);
-    }
   };
   var add = function (a, b) {
     return fromFloatUncheckInteger(a + b);
@@ -498,6 +552,13 @@ function MakeInteger(IntModule) {
           fromString: fromString,
           fromStringExn: fromStringExn,
           toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+          fromStringWithRadix: fromStringWithRadix,
+          fromStringWithRadixExn: fromStringWithRadixExn,
           zero: 0.0,
           one: 1.0,
           minValue: minValue$1,
@@ -621,7 +682,7 @@ function MakeFixedBitsIntegerConversion(IntRange) {
         return f | 0;
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -637,19 +698,34 @@ function MakeFixedBitsIntegerConversion(IntRange) {
     return i;
   };
   var fromString = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromInt(i);
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromIntExn(i);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   return {
           fromInt: fromInt,
@@ -667,7 +743,12 @@ function MakeFixedBitsIntegerConversion(IntRange) {
           toFloat: toFloat,
           fromString: fromString,
           fromStringExn: fromStringExn,
-          toString: toString
+          toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn
         };
 }
 
@@ -744,7 +825,7 @@ function MakeFixedBitsInt(IntRange) {
         return f | 0;
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -760,25 +841,59 @@ function MakeFixedBitsInt(IntRange) {
     return i;
   };
   var fromString = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromInt(i);
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromIntExn(i);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   var minValue$1 = IntRange.minValue;
   var maxValue$1 = IntRange.maxValue;
   if (minValue$1 > 0 || maxValue$1 < 1) {
     PervasivesU.invalid_arg((0).toString() + " and " + (1).toString() + " must be between minValue " + minValue$1.toString() + " and maxValue " + maxValue$1.toString());
   }
+  var fromStringWithRadix = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
+    }
+    
+  };
+  var fromStringWithRadixExn = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (Number.isNaN(f)) {
+      if (radix >= 2 && radix <= 36) {
+        return PervasivesU.invalid_arg("the string is not an integer: " + s);
+      } else {
+        return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+      }
+    } else {
+      return fromFloatExn(f);
+    }
+  };
   var compareExn = function (a, b) {
     if (a < b) {
       return -1;
@@ -1009,6 +1124,13 @@ function MakeFixedBitsInt(IntRange) {
           fromString: fromString,
           fromStringExn: fromStringExn,
           toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+          fromStringWithRadix: fromStringWithRadix,
+          fromStringWithRadixExn: fromStringWithRadixExn,
           zero: 0,
           one: 1,
           minValue: minValue$1,
@@ -1166,7 +1288,7 @@ function MakeFixedBitsInteger(M) {
         return f | 0;
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -1182,25 +1304,59 @@ function MakeFixedBitsInteger(M) {
     return i;
   };
   var fromString = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromInt(i);
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromIntExn(i);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   var minValue$1 = M.minValue;
   var maxValue$1 = M.maxValue;
   if (minValue$1 > 0 || maxValue$1 < 1) {
     PervasivesU.invalid_arg((0).toString() + " and " + (1).toString() + " must be between minValue " + minValue$1.toString() + " and maxValue " + maxValue$1.toString());
   }
+  var fromStringWithRadix = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
+    }
+    
+  };
+  var fromStringWithRadixExn = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (Number.isNaN(f)) {
+      if (radix >= 2 && radix <= 36) {
+        return PervasivesU.invalid_arg("the string is not an integer: " + s);
+      } else {
+        return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+      }
+    } else {
+      return fromFloatExn(f);
+    }
+  };
   var compareExn = function (a, b) {
     if (a < b) {
       return -1;
@@ -1584,6 +1740,13 @@ function MakeFixedBitsInteger(M) {
           fromString: fromString,
           fromStringExn: fromStringExn,
           toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+          fromStringWithRadix: fromStringWithRadix,
+          fromStringWithRadixExn: fromStringWithRadixExn,
           zero: 0,
           one: 1,
           minValue: minValue$1,
@@ -1727,7 +1890,7 @@ function MakeSignedInteger(M) {
         return f | 0;
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -1743,23 +1906,57 @@ function MakeSignedInteger(M) {
     return i;
   };
   var fromString = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromInt(i);
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromIntExn(i);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   if (minValue > 0 || maxValue < 1) {
     PervasivesU.invalid_arg((0).toString() + " and " + (1).toString() + " must be between minValue " + minValue.toString() + " and maxValue " + maxValue.toString());
   }
+  var fromStringWithRadix = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
+    }
+    
+  };
+  var fromStringWithRadixExn = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (Number.isNaN(f)) {
+      if (radix >= 2 && radix <= 36) {
+        return PervasivesU.invalid_arg("the string is not an integer: " + s);
+      } else {
+        return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+      }
+    } else {
+      return fromFloatExn(f);
+    }
+  };
   var compareExn = function (a, b) {
     if (a < b) {
       return -1;
@@ -2180,6 +2377,13 @@ function MakeSignedInteger(M) {
           fromString: fromString,
           fromStringExn: fromStringExn,
           toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+          fromStringWithRadix: fromStringWithRadix,
+          fromStringWithRadixExn: fromStringWithRadixExn,
           zero: 0,
           one: 1,
           minValue: minValue,
@@ -2332,7 +2536,7 @@ function MakeUnsignedInteger(M) {
         return f | 0;
       }
     } else {
-      return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+      return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
     }
   };
   var fromFloatClamped = function (f) {
@@ -2348,23 +2552,57 @@ function MakeUnsignedInteger(M) {
     return i;
   };
   var fromString = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromInt(i);
+    var f = parseInt(s, undefined);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
     }
     
   };
   var fromStringExn = function (s) {
-    var i = ResNumber__Utils.stringToInt(s);
-    if (i !== undefined) {
-      return fromIntExn(i);
+    var f = parseInt(s, undefined);
+    if (Number.isNaN(f)) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
     } else {
-      return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+      return fromFloatExn(f);
     }
+  };
+  var toStringWithRadixExn = function (i, radix) {
+    return i.toString(radix);
+  };
+  var toExponential = function (i) {
+    return i.toExponential();
+  };
+  var toExponentialWithPrecisionExn = function (i, digits) {
+    return i.toExponential(digits);
+  };
+  var toPrecision = function (i) {
+    return i.toPrecision();
+  };
+  var toPrecisionWithPrecisionExn = function (i, digits) {
+    return i.toPrecision(digits);
   };
   if (minValue > 0 || maxValue < 1) {
     PervasivesU.invalid_arg((0).toString() + " and " + (1).toString() + " must be between minValue " + minValue.toString() + " and maxValue " + maxValue.toString());
   }
+  var fromStringWithRadix = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (!Number.isNaN(f)) {
+      return fromFloat(f);
+    }
+    
+  };
+  var fromStringWithRadixExn = function (s, radix) {
+    var f = parseInt(s, radix);
+    if (Number.isNaN(f)) {
+      if (radix >= 2 && radix <= 36) {
+        return PervasivesU.invalid_arg("the string is not an integer: " + s);
+      } else {
+        return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+      }
+    } else {
+      return fromFloatExn(f);
+    }
+  };
   var compareExn = function (a, b) {
     if (a < b) {
       return -1;
@@ -2701,6 +2939,13 @@ function MakeUnsignedInteger(M) {
           fromString: fromString,
           fromStringExn: fromStringExn,
           toString: toString,
+          toStringWithRadixExn: toStringWithRadixExn,
+          toExponential: toExponential,
+          toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+          toPrecision: toPrecision,
+          toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+          fromStringWithRadix: fromStringWithRadix,
+          fromStringWithRadixExn: fromStringWithRadixExn,
           zero: 0,
           one: 1,
           minValue: minValue,
@@ -2851,7 +3096,7 @@ function fromFloatExn(f) {
       return f | 0;
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -2870,19 +3115,60 @@ function toFloat(i) {
 }
 
 function fromString(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromInt(i);
+  var f = parseInt(s, undefined);
+  if (!Number.isNaN(f)) {
+    return fromFloat(f);
   }
   
 }
 
 function fromStringExn(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromIntExn(i);
+  var f = parseInt(s, undefined);
+  if (Number.isNaN(f)) {
+    return PervasivesU.invalid_arg("the string is not an integer: " + s);
   } else {
-    return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+    return fromFloatExn(f);
+  }
+}
+
+function toStringWithRadixExn(i, radix) {
+  return i.toString(radix);
+}
+
+function toExponential(i) {
+  return i.toExponential();
+}
+
+function toExponentialWithPrecisionExn(i, digits) {
+  return i.toExponential(digits);
+}
+
+function toPrecision(i) {
+  return i.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn(i, digits) {
+  return i.toPrecision(digits);
+}
+
+function fromStringWithRadix(s, radix) {
+  var f = parseInt(s, radix);
+  if (!Number.isNaN(f)) {
+    return fromFloat(f);
+  }
+  
+}
+
+function fromStringWithRadixExn(s, radix) {
+  var f = parseInt(s, radix);
+  if (Number.isNaN(f)) {
+    if (radix >= 2 && radix <= 36) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
+    } else {
+      return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+    }
+  } else {
+    return fromFloatExn(f);
   }
 }
 
@@ -3386,6 +3672,13 @@ var Int8 = {
   fromString: fromString,
   fromStringExn: fromStringExn,
   toString: toString,
+  toStringWithRadixExn: toStringWithRadixExn,
+  toExponential: toExponential,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn,
+  toPrecision: toPrecision,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn,
+  fromStringWithRadix: fromStringWithRadix,
+  fromStringWithRadixExn: fromStringWithRadixExn,
   zero: 0,
   one: 1,
   minValue: -128,
@@ -3544,7 +3837,7 @@ function fromFloatExn$1(f) {
       return f | 0;
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -3563,19 +3856,60 @@ function toFloat$1(i) {
 }
 
 function fromString$1(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromInt$1(i);
+  var f = parseInt(s, undefined);
+  if (!Number.isNaN(f)) {
+    return fromFloat$1(f);
   }
   
 }
 
 function fromStringExn$1(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromIntExn$1(i);
+  var f = parseInt(s, undefined);
+  if (Number.isNaN(f)) {
+    return PervasivesU.invalid_arg("the string is not an integer: " + s);
   } else {
-    return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+    return fromFloatExn$1(f);
+  }
+}
+
+function toStringWithRadixExn$1(i, radix) {
+  return i.toString(radix);
+}
+
+function toExponential$1(i) {
+  return i.toExponential();
+}
+
+function toExponentialWithPrecisionExn$1(i, digits) {
+  return i.toExponential(digits);
+}
+
+function toPrecision$1(i) {
+  return i.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn$1(i, digits) {
+  return i.toPrecision(digits);
+}
+
+function fromStringWithRadix$1(s, radix) {
+  var f = parseInt(s, radix);
+  if (!Number.isNaN(f)) {
+    return fromFloat$1(f);
+  }
+  
+}
+
+function fromStringWithRadixExn$1(s, radix) {
+  var f = parseInt(s, radix);
+  if (Number.isNaN(f)) {
+    if (radix >= 2 && radix <= 36) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
+    } else {
+      return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+    }
+  } else {
+    return fromFloatExn$1(f);
   }
 }
 
@@ -3981,6 +4315,13 @@ var Uint8 = {
   fromString: fromString$1,
   fromStringExn: fromStringExn$1,
   toString: toString$1,
+  toStringWithRadixExn: toStringWithRadixExn$1,
+  toExponential: toExponential$1,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn$1,
+  toPrecision: toPrecision$1,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn$1,
+  fromStringWithRadix: fromStringWithRadix$1,
+  fromStringWithRadixExn: fromStringWithRadixExn$1,
   zero: 0,
   one: 1,
   minValue: 0,
@@ -4130,7 +4471,7 @@ function fromFloatExn$2(f) {
       return f | 0;
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -4149,19 +4490,60 @@ function toFloat$2(i) {
 }
 
 function fromString$2(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromInt$2(i);
+  var f = parseInt(s, undefined);
+  if (!Number.isNaN(f)) {
+    return fromFloat$2(f);
   }
   
 }
 
 function fromStringExn$2(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromIntExn$2(i);
+  var f = parseInt(s, undefined);
+  if (Number.isNaN(f)) {
+    return PervasivesU.invalid_arg("the string is not an integer: " + s);
   } else {
-    return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+    return fromFloatExn$2(f);
+  }
+}
+
+function toStringWithRadixExn$2(i, radix) {
+  return i.toString(radix);
+}
+
+function toExponential$2(i) {
+  return i.toExponential();
+}
+
+function toExponentialWithPrecisionExn$2(i, digits) {
+  return i.toExponential(digits);
+}
+
+function toPrecision$2(i) {
+  return i.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn$2(i, digits) {
+  return i.toPrecision(digits);
+}
+
+function fromStringWithRadix$2(s, radix) {
+  var f = parseInt(s, radix);
+  if (!Number.isNaN(f)) {
+    return fromFloat$2(f);
+  }
+  
+}
+
+function fromStringWithRadixExn$2(s, radix) {
+  var f = parseInt(s, radix);
+  if (Number.isNaN(f)) {
+    if (radix >= 2 && radix <= 36) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
+    } else {
+      return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+    }
+  } else {
+    return fromFloatExn$2(f);
   }
 }
 
@@ -4665,6 +5047,13 @@ var Int16 = {
   fromString: fromString$2,
   fromStringExn: fromStringExn$2,
   toString: toString$2,
+  toStringWithRadixExn: toStringWithRadixExn$2,
+  toExponential: toExponential$2,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn$2,
+  toPrecision: toPrecision$2,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn$2,
+  fromStringWithRadix: fromStringWithRadix$2,
+  fromStringWithRadixExn: fromStringWithRadixExn$2,
   zero: 0,
   one: 1,
   minValue: -32768,
@@ -4823,7 +5212,7 @@ function fromFloatExn$3(f) {
       return f | 0;
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -4842,19 +5231,60 @@ function toFloat$3(i) {
 }
 
 function fromString$3(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromInt$3(i);
+  var f = parseInt(s, undefined);
+  if (!Number.isNaN(f)) {
+    return fromFloat$3(f);
   }
   
 }
 
 function fromStringExn$3(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromIntExn$3(i);
+  var f = parseInt(s, undefined);
+  if (Number.isNaN(f)) {
+    return PervasivesU.invalid_arg("the string is not an integer: " + s);
   } else {
-    return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+    return fromFloatExn$3(f);
+  }
+}
+
+function toStringWithRadixExn$3(i, radix) {
+  return i.toString(radix);
+}
+
+function toExponential$3(i) {
+  return i.toExponential();
+}
+
+function toExponentialWithPrecisionExn$3(i, digits) {
+  return i.toExponential(digits);
+}
+
+function toPrecision$3(i) {
+  return i.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn$3(i, digits) {
+  return i.toPrecision(digits);
+}
+
+function fromStringWithRadix$3(s, radix) {
+  var f = parseInt(s, radix);
+  if (!Number.isNaN(f)) {
+    return fromFloat$3(f);
+  }
+  
+}
+
+function fromStringWithRadixExn$3(s, radix) {
+  var f = parseInt(s, radix);
+  if (Number.isNaN(f)) {
+    if (radix >= 2 && radix <= 36) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
+    } else {
+      return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+    }
+  } else {
+    return fromFloatExn$3(f);
   }
 }
 
@@ -5260,6 +5690,13 @@ var Uint16 = {
   fromString: fromString$3,
   fromStringExn: fromStringExn$3,
   toString: toString$3,
+  toStringWithRadixExn: toStringWithRadixExn$3,
+  toExponential: toExponential$3,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn$3,
+  toPrecision: toPrecision$3,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn$3,
+  fromStringWithRadix: fromStringWithRadix$3,
+  fromStringWithRadixExn: fromStringWithRadixExn$3,
   zero: 0,
   one: 1,
   minValue: 0,
@@ -5413,7 +5850,7 @@ function fromFloatExn$4(f) {
       return f | 0;
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -5432,24 +5869,65 @@ function toFloat$4(i) {
 }
 
 function fromString$4(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromInt$4(i);
+  var f = parseInt(s, undefined);
+  if (!Number.isNaN(f)) {
+    return fromFloat$4(f);
   }
   
 }
 
 function fromStringExn$4(s) {
-  var i = ResNumber__Utils.stringToInt(s);
-  if (i !== undefined) {
-    return fromIntExn$4(i);
+  var f = parseInt(s, undefined);
+  if (Number.isNaN(f)) {
+    return PervasivesU.invalid_arg("the string is not an integer: " + s);
   } else {
-    return PervasivesU.invalid_arg("the string is not a 32 bits signed integer: " + s);
+    return fromFloatExn$4(f);
   }
+}
+
+function toStringWithRadixExn$4(i, radix) {
+  return i.toString(radix);
+}
+
+function toExponential$4(i) {
+  return i.toExponential();
+}
+
+function toExponentialWithPrecisionExn$4(i, digits) {
+  return i.toExponential(digits);
+}
+
+function toPrecision$4(i) {
+  return i.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn$4(i, digits) {
+  return i.toPrecision(digits);
 }
 
 if (Js_int.min > 0 || Js_int.max < 1) {
   PervasivesU.invalid_arg((0).toString() + " and " + (1).toString() + " must be between minValue " + Js_int.min.toString() + " and maxValue " + Js_int.max.toString());
+}
+
+function fromStringWithRadix$4(s, radix) {
+  var f = parseInt(s, radix);
+  if (!Number.isNaN(f)) {
+    return fromFloat$4(f);
+  }
+  
+}
+
+function fromStringWithRadixExn$4(s, radix) {
+  var f = parseInt(s, radix);
+  if (Number.isNaN(f)) {
+    if (radix >= 2 && radix <= 36) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
+    } else {
+      return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+    }
+  } else {
+    return fromFloatExn$4(f);
+  }
 }
 
 function compareExn$4(a, b) {
@@ -5958,6 +6436,13 @@ var Int32 = {
   fromString: fromString$4,
   fromStringExn: fromStringExn$4,
   toString: toString$4,
+  toStringWithRadixExn: toStringWithRadixExn$4,
+  toExponential: toExponential$4,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn$4,
+  toPrecision: toPrecision$4,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn$4,
+  fromStringWithRadix: fromStringWithRadix$4,
+  fromStringWithRadixExn: fromStringWithRadixExn$4,
   zero: 0,
   one: 1,
   minValue: Js_int.min,
@@ -6051,7 +6536,7 @@ function toString$5(i) {
 }
 
 if (0.0 < Number.MIN_SAFE_INTEGER || 4294967295.0 > Number.MAX_SAFE_INTEGER) {
-  PervasivesU.invalid_arg("the range of integer overflows, minValue: " + (0.0).toString() + ", maxValue: " + (4294967295.0).toString() + ", max range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
+  PervasivesU.invalid_arg("the range of integer overflows, minValue: " + (0.0).toString() + ", maxValue: " + (4294967295.0).toString() + ", range: " + Number.MIN_SAFE_INTEGER.toString() + " - " + Number.MAX_SAFE_INTEGER.toString());
 }
 
 function fromInt$5(i) {
@@ -6123,7 +6608,7 @@ function fromFloatExn$5(f) {
       return toUint32(f);
     }
   } else {
-    return PervasivesU.invalid_arg("float number " + f.toString() + " is not a integer");
+    return PervasivesU.invalid_arg("float number " + f.toString() + " is not an integer");
   }
 }
 
@@ -6142,19 +6627,85 @@ function toFloat$5(f) {
 }
 
 function fromString$5(s) {
-  var f = ResNumber__Utils.stringToFloat(s);
-  if (f !== undefined) {
+  var f = parseInt(s, undefined);
+  if (!Number.isNaN(f)) {
     return fromFloat$5(f);
   }
   
 }
 
 function fromStringExn$5(s) {
-  var f = ResNumber__Utils.stringToFloat(s);
-  if (f !== undefined) {
-    return fromFloatExn$5(f);
+  var f = parseInt(s, undefined);
+  if (Number.isNaN(f)) {
+    return PervasivesU.invalid_arg("the string is not an integer: " + s);
   } else {
-    return PervasivesU.invalid_arg("the string is not a integer: " + s);
+    return fromFloatExn$5(f);
+  }
+}
+
+function toStringWithRadixExn$5(i, radix) {
+  return i.toString(radix);
+}
+
+function toExponential$5(i) {
+  return i.toExponential();
+}
+
+function toExponentialWithPrecisionExn$5(i, digits) {
+  return i.toExponential(digits);
+}
+
+function toPrecision$5(i) {
+  return i.toPrecision();
+}
+
+function toPrecisionWithPrecisionExn$5(i, digits) {
+  return i.toPrecision(digits);
+}
+
+function fromFloatUncheckInteger$5(f) {
+  if (f >= 0.0 && f <= 4294967295.0) {
+    return toUint32(f);
+  }
+  
+}
+
+function fromFloatUncheckIntegerExn$5(f) {
+  if (f >= 0.0 && f <= 4294967295.0) {
+    return toUint32(f);
+  } else {
+    return ResNumber__Utils.raiseOverflow(f, IntModule);
+  }
+}
+
+function fromFloatUncheckIntegerClamped$5(f) {
+  if (f < 0.0) {
+    return 0.0;
+  } else if (f > 4294967295.0) {
+    return 4294967295.0;
+  } else {
+    return toUint32(f);
+  }
+}
+
+function fromStringWithRadix$5(s, radix) {
+  var f = parseInt(s, radix);
+  if (!Number.isNaN(f)) {
+    return fromFloatUncheckInteger$5(f);
+  }
+  
+}
+
+function fromStringWithRadixExn$5(s, radix) {
+  var f = parseInt(s, radix);
+  if (Number.isNaN(f)) {
+    if (radix >= 2 && radix <= 36) {
+      return PervasivesU.invalid_arg("the string is not an integer: " + s);
+    } else {
+      return PervasivesU.invalid_arg("the radix is less than 2 or greater than 36: " + radix.toString());
+    }
+  } else {
+    return fromFloatUncheckIntegerExn$5(f);
   }
 }
 
@@ -6260,31 +6811,6 @@ function maxManyExn$5(arr) {
 
 function maxManyUnsafe$5(arr) {
   return toUint32(Caml_splice_call.spliceApply(Math.max, [arr]));
-}
-
-function fromFloatUncheckInteger$5(f) {
-  if (f >= 0.0 && f <= 4294967295.0) {
-    return toUint32(f);
-  }
-  
-}
-
-function fromFloatUncheckIntegerExn$5(f) {
-  if (f >= 0.0 && f <= 4294967295.0) {
-    return toUint32(f);
-  } else {
-    return ResNumber__Utils.raiseOverflow(f, IntModule);
-  }
-}
-
-function fromFloatUncheckIntegerClamped$5(f) {
-  if (f < 0.0) {
-    return 0.0;
-  } else if (f > 4294967295.0) {
-    return 4294967295.0;
-  } else {
-    return toUint32(f);
-  }
 }
 
 function add$5(a, b) {
@@ -6512,6 +7038,13 @@ var Uint32 = {
   fromString: fromString$5,
   fromStringExn: fromStringExn$5,
   toString: toString$5,
+  toStringWithRadixExn: toStringWithRadixExn$5,
+  toExponential: toExponential$5,
+  toExponentialWithPrecisionExn: toExponentialWithPrecisionExn$5,
+  toPrecision: toPrecision$5,
+  toPrecisionWithPrecisionExn: toPrecisionWithPrecisionExn$5,
+  fromStringWithRadix: fromStringWithRadix$5,
+  fromStringWithRadixExn: fromStringWithRadixExn$5,
   zero: 0.0,
   one: 1.0,
   minValue: 0.0,

@@ -13,6 +13,8 @@ module type Integer = {
 
   include NumberConversion with type t := t
 
+  include IntegerFromString with type t := t
+
   include Number with type t := t
 
   include NumberIncDec with type t := t
@@ -82,7 +84,7 @@ module MakeIntegerConversion = (
 
   if minValue < minSafeInteger || maxValue > maxSafeInteger {
     invalid_arg(
-      `the range of integer overflows, minValue: ${minValue->toString}, maxValue: ${maxValue->toString}, max range: ${minSafeInteger->toString} - ${maxSafeInteger->toString}`,
+      `the range of integer overflows, minValue: ${minValue->toString}, maxValue: ${maxValue->toString}, range: ${minSafeInteger->toString} - ${maxSafeInteger->toString}`,
     )
   }
 
@@ -127,7 +129,7 @@ module MakeIntegerConversion = (
 
   let fromFloatExn = f =>
     if !(f->isInteger) {
-      invalid_arg(`float number ${f->toString} is not a integer`)
+      invalid_arg(`float number ${f->toString} is not an integer`)
     } else if f < minValue || f > maxValue {
       raiseOverflow(f, module(IntModule))
     } else {
@@ -145,17 +147,27 @@ module MakeIntegerConversion = (
 
   let toFloat = f => f
 
-  let fromString = s =>
-    switch s->stringToFloat {
-    | Some(f) => f->fromFloat
-    | None => None
-    }
+  let fromString = s => {
+    let f = s->parseInt
 
-  let fromStringExn = s =>
-    switch s->stringToFloat {
-    | Some(f) => f->fromFloatExn
-    | None => invalid_arg(`the string is not a integer: ${s}`)
-    }
+    !(f->isNaN) ? f->fromFloat : None
+  }
+
+  let fromStringExn = s => {
+    let f = s->parseInt
+
+    !(f->isNaN) ? f->fromFloatExn : invalid_arg(`the string is not an integer: ${s}`)
+  }
+
+  let toStringWithRadixExn = (i, ~radix) => i->Float.toStringWithRadix(~radix)
+
+  let toExponential = i => i->Float.toExponential
+
+  let toExponentialWithPrecisionExn = (i, ~digits) => i->Float.toExponentialWithPrecision(~digits)
+
+  let toPrecision = i => i->Float.toPrecision
+
+  let toPrecisionWithPrecisionExn = (i, ~digits) => i->Float.toPrecisionWithPrecision(~digits)
 }
 
 module MakeNumberIncDec = (
@@ -211,6 +223,39 @@ module MakeInteger = (
     invalid_arg(
       `${zero->toString} and ${one->toString} must be between minValue ${minValue->toString} and maxValue ${maxValue->toString}`,
     )
+  }
+
+  let fromFloatUncheckInteger = f =>
+    f >= minValue && f <= maxValue ? Some(f->fromFloatUnsafe) : None
+
+  let fromFloatUncheckIntegerExn = f =>
+    f >= minValue && f <= maxValue ? f->fromFloatUnsafe : raiseOverflow(f, module(IntModule))
+
+  let fromFloatUncheckIntegerClamped = f =>
+    if f < minValue {
+      minValue
+    } else if f > maxValue {
+      maxValue
+    } else {
+      f->fromFloatUnsafe
+    }
+
+  let fromStringWithRadix = (s, ~radix) => {
+    let f = s->parseInt(~radix)
+
+    !(f->isNaN) ? f->fromFloatUncheckInteger : None
+  }
+
+  let fromStringWithRadixExn = (s, ~radix) => {
+    let f = s->parseInt(~radix)
+
+    if !(f->isNaN) {
+      f->fromFloatUncheckIntegerExn
+    } else if radix >= 2 && radix <= 36 {
+      invalid_arg(`the string is not an integer: ${s}`)
+    } else {
+      invalid_arg(`the radix is less than 2 or greater than 36: ${radix->Int.toString}`)
+    }
   }
 
   let compareExn = (a: t, b: t) =>
@@ -275,21 +320,6 @@ module MakeInteger = (
   }
 
   let maxManyUnsafe = arr => arr->Math.maxMany_float->fromFloatUnsafe
-
-  let fromFloatUncheckInteger = f =>
-    f >= minValue && f <= maxValue ? Some(f->fromFloatUnsafe) : None
-
-  let fromFloatUncheckIntegerExn = f =>
-    f >= minValue && f <= maxValue ? f->fromFloatUnsafe : raiseOverflow(f, module(IntModule))
-
-  let fromFloatUncheckIntegerClamped = f =>
-    if f < minValue {
-      minValue
-    } else if f > maxValue {
-      maxValue
-    } else {
-      f->fromFloatUnsafe
-    }
 
   module Add = {
     let add = (a, b) => (a +. b)->fromFloatUncheckInteger
@@ -417,7 +447,7 @@ module MakeFixedBitsIntegerConversion = (IntRange: NumberRange with type t = int
 
   let fromFloatExn = f =>
     if !(f->isInteger) {
-      invalid_arg(`float number ${f->Float.toString} is not a integer`)
+      invalid_arg(`float number ${f->Float.toString} is not an integer`)
     } else if f < minValue->Int.toFloat || f > maxValue->Int.toFloat {
       raiseOverflow(f, module(IntRange))
     } else {
@@ -435,17 +465,27 @@ module MakeFixedBitsIntegerConversion = (IntRange: NumberRange with type t = int
 
   let toFloat = i => i->Int.toFloat
 
-  let fromString = s =>
-    switch s->stringToInt {
-    | Some(i) => i->fromInt
-    | None => None
-    }
+  let fromString = s => {
+    let f = s->parseInt
 
-  let fromStringExn = s =>
-    switch s->stringToInt {
-    | Some(i) => i->fromIntExn
-    | None => invalid_arg(`the string is not a 32 bits signed integer: ${s}`)
-    }
+    !(f->isNaN) ? f->fromFloat : None
+  }
+
+  let fromStringExn = s => {
+    let f = s->parseInt
+
+    !(f->isNaN) ? f->fromFloatExn : invalid_arg(`the string is not an integer: ${s}`)
+  }
+
+  let toStringWithRadixExn = (i, ~radix) => i->Int.toStringWithRadix(~radix)
+
+  let toExponential = i => i->Int.toExponential
+
+  let toExponentialWithPrecisionExn = (i, ~digits) => i->Int.toExponentialWithPrecision(~digits)
+
+  let toPrecision = i => i->Int.toPrecision
+
+  let toPrecisionWithPrecisionExn = (i, ~digits) => i->Int.toPrecisionWithPrecision(~digits)
 }
 
 module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
@@ -467,6 +507,24 @@ module MakeFixedBitsInt = (IntRange: NumberRange with type t = int): (
     invalid_arg(
       `${zero->toString} and ${one->toString} must be between minValue ${minValue->toString} and maxValue ${maxValue->toString}`,
     )
+  }
+
+  let fromStringWithRadix = (s, ~radix) => {
+    let f = s->parseInt(~radix)
+
+    !(f->isNaN) ? f->fromFloat : None
+  }
+
+  let fromStringWithRadixExn = (s, ~radix) => {
+    let f = s->parseInt(~radix)
+
+    if !(f->isNaN) {
+      f->fromFloatExn
+    } else if radix >= 2 && radix <= 36 {
+      invalid_arg(`the string is not an integer: ${s}`)
+    } else {
+      invalid_arg(`the radix is less than 2 or greater than 36: ${radix->Int.toString}`)
+    }
   }
 
   let compareExn = (a: t, b: t) =>

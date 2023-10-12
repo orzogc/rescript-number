@@ -20,7 +20,7 @@
     ]
   },
   "dependencies": {
-    "rescript": "^11.0.0-rc.3"
+    "rescript": "^11.0.0-rc.4"
   },
   "devDependencies": {
     "@dzakh/rescript-ava": "^2.3.0",

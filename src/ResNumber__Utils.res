@@ -7,16 +7,19 @@ external minSafeInteger: float = "MIN_SAFE_INTEGER"
 external maxSafeInteger: float = "MAX_SAFE_INTEGER"
 
 @scope("Number") @val
-external isInteger: float => bool = "isInteger"
+external isFinite: float => bool = "isFinite"
 
 @scope("Number") @val
-external isFinite: float => bool = "isFinite"
+external isInteger: float => bool = "isInteger"
 
 @scope("Number") @val
 external isNaN: float => bool = "isNaN"
 
+@scope("Number") @val
+external isSafeInteger: float => bool = "isSafeInteger"
+
 @val
-external parseInt: string => float = "parseInt"
+external parseInt: (string, ~radix: int=?) => float = "parseInt"
 
 @val
 external parseFloat: string => float = "parseFloat"
@@ -32,12 +35,6 @@ module Int32Range = {
 }
 
 let inInt32Range = f => f >= Int.min->Int.toFloat && f <= Int.max->Int.toFloat
-
-let stringToInt = s => {
-  let i = s->parseInt
-
-  !(i->isNaN) && i->inInt32Range ? Some(i->floatToIntUnsafe->lor(0)) : None
-}
 
 let stringToFloat = s => {
   let f = s->parseFloat

@@ -281,6 +281,14 @@ test(`test ${name} from string`, t => {
     let n = IntModule.fromIntExn(i)
     t->Assert.deepEqual(IntModule.fromString(s), Some(n), ())
     t->Assert.deepEqual(IntModule.fromStringExn(s), n, ())
+
+    for radix in 2 to 36 {
+      let s = i->Js.Int.toStringWithRadix(~radix)
+      t->Assert.deepEqual(IntModule.fromStringWithRadix(s, ~radix), Some(n), ())
+      t->Assert.deepEqual(IntModule.fromStringWithRadixExn(s, ~radix), n, ())
+    }
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=1))
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=37))
   }
 
   testInRange(0, "0")
@@ -310,7 +318,15 @@ test(`test ${name} from string`, t => {
   let testOutOfRange = f => {
     let s = f->Float.toString
     t->Assert.deepEqual(IntModule.fromString(s), None, ())
-    t->assertException(() => IntModule.fromStringExn(s))
+    t->assertOverflow(() => IntModule.fromStringExn(s))
+
+    for radix in 2 to 36 {
+      let s = f->Js.Float.toStringWithRadix(~radix)
+      t->Assert.deepEqual(IntModule.fromStringWithRadix(s, ~radix), None, ())
+      t->assertOverflow(() => IntModule.fromStringWithRadixExn(s, ~radix))
+    }
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=1))
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=37))
   }
 
   testOutOfRange(minValue->Int.toFloat -. 1.0)
@@ -326,6 +342,13 @@ test(`test ${name} from string`, t => {
   let testIsNotInteger = s => {
     t->Assert.deepEqual(IntModule.fromString(s), None, ())
     t->assertInvalidArgument(() => IntModule.fromStringExn(s))
+
+    for radix in 2 to 10 {
+      t->Assert.deepEqual(IntModule.fromStringWithRadix(s, ~radix), None, ())
+      t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix))
+    }
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=1))
+    t->assertInvalidArgument(() => IntModule.fromStringWithRadixExn(s, ~radix=37))
   }
 
   testIsNotInteger("NaN")
@@ -336,19 +359,61 @@ test(`test ${name} from string`, t => {
 })
 
 test(`test ${name} to string`, t => {
-  let testToString = i => {
-    let s = i->Int.toString
-    t->Assert.deepEqual(IntModule.fromStringExn(s)->IntModule.toString, s, ())
+  let testFn = fn => {
+    fn(0)
+    fn(1)
+    fn(value)
+    fn(minValue)
+    fn(minValue + 1)
+    fn(maxValue)
+    fn(maxValue - 1)
+    loop100Fn(() => fn(randomValue()))
   }
 
-  testToString(0)
-  testToString(1)
-  testToString(value)
-  testToString(minValue)
-  testToString(minValue + 1)
-  testToString(maxValue)
-  testToString(maxValue - 1)
-  loop100Fn(() => testToString(randomValue()))
+  let testToString = i => {
+    let s = i->Int.toString
+    let n = IntModule.fromIntExn(i)
+    t->Assert.deepEqual(n->IntModule.toString, s, ())
+
+    for radix in 2 to 36 {
+      let s = i->Js.Int.toStringWithRadix(~radix)
+      t->Assert.deepEqual(n->IntModule.toStringWithRadixExn(~radix), s, ())
+    }
+    t->Assert.throws(() => n->IntModule.toStringWithRadixExn(~radix=1), ())
+    t->Assert.throws(() => n->IntModule.toStringWithRadixExn(~radix=37), ())
+  }
+
+  testFn(testToString)
+
+  let testToExponential = i => {
+    let s = i->Js.Int.toExponential
+    let n = IntModule.fromIntExn(i)
+    t->Assert.deepEqual(n->IntModule.toExponential, s, ())
+
+    for digits in 0 to 100 {
+      let s = i->Js.Int.toExponentialWithPrecision(~digits)
+      t->Assert.deepEqual(n->IntModule.toExponentialWithPrecisionExn(~digits), s, ())
+    }
+    t->Assert.throws(() => n->IntModule.toExponentialWithPrecisionExn(~digits=-1), ())
+    t->Assert.throws(() => n->IntModule.toExponentialWithPrecisionExn(~digits=101), ())
+  }
+
+  testFn(testToExponential)
+
+  let testToPrecision = i => {
+    let s = i->Js.Int.toPrecision
+    let n = IntModule.fromIntExn(i)
+    t->Assert.deepEqual(n->IntModule.toPrecision, s, ())
+
+    for digits in 1 to 100 {
+      let s = i->Js.Int.toPrecisionWithPrecision(~digits)
+      t->Assert.deepEqual(n->IntModule.toPrecisionWithPrecisionExn(~digits), s, ())
+    }
+    t->Assert.throws(() => n->IntModule.toPrecisionWithPrecisionExn(~digits=0), ())
+    t->Assert.throws(() => n->IntModule.toPrecisionWithPrecisionExn(~digits=101), ())
+  }
+
+  testFn(testToPrecision)
 })
 
 test(`test ${name} zero`, t => {
@@ -1088,7 +1153,7 @@ test(`test ${name} sum`, t => {
   testInRange([maxValue - 1])
   testInRange([less, greater])
   testInRange([greater, less])
-  testInRange([less, value, greater])
+  testInRange([less, 0, value, 1, greater])
   testInRange([minValue, maxValue])
 
   t->Assert.deepEqual(IntModule.sum([]), None, ())
@@ -1586,6 +1651,7 @@ test(`test ${name} signed math`, t => {
   }
 
   testNegInRange(0)
+  testNegInRange(%raw(`-0`))
   testNegInRange(1)
   testNegInRange(value)
   testNegInRange(minValue + 1)
@@ -1617,6 +1683,7 @@ test(`test ${name} signed math`, t => {
   }
 
   testAbsInRange(0)
+  testAbsInRange(%raw(`-0`))
   testAbsInRange(-1)
   testAbsInRange(-value)
   testAbsInRange(-maxValue)
@@ -1636,35 +1703,40 @@ test(`test ${name} signed math`, t => {
   })
 
   let testSign = i => {
-    let n = IntModule.fromIntExn(i)
-    let result = if i < 0 {
-      Number.Negative
-    } else if i > 0 {
-      Number.Positive
-    } else {
-      Number.Zero
+    let test_ = i => {
+      let n = IntModule.fromIntExn(i)
+      let result = if i < 0 {
+        Number.Negative
+      } else if i > 0 {
+        Number.Positive
+      } else {
+        Number.Zero
+      }
+      let raw = if i < 0 {
+        -1.0
+      } else if i > 0 {
+        1.0
+      } else {
+        0.0
+      }
+      t->Assert.deepEqual(n->IntModule.sign, Some(result), ())
+      t->Assert.deepEqual(n->IntModule.signExn, result, ())
+      t->Assert.deepEqual(n->IntModule.signRaw, raw, ())
     }
-    let raw = if i < 0 {
-      -1.0
-    } else if i > 0 {
-      1.0
-    } else {
-      0.0
+
+    test_(i)
+    if i !== minValue {
+      test_(-i)
     }
-    t->Assert.deepEqual(n->IntModule.sign, Some(result), ())
-    t->Assert.deepEqual(n->IntModule.signExn, result, ())
-    t->Assert.deepEqual(n->IntModule.signRaw, raw, ())
   }
 
   testSign(0)
+  testSign(%raw(`-0`))
   testSign(1)
-  testSign(-1)
   testSign(value)
-  testSign(-value)
   testSign(minValue)
   testSign(minValue + 1)
   testSign(maxValue)
   testSign(maxValue - 1)
-  testSign(-maxValue)
   loop100Fn(() => testSign(randomValue()))
 })

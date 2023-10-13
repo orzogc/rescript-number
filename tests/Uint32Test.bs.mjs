@@ -80,6 +80,16 @@ var valueRotateShiftLeft = [
   1000000000.0
 ];
 
+var negZero = -0;
+
+var zero = $$Number.Uint32.zero;
+
+var one = $$Number.Uint32.one;
+
+var fromIntExn = $$Number.Uint32.fromIntExn;
+
+var fromFloatExn = $$Number.Uint32.fromFloatExn;
+
 function toUint32(f) {
   return (f >>> 0);
 }
@@ -90,6 +100,22 @@ function randomValue() {
 
 function randomLargerFloat() {
   return Math.floor(TestUtils.randomFloat(Js_int.max + 1.0, 4294967295.0));
+}
+
+function testFn(fn) {
+  fn(0.0);
+  fn(-0.0);
+  fn(1.0);
+  fn(2000000000.0);
+  fn(27852.0);
+  fn(56331.0);
+  fn(0.0);
+  fn(0.0 + 1.0);
+  fn(4294967295.0);
+  fn(4294967295.0 - 1.0);
+  TestUtils.loop100Fn(function () {
+        fn(randomValue(undefined));
+      });
 }
 
 Ava("test " + name + " sign", (function (t) {
@@ -103,9 +129,9 @@ Ava("test " + name + " bits", (function (t) {
 
 Ava("test " + name + " from int", (function (t) {
         var testInRange = function (i) {
-          var n = $$Number.Uint32.fromIntExn(i);
+          var n = fromIntExn(i);
           t.deepEqual($$Number.Uint32.fromInt(i), Caml_option.some(n), undefined);
-          t.deepEqual($$Number.Uint32.fromIntExn(i), n, undefined);
+          t.deepEqual(fromIntExn(i), n, undefined);
           t.deepEqual($$Number.Uint32.fromIntClamped(i), n, undefined);
           t.deepEqual($$Number.Uint32.fromIntUnsafe(i), n, undefined);
         };
@@ -120,7 +146,7 @@ Ava("test " + name + " from int", (function (t) {
         var testOutOfRange = function (i) {
           t.deepEqual($$Number.Uint32.fromInt(i), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
-                  return $$Number.Uint32.fromIntExn(i);
+                  return fromIntExn(i);
                 }));
           t.deepEqual($$Number.Uint32.fromIntClamped(i), $$Number.Uint32.minValue, undefined);
         };
@@ -135,7 +161,7 @@ Ava("test " + name + " from int", (function (t) {
 
 Ava("test " + name + " to int", (function (t) {
         var testInRange = function (i) {
-          var n = $$Number.Uint32.fromIntExn(i);
+          var n = fromIntExn(i);
           t.deepEqual($$Number.Uint32.toInt(n), i, undefined);
           t.deepEqual($$Number.Uint32.toIntExn(n), i, undefined);
           t.deepEqual($$Number.Uint32.toIntClamped(n), i, undefined);
@@ -150,7 +176,7 @@ Ava("test " + name + " to int", (function (t) {
               testInRange(TestUtils.randomPositiveInt(undefined));
             });
         var testOutOfRange = function (f) {
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.toInt(n), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
                   return $$Number.Uint32.toIntExn(n);
@@ -166,29 +192,19 @@ Ava("test " + name + " to int", (function (t) {
 
 Ava("test " + name + " from float", (function (t) {
         var testIsIntegerAndInRange = function (f) {
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.fromFloat(f), Caml_option.some(n), undefined);
-          t.deepEqual($$Number.Uint32.fromFloatExn(f), n, undefined);
+          t.deepEqual(fromFloatExn(f), n, undefined);
           t.deepEqual($$Number.Uint32.fromFloatClamped(f), n, undefined);
           t.deepEqual($$Number.Uint32.fromFloatUnsafe(f), n, undefined);
         };
-        testIsIntegerAndInRange(0.0);
-        testIsIntegerAndInRange(-0.0);
-        testIsIntegerAndInRange(1.0);
-        testIsIntegerAndInRange(2000000000.0);
-        testIsIntegerAndInRange(0.0);
-        testIsIntegerAndInRange(4294967295.0);
-        testIsIntegerAndInRange(0.0 + 1.0);
-        testIsIntegerAndInRange(4294967295.0 - 1.0);
-        TestUtils.loop100Fn(function () {
-              testIsIntegerAndInRange(randomValue(undefined));
-            });
+        testFn(testIsIntegerAndInRange);
         var testOutOfRange = function (f, value) {
           t.deepEqual($$Number.Uint32.fromFloat(f), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
-                  return $$Number.Uint32.fromFloatExn(f);
+                  return fromFloatExn(f);
                 }));
-          t.deepEqual($$Number.Uint32.fromFloatClamped(f), $$Number.Uint32.fromFloatExn(value), undefined);
+          t.deepEqual($$Number.Uint32.fromFloatClamped(f), fromFloatExn(value), undefined);
         };
         testOutOfRange(0.0 - 1.0, 0.0);
         testOutOfRange(4294967295.0 + 1.0, 4294967295.0);
@@ -203,9 +219,9 @@ Ava("test " + name + " from float", (function (t) {
         var testIsNotInteger = function (f, value) {
           t.deepEqual($$Number.Uint32.fromFloat(f), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
-                  return $$Number.Uint32.fromFloatExn(f);
+                  return fromFloatExn(f);
                 }));
-          t.deepEqual($$Number.Uint32.fromFloatClamped(f), $$Number.Uint32.fromFloatExn(value), undefined);
+          t.deepEqual($$Number.Uint32.fromFloatClamped(f), fromFloatExn(value), undefined);
         };
         testIsNotInteger(2000000000.0 + 0.5, 2000000000.0);
         testIsNotInteger(Number.NaN, 0.0);
@@ -221,7 +237,7 @@ Ava("test " + name + " from float", (function (t) {
 
 Ava("test " + name + " to float", (function (t) {
         var testToFloat = function (f) {
-          t.deepEqual($$Number.Uint32.toFloat($$Number.Uint32.fromFloatExn(f)), f, undefined);
+          t.deepEqual($$Number.Uint32.toFloat(fromFloatExn(f)), f, undefined);
         };
         testToFloat(2000000000.0);
         TestUtils.loop100Fn(function () {
@@ -231,7 +247,7 @@ Ava("test " + name + " to float", (function (t) {
 
 Ava("test " + name + " from string", (function (t) {
         var testInRange = function (f, s) {
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.fromString(s), Caml_option.some(n), undefined);
           t.deepEqual($$Number.Uint32.fromStringExn(s), n, undefined);
           for(var radix = 2; radix <= 36; ++radix){
@@ -316,21 +332,9 @@ Ava("test " + name + " from string", (function (t) {
       }));
 
 Ava("test " + name + " to string", (function (t) {
-        var testFn = function (fn) {
-          fn(0.0);
-          fn(1.0);
-          fn(2000000000.0);
-          fn(0.0);
-          fn(0.0 + 1.0);
-          fn(4294967295.0);
-          fn(4294967295.0 - 1.0);
-          TestUtils.loop100Fn(function () {
-                fn(randomValue(undefined));
-              });
-        };
         var testToString = function (f) {
           var s = String(f);
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.toString(n), s, undefined);
           for(var radix = 2; radix <= 36; ++radix){
             var s$1 = f.toString(radix);
@@ -346,7 +350,7 @@ Ava("test " + name + " to string", (function (t) {
         testFn(testToString);
         var testToExponential = function (f) {
           var s = f.toExponential();
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.toExponential(n), s, undefined);
           for(var digits = 0; digits <= 100; ++digits){
             var s$1 = f.toExponential(digits);
@@ -362,7 +366,7 @@ Ava("test " + name + " to string", (function (t) {
         testFn(testToExponential);
         var testToPrecision = function (f) {
           var s = f.toPrecision();
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.toPrecision(n), s, undefined);
           for(var digits = 1; digits <= 100; ++digits){
             var s$1 = f.toPrecision(digits);
@@ -379,29 +383,29 @@ Ava("test " + name + " to string", (function (t) {
       }));
 
 Ava("test " + name + " zero", (function (t) {
-        t.deepEqual($$Number.Uint32.zero, $$Number.Uint32.fromIntExn(0), undefined);
-        t.deepEqual($$Number.Uint32.zero, $$Number.Uint32.fromFloatExn(0.0), undefined);
-        t.deepEqual($$Number.Uint32.zero, $$Number.Uint32.fromFloatExn(-0.0), undefined);
+        t.deepEqual(zero, fromIntExn(0), undefined);
+        t.deepEqual(zero, fromFloatExn(0.0), undefined);
+        t.deepEqual(zero, fromFloatExn(-0.0), undefined);
       }));
 
 Ava("test " + name + " one", (function (t) {
-        t.deepEqual($$Number.Uint32.one, $$Number.Uint32.fromIntExn(1), undefined);
-        t.deepEqual($$Number.Uint32.one, $$Number.Uint32.fromFloatExn(1.0), undefined);
+        t.deepEqual(one, fromIntExn(1), undefined);
+        t.deepEqual(one, fromFloatExn(1.0), undefined);
       }));
 
 Ava("test " + name + " range", (function (t) {
-        t.deepEqual($$Number.Uint32.minValue, $$Number.Uint32.fromIntExn(0), undefined);
-        t.deepEqual($$Number.Uint32.minValue, $$Number.Uint32.fromFloatExn(0.0), undefined);
-        t.deepEqual($$Number.Uint32.maxValue, $$Number.Uint32.fromFloatExn(4294967295.0), undefined);
+        t.deepEqual($$Number.Uint32.minValue, fromIntExn(0), undefined);
+        t.deepEqual($$Number.Uint32.minValue, fromFloatExn(0.0), undefined);
+        t.deepEqual($$Number.Uint32.maxValue, fromFloatExn(4294967295.0), undefined);
       }));
 
 Ava("test " + name + " comparison", (function (t) {
         var testCompare = function (less, greater) {
-          var less$1 = $$Number.Uint32.fromFloatExn(less);
-          var greater$1 = $$Number.Uint32.fromFloatExn(greater);
-          var value = $$Number.Uint32.fromFloatExn(2000000000.0);
-          var minValue = $$Number.Uint32.fromFloatExn(0.0);
-          var maxValue = $$Number.Uint32.fromFloatExn(4294967295.0);
+          var less$1 = fromFloatExn(less);
+          var greater$1 = fromFloatExn(greater);
+          var value = fromFloatExn(2000000000.0);
+          var minValue = fromFloatExn(0.0);
+          var maxValue = fromFloatExn(4294967295.0);
           t.deepEqual($$Number.Uint32.compare(less$1, greater$1), -1, undefined);
           t.deepEqual($$Number.Uint32.compare(greater$1, less$1), 1, undefined);
           t.deepEqual($$Number.Uint32.compare(less$1, less$1), 0, undefined);
@@ -545,8 +549,8 @@ Ava("test " + name + " comparison", (function (t) {
               var greater = Math.floor(TestUtils.randomFloat(less + 1.0, 4294967295.0 + 1.0));
               testCompare(less, greater);
             });
-        var zero = $$Number.Uint32.fromFloatExn(0.0);
-        var negZero = $$Number.Uint32.fromFloatExn(-0.0);
+        var zero = fromFloatExn(0.0);
+        var negZero = fromFloatExn(-0.0);
         t.true($$Number.Uint32.eq(zero, negZero), undefined);
         t.true($$Number.Uint32.le(zero, negZero), undefined);
         t.true($$Number.Uint32.ge(zero, negZero), undefined);
@@ -564,9 +568,9 @@ Ava("test " + name + " comparison", (function (t) {
 
 Ava("test " + name + " addition", (function (t) {
         var testInRange = function (a, b) {
-          var result = $$Number.Uint32.fromFloatExn(a + b);
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
+          var result = fromFloatExn(a + b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Uint32.add(a$1, b$1), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.add(a$1, b$1), $$Number.Uint32.add(b$1, a$1), undefined);
           t.deepEqual($$Number.Uint32.addExn(a$1, b$1), result, undefined);
@@ -575,31 +579,31 @@ Ava("test " + name + " addition", (function (t) {
           t.deepEqual($$Number.Uint32.addClamped(a$1, b$1), $$Number.Uint32.addClamped(b$1, a$1), undefined);
           t.deepEqual($$Number.Uint32.addUnsafe(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint32.addUnsafe(a$1, b$1), $$Number.Uint32.addUnsafe(b$1, a$1), undefined);
-          t.deepEqual($$Number.Uint32.add(a$1, $$Number.Uint32.zero), Caml_option.some(a$1), undefined);
-          t.deepEqual($$Number.Uint32.add(a$1, $$Number.Uint32.zero), $$Number.Uint32.add($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.addExn(a$1, $$Number.Uint32.zero), a$1, undefined);
-          t.deepEqual($$Number.Uint32.addExn(a$1, $$Number.Uint32.zero), $$Number.Uint32.addExn($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.addClamped(a$1, $$Number.Uint32.zero), a$1, undefined);
-          t.deepEqual($$Number.Uint32.addClamped(a$1, $$Number.Uint32.zero), $$Number.Uint32.addClamped($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.addUnsafe(a$1, $$Number.Uint32.zero), a$1, undefined);
-          t.deepEqual($$Number.Uint32.addUnsafe(a$1, $$Number.Uint32.zero), $$Number.Uint32.addUnsafe($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.add(b$1, $$Number.Uint32.zero), Caml_option.some(b$1), undefined);
-          t.deepEqual($$Number.Uint32.add(b$1, $$Number.Uint32.zero), $$Number.Uint32.add($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.addExn(b$1, $$Number.Uint32.zero), b$1, undefined);
-          t.deepEqual($$Number.Uint32.addExn(b$1, $$Number.Uint32.zero), $$Number.Uint32.addExn($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.addClamped(b$1, $$Number.Uint32.zero), b$1, undefined);
-          t.deepEqual($$Number.Uint32.addClamped(b$1, $$Number.Uint32.zero), $$Number.Uint32.addClamped($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.addUnsafe(b$1, $$Number.Uint32.zero), b$1, undefined);
-          t.deepEqual($$Number.Uint32.addUnsafe(b$1, $$Number.Uint32.zero), $$Number.Uint32.addUnsafe($$Number.Uint32.zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.add(a$1, zero), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint32.add(a$1, zero), $$Number.Uint32.add(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.addExn(a$1, zero), a$1, undefined);
+          t.deepEqual($$Number.Uint32.addExn(a$1, zero), $$Number.Uint32.addExn(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.addClamped(a$1, zero), a$1, undefined);
+          t.deepEqual($$Number.Uint32.addClamped(a$1, zero), $$Number.Uint32.addClamped(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.addUnsafe(a$1, zero), a$1, undefined);
+          t.deepEqual($$Number.Uint32.addUnsafe(a$1, zero), $$Number.Uint32.addUnsafe(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.add(b$1, zero), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint32.add(b$1, zero), $$Number.Uint32.add(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.addExn(b$1, zero), b$1, undefined);
+          t.deepEqual($$Number.Uint32.addExn(b$1, zero), $$Number.Uint32.addExn(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.addClamped(b$1, zero), b$1, undefined);
+          t.deepEqual($$Number.Uint32.addClamped(b$1, zero), $$Number.Uint32.addClamped(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.addUnsafe(b$1, zero), b$1, undefined);
+          t.deepEqual($$Number.Uint32.addUnsafe(b$1, zero), $$Number.Uint32.addUnsafe(zero, b$1), undefined);
         };
         testInRange(27852.0, 56331.0);
         testInRange(0.0, 0.0);
         testInRange(4294967295.0, 0.0);
         testInRange(0.0, 1.0);
         var testOutOfRange = function (a, b, value) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
-          var value$1 = $$Number.Uint32.fromFloatExn(value);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
+          var value$1 = fromFloatExn(value);
           t.deepEqual($$Number.Uint32.add(a$1, b$1), undefined, undefined);
           t.deepEqual($$Number.Uint32.add(b$1, a$1), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
@@ -631,9 +635,9 @@ Ava("test " + name + " addition", (function (t) {
 
 Ava("test " + name + " subtraction", (function (t) {
         var testInRange = function (a, b) {
-          var result = $$Number.Uint32.fromFloatExn(a - b);
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
+          var result = fromFloatExn(a - b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Uint32.sub(a$1, b$1), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.subExn(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint32.subClamped(a$1, b$1), result, undefined);
@@ -642,35 +646,35 @@ Ava("test " + name + " subtraction", (function (t) {
           t.deepEqual($$Number.Uint32.subExn(a$1, result), b$1, undefined);
           t.deepEqual($$Number.Uint32.subClamped(a$1, result), b$1, undefined);
           t.deepEqual($$Number.Uint32.subUnsafe(a$1, result), b$1, undefined);
-          t.deepEqual($$Number.Uint32.sub(a$1, a$1), Caml_option.some($$Number.Uint32.zero), undefined);
-          t.deepEqual($$Number.Uint32.subExn(a$1, a$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.subClamped(a$1, a$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.subUnsafe(a$1, a$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.sub(a$1, $$Number.Uint32.zero), Caml_option.some(a$1), undefined);
-          t.deepEqual($$Number.Uint32.subExn(a$1, $$Number.Uint32.zero), a$1, undefined);
-          t.deepEqual($$Number.Uint32.subClamped(a$1, $$Number.Uint32.zero), a$1, undefined);
-          t.deepEqual($$Number.Uint32.subUnsafe(a$1, $$Number.Uint32.zero), a$1, undefined);
-          t.deepEqual($$Number.Uint32.sub(b$1, b$1), Caml_option.some($$Number.Uint32.zero), undefined);
-          t.deepEqual($$Number.Uint32.subExn(b$1, b$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.subClamped(b$1, b$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.subUnsafe(b$1, b$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.sub(b$1, $$Number.Uint32.zero), Caml_option.some(b$1), undefined);
-          t.deepEqual($$Number.Uint32.subExn(b$1, $$Number.Uint32.zero), b$1, undefined);
-          t.deepEqual($$Number.Uint32.subClamped(b$1, $$Number.Uint32.zero), b$1, undefined);
-          t.deepEqual($$Number.Uint32.subUnsafe(b$1, $$Number.Uint32.zero), b$1, undefined);
+          t.deepEqual($$Number.Uint32.sub(a$1, a$1), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Uint32.subExn(a$1, a$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.subClamped(a$1, a$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.subUnsafe(a$1, a$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.sub(a$1, zero), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint32.subExn(a$1, zero), a$1, undefined);
+          t.deepEqual($$Number.Uint32.subClamped(a$1, zero), a$1, undefined);
+          t.deepEqual($$Number.Uint32.subUnsafe(a$1, zero), a$1, undefined);
+          t.deepEqual($$Number.Uint32.sub(b$1, b$1), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Uint32.subExn(b$1, b$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.subClamped(b$1, b$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.subUnsafe(b$1, b$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.sub(b$1, zero), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint32.subExn(b$1, zero), b$1, undefined);
+          t.deepEqual($$Number.Uint32.subClamped(b$1, zero), b$1, undefined);
+          t.deepEqual($$Number.Uint32.subUnsafe(b$1, zero), b$1, undefined);
         };
         testInRange(56331.0, 27852.0);
         testInRange(0.0, 0.0);
         testInRange(4294967295.0, 0.0);
         testInRange(4294967295.0, 1.0);
         var testOutOfRange = function (a, b, value) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Uint32.sub(a$1, b$1), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
                   return $$Number.Uint32.subExn(a$1, b$1);
                 }));
-          t.deepEqual($$Number.Uint32.subClamped(a$1, b$1), $$Number.Uint32.fromFloatExn(value), undefined);
+          t.deepEqual($$Number.Uint32.subClamped(a$1, b$1), fromFloatExn(value), undefined);
         };
         testOutOfRange(0.0, 1.0, 0.0);
         testOutOfRange(0.0, 2000000000.0, 0.0);
@@ -698,9 +702,9 @@ Ava("test " + name + " subtraction", (function (t) {
 
 Ava("test " + name + " multiplication", (function (t) {
         var testInRange = function (a, b) {
-          var result = $$Number.Uint32.fromFloatExn(a * b);
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
+          var result = fromFloatExn(a * b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Uint32.mul(a$1, b$1), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.mul(a$1, b$1), $$Number.Uint32.mul(b$1, a$1), undefined);
           t.deepEqual($$Number.Uint32.mulExn(a$1, b$1), result, undefined);
@@ -709,38 +713,38 @@ Ava("test " + name + " multiplication", (function (t) {
           t.deepEqual($$Number.Uint32.mulClamped(a$1, b$1), $$Number.Uint32.mulClamped(b$1, a$1), undefined);
           t.deepEqual($$Number.Uint32.mulUnsafe(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint32.mulUnsafe(a$1, b$1), $$Number.Uint32.mulUnsafe(b$1, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mul(a$1, $$Number.Uint32.zero), Caml_option.some($$Number.Uint32.zero), undefined);
-          t.deepEqual($$Number.Uint32.mul(a$1, $$Number.Uint32.zero), $$Number.Uint32.mul($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mulExn(a$1, $$Number.Uint32.zero), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.mulExn(a$1, $$Number.Uint32.zero), $$Number.Uint32.mulExn($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(a$1, $$Number.Uint32.zero), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(a$1, $$Number.Uint32.zero), $$Number.Uint32.mulClamped($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, $$Number.Uint32.zero), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, $$Number.Uint32.zero), $$Number.Uint32.mulUnsafe($$Number.Uint32.zero, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mul(a$1, $$Number.Uint32.one), Caml_option.some(a$1), undefined);
-          t.deepEqual($$Number.Uint32.mul(a$1, $$Number.Uint32.one), $$Number.Uint32.mul($$Number.Uint32.one, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mulExn(a$1, $$Number.Uint32.one), a$1, undefined);
-          t.deepEqual($$Number.Uint32.mulExn(a$1, $$Number.Uint32.one), $$Number.Uint32.mulExn($$Number.Uint32.one, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(a$1, $$Number.Uint32.one), a$1, undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(a$1, $$Number.Uint32.one), $$Number.Uint32.mulClamped($$Number.Uint32.one, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, $$Number.Uint32.one), a$1, undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, $$Number.Uint32.one), $$Number.Uint32.mulUnsafe($$Number.Uint32.one, a$1), undefined);
-          t.deepEqual($$Number.Uint32.mul(b$1, $$Number.Uint32.zero), Caml_option.some($$Number.Uint32.zero), undefined);
-          t.deepEqual($$Number.Uint32.mul(b$1, $$Number.Uint32.zero), $$Number.Uint32.mul($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mulExn(b$1, $$Number.Uint32.zero), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.mulExn(b$1, $$Number.Uint32.zero), $$Number.Uint32.mulExn($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(b$1, $$Number.Uint32.zero), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(b$1, $$Number.Uint32.zero), $$Number.Uint32.mulClamped($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, $$Number.Uint32.zero), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, $$Number.Uint32.zero), $$Number.Uint32.mulUnsafe($$Number.Uint32.zero, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mul(b$1, $$Number.Uint32.one), Caml_option.some(b$1), undefined);
-          t.deepEqual($$Number.Uint32.mul(b$1, $$Number.Uint32.one), $$Number.Uint32.mul($$Number.Uint32.one, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mulExn(b$1, $$Number.Uint32.one), b$1, undefined);
-          t.deepEqual($$Number.Uint32.mulExn(b$1, $$Number.Uint32.one), $$Number.Uint32.mulExn($$Number.Uint32.one, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(b$1, $$Number.Uint32.one), b$1, undefined);
-          t.deepEqual($$Number.Uint32.mulClamped(b$1, $$Number.Uint32.one), $$Number.Uint32.mulClamped($$Number.Uint32.one, b$1), undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, $$Number.Uint32.one), b$1, undefined);
-          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, $$Number.Uint32.one), $$Number.Uint32.mulUnsafe($$Number.Uint32.one, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mul(a$1, zero), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Uint32.mul(a$1, zero), $$Number.Uint32.mul(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mulExn(a$1, zero), zero, undefined);
+          t.deepEqual($$Number.Uint32.mulExn(a$1, zero), $$Number.Uint32.mulExn(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(a$1, zero), zero, undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(a$1, zero), $$Number.Uint32.mulClamped(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, zero), zero, undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, zero), $$Number.Uint32.mulUnsafe(zero, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mul(a$1, one), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint32.mul(a$1, one), $$Number.Uint32.mul(one, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mulExn(a$1, one), a$1, undefined);
+          t.deepEqual($$Number.Uint32.mulExn(a$1, one), $$Number.Uint32.mulExn(one, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(a$1, one), a$1, undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(a$1, one), $$Number.Uint32.mulClamped(one, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, one), a$1, undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(a$1, one), $$Number.Uint32.mulUnsafe(one, a$1), undefined);
+          t.deepEqual($$Number.Uint32.mul(b$1, zero), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Uint32.mul(b$1, zero), $$Number.Uint32.mul(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mulExn(b$1, zero), zero, undefined);
+          t.deepEqual($$Number.Uint32.mulExn(b$1, zero), $$Number.Uint32.mulExn(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(b$1, zero), zero, undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(b$1, zero), $$Number.Uint32.mulClamped(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, zero), zero, undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, zero), $$Number.Uint32.mulUnsafe(zero, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mul(b$1, one), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint32.mul(b$1, one), $$Number.Uint32.mul(one, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mulExn(b$1, one), b$1, undefined);
+          t.deepEqual($$Number.Uint32.mulExn(b$1, one), $$Number.Uint32.mulExn(one, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(b$1, one), b$1, undefined);
+          t.deepEqual($$Number.Uint32.mulClamped(b$1, one), $$Number.Uint32.mulClamped(one, b$1), undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, one), b$1, undefined);
+          t.deepEqual($$Number.Uint32.mulUnsafe(b$1, one), $$Number.Uint32.mulUnsafe(one, b$1), undefined);
         };
         testInRange(27852.0, 56331.0);
         testInRange(0.0, 0.0);
@@ -750,9 +754,9 @@ Ava("test " + name + " multiplication", (function (t) {
         testInRange(0.0 + 1.0, 1.0);
         testInRange(4294967295.0 - 1.0, 1.0);
         var testOutOfRange = function (a, b, value) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
-          var value$1 = $$Number.Uint32.fromFloatExn(value);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
+          var value$1 = fromFloatExn(value);
           t.deepEqual($$Number.Uint32.mul(a$1, b$1), undefined, undefined);
           t.deepEqual($$Number.Uint32.mul(b$1, a$1), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
@@ -783,36 +787,44 @@ Ava("test " + name + " multiplication", (function (t) {
 Ava("test " + name + " division", (function (t) {
         var testNotDividedByZero = function (a, b) {
           if (a !== 0.0) {
-            var result = $$Number.Uint32.fromFloatExn(toUint32(b / a));
-            var a$1 = $$Number.Uint32.fromFloatExn(a);
-            var b$1 = $$Number.Uint32.fromFloatExn(b);
+            var result = fromFloatExn(toUint32(b / a));
+            var a$1 = fromFloatExn(a);
+            var b$1 = fromFloatExn(b);
             t.deepEqual($$Number.Uint32.div(b$1, a$1), Caml_option.some(result), undefined);
             t.deepEqual($$Number.Uint32.divExn(b$1, a$1), result, undefined);
             t.deepEqual($$Number.Uint32.divUnsafe(b$1, a$1), result, undefined);
-            t.deepEqual($$Number.Uint32.div($$Number.Uint32.zero, a$1), Caml_option.some($$Number.Uint32.zero), undefined);
-            t.deepEqual($$Number.Uint32.divExn($$Number.Uint32.zero, a$1), $$Number.Uint32.zero, undefined);
-            t.deepEqual($$Number.Uint32.divUnsafe($$Number.Uint32.zero, a$1), $$Number.Uint32.zero, undefined);
+            t.deepEqual($$Number.Uint32.div(a$1, a$1), Caml_option.some(one), undefined);
+            t.deepEqual($$Number.Uint32.divExn(a$1, a$1), one, undefined);
+            t.deepEqual($$Number.Uint32.divUnsafe(a$1, a$1), one, undefined);
+            t.deepEqual($$Number.Uint32.div(zero, a$1), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Uint32.divExn(zero, a$1), zero, undefined);
+            t.deepEqual($$Number.Uint32.divUnsafe(zero, a$1), zero, undefined);
           }
           if (b !== 0.0) {
-            var result$1 = $$Number.Uint32.fromFloatExn(toUint32(a / b));
-            var a$2 = $$Number.Uint32.fromFloatExn(a);
-            var b$2 = $$Number.Uint32.fromFloatExn(b);
+            var result$1 = fromFloatExn(toUint32(a / b));
+            var a$2 = fromFloatExn(a);
+            var b$2 = fromFloatExn(b);
             t.deepEqual($$Number.Uint32.div(a$2, b$2), Caml_option.some(result$1), undefined);
             t.deepEqual($$Number.Uint32.divExn(a$2, b$2), result$1, undefined);
             t.deepEqual($$Number.Uint32.divUnsafe(a$2, b$2), result$1, undefined);
-            t.deepEqual($$Number.Uint32.div($$Number.Uint32.zero, b$2), Caml_option.some($$Number.Uint32.zero), undefined);
-            t.deepEqual($$Number.Uint32.divExn($$Number.Uint32.zero, b$2), $$Number.Uint32.zero, undefined);
-            t.deepEqual($$Number.Uint32.divUnsafe($$Number.Uint32.zero, b$2), $$Number.Uint32.zero, undefined);
+            t.deepEqual($$Number.Uint32.div(b$2, b$2), Caml_option.some(one), undefined);
+            t.deepEqual($$Number.Uint32.divExn(b$2, b$2), one, undefined);
+            t.deepEqual($$Number.Uint32.divUnsafe(b$2, b$2), one, undefined);
+            t.deepEqual($$Number.Uint32.div(zero, b$2), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Uint32.divExn(zero, b$2), zero, undefined);
+            t.deepEqual($$Number.Uint32.divUnsafe(zero, b$2), zero, undefined);
           }
-          var a$3 = $$Number.Uint32.fromFloatExn(a);
-          var b$3 = $$Number.Uint32.fromFloatExn(b);
-          t.deepEqual($$Number.Uint32.div(a$3, $$Number.Uint32.one), Caml_option.some(a$3), undefined);
-          t.deepEqual($$Number.Uint32.divExn(a$3, $$Number.Uint32.one), a$3, undefined);
-          t.deepEqual($$Number.Uint32.divUnsafe(a$3, $$Number.Uint32.one), a$3, undefined);
-          t.deepEqual($$Number.Uint32.div(b$3, $$Number.Uint32.one), Caml_option.some(b$3), undefined);
-          t.deepEqual($$Number.Uint32.divExn(b$3, $$Number.Uint32.one), b$3, undefined);
-          t.deepEqual($$Number.Uint32.divUnsafe(b$3, $$Number.Uint32.one), b$3, undefined);
+          var a$3 = fromFloatExn(a);
+          var b$3 = fromFloatExn(b);
+          t.deepEqual($$Number.Uint32.div(a$3, one), Caml_option.some(a$3), undefined);
+          t.deepEqual($$Number.Uint32.divExn(a$3, one), a$3, undefined);
+          t.deepEqual($$Number.Uint32.divUnsafe(a$3, one), a$3, undefined);
+          t.deepEqual($$Number.Uint32.div(b$3, one), Caml_option.some(b$3), undefined);
+          t.deepEqual($$Number.Uint32.divExn(b$3, one), b$3, undefined);
+          t.deepEqual($$Number.Uint32.divUnsafe(b$3, one), b$3, undefined);
         };
+        testNotDividedByZero(0.0, 2000000000.0);
+        testNotDividedByZero(-0.0, 2000000000.0);
         testNotDividedByZero(27852.0, 56331.0);
         testNotDividedByZero(0.0, 27852.0);
         testNotDividedByZero(0.0, 56331.0);
@@ -825,26 +837,18 @@ Ava("test " + name + " division", (function (t) {
         testNotDividedByZero(0.0 + 1.0, 2.0);
         testNotDividedByZero(4294967295.0 - 1.0, 2.0);
         var testDividedByZero = function (i) {
-          var a = $$Number.Uint32.fromFloatExn(i);
-          t.deepEqual($$Number.Uint32.div(a, $$Number.Uint32.zero), undefined, undefined);
+          var a = fromFloatExn(i);
+          t.deepEqual($$Number.Uint32.div(a, zero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Uint32.divExn(a, $$Number.Uint32.zero);
+                  return $$Number.Uint32.divExn(a, zero);
                 }));
-          var negZero = $$Number.Uint32.fromIntExn(-0);
-          t.deepEqual($$Number.Uint32.div(a, negZero), undefined, undefined);
+          var negZero$1 = fromIntExn(negZero);
+          t.deepEqual($$Number.Uint32.div(a, negZero$1), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Uint32.divExn(a, negZero);
+                  return $$Number.Uint32.divExn(a, negZero$1);
                 }));
         };
-        testDividedByZero(0.0);
-        testDividedByZero(1.0);
-        testDividedByZero(27852.0);
-        testDividedByZero(56331.0);
-        testDividedByZero(2000000000.0);
-        testDividedByZero(0.0);
-        testDividedByZero(4294967295.0);
-        testDividedByZero(0.0 + 1.0);
-        testDividedByZero(4294967295.0 - 1.0);
+        testFn(testDividedByZero);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
@@ -857,35 +861,35 @@ Ava("test " + name + " division", (function (t) {
 Ava("test " + name + " remainder", (function (t) {
         var testNotModByZero = function (a, b) {
           if (a !== 0.0) {
-            var result = $$Number.Uint32.fromFloatExn(toUint32(b % a));
-            var a$1 = $$Number.Uint32.fromFloatExn(a);
-            var b$1 = $$Number.Uint32.fromFloatExn(b);
+            var result = fromFloatExn(toUint32(b % a));
+            var a$1 = fromFloatExn(a);
+            var b$1 = fromFloatExn(b);
             t.deepEqual($$Number.Uint32.rem(b$1, a$1), Caml_option.some(result), undefined);
             t.deepEqual($$Number.Uint32.remExn(b$1, a$1), result, undefined);
             t.deepEqual($$Number.Uint32.remUnsafe(b$1, a$1), result, undefined);
-            t.deepEqual($$Number.Uint32.rem($$Number.Uint32.zero, a$1), Caml_option.some($$Number.Uint32.zero), undefined);
-            t.deepEqual($$Number.Uint32.remExn($$Number.Uint32.zero, a$1), $$Number.Uint32.zero, undefined);
-            t.deepEqual($$Number.Uint32.remUnsafe($$Number.Uint32.zero, a$1), $$Number.Uint32.zero, undefined);
+            t.deepEqual($$Number.Uint32.rem(zero, a$1), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Uint32.remExn(zero, a$1), zero, undefined);
+            t.deepEqual($$Number.Uint32.remUnsafe(zero, a$1), zero, undefined);
           }
           if (b !== 0.0) {
-            var result$1 = $$Number.Uint32.fromFloatExn(toUint32(a % b));
-            var a$2 = $$Number.Uint32.fromFloatExn(a);
-            var b$2 = $$Number.Uint32.fromFloatExn(b);
+            var result$1 = fromFloatExn(toUint32(a % b));
+            var a$2 = fromFloatExn(a);
+            var b$2 = fromFloatExn(b);
             t.deepEqual($$Number.Uint32.rem(a$2, b$2), Caml_option.some(result$1), undefined);
             t.deepEqual($$Number.Uint32.remExn(a$2, b$2), result$1, undefined);
             t.deepEqual($$Number.Uint32.remUnsafe(a$2, b$2), result$1, undefined);
-            t.deepEqual($$Number.Uint32.rem($$Number.Uint32.zero, b$2), Caml_option.some($$Number.Uint32.zero), undefined);
-            t.deepEqual($$Number.Uint32.remExn($$Number.Uint32.zero, b$2), $$Number.Uint32.zero, undefined);
-            t.deepEqual($$Number.Uint32.remUnsafe($$Number.Uint32.zero, b$2), $$Number.Uint32.zero, undefined);
+            t.deepEqual($$Number.Uint32.rem(zero, b$2), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Uint32.remExn(zero, b$2), zero, undefined);
+            t.deepEqual($$Number.Uint32.remUnsafe(zero, b$2), zero, undefined);
           }
-          var a$3 = $$Number.Uint32.fromFloatExn(a);
-          var b$3 = $$Number.Uint32.fromFloatExn(b);
-          t.deepEqual($$Number.Uint32.rem(a$3, $$Number.Uint32.one), Caml_option.some($$Number.Uint32.zero), undefined);
-          t.deepEqual($$Number.Uint32.remExn(a$3, $$Number.Uint32.one), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.remUnsafe(a$3, $$Number.Uint32.one), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.rem(b$3, $$Number.Uint32.one), Caml_option.some($$Number.Uint32.zero), undefined);
-          t.deepEqual($$Number.Uint32.remExn(b$3, $$Number.Uint32.one), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.remUnsafe(b$3, $$Number.Uint32.one), $$Number.Uint32.zero, undefined);
+          var a$3 = fromFloatExn(a);
+          var b$3 = fromFloatExn(b);
+          t.deepEqual($$Number.Uint32.rem(a$3, one), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Uint32.remExn(a$3, one), zero, undefined);
+          t.deepEqual($$Number.Uint32.remUnsafe(a$3, one), zero, undefined);
+          t.deepEqual($$Number.Uint32.rem(b$3, one), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Uint32.remExn(b$3, one), zero, undefined);
+          t.deepEqual($$Number.Uint32.remUnsafe(b$3, one), zero, undefined);
         };
         testNotModByZero(27852.0, 56331.0);
         testNotModByZero(0.0, 27852.0);
@@ -899,26 +903,18 @@ Ava("test " + name + " remainder", (function (t) {
         testNotModByZero(0.0 + 1.0, 2.0);
         testNotModByZero(4294967295.0 - 1.0, 2.0);
         var testModByZero = function (a) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          t.deepEqual($$Number.Uint32.rem(a$1, $$Number.Uint32.zero), undefined, undefined);
+          var a$1 = fromFloatExn(a);
+          t.deepEqual($$Number.Uint32.rem(a$1, zero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Uint32.remExn(a$1, $$Number.Uint32.zero);
+                  return $$Number.Uint32.remExn(a$1, zero);
                 }));
-          var negZero = $$Number.Uint32.fromIntExn(-0);
-          t.deepEqual($$Number.Uint32.rem(a$1, negZero), undefined, undefined);
+          var negZero$1 = fromIntExn(negZero);
+          t.deepEqual($$Number.Uint32.rem(a$1, negZero$1), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Uint32.remExn(a$1, negZero);
+                  return $$Number.Uint32.remExn(a$1, negZero$1);
                 }));
         };
-        testModByZero(0.0);
-        testModByZero(1.0);
-        testModByZero(27852.0);
-        testModByZero(56331.0);
-        testModByZero(2000000000.0);
-        testModByZero(0.0);
-        testModByZero(4294967295.0);
-        testModByZero(0.0 + 1.0);
-        testModByZero(4294967295.0 - 1.0);
+        testFn(testModByZero);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
@@ -930,11 +926,11 @@ Ava("test " + name + " remainder", (function (t) {
 
 Ava("test " + name + " sum", (function (t) {
         var testInRange = function (arr) {
-          var result = $$Number.Uint32.fromFloatExn(Belt_Array.reduce(arr, 0.0, (function (acc, v) {
+          var result = fromFloatExn(Belt_Array.reduce(arr, 0.0, (function (acc, v) {
                       return acc + v;
                     })));
           var arr$1 = Belt_Array.mapU(arr, (function (i) {
-                  return $$Number.Uint32.fromFloatExn(i);
+                  return fromFloatExn(i);
                 }));
           t.deepEqual($$Number.Uint32.sum(arr$1), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.sumExn(arr$1), result, undefined);
@@ -971,7 +967,7 @@ Ava("test " + name + " sum", (function (t) {
               }));
         var testOutOfRange = function (arr) {
           var arr$1 = Belt_Array.mapU(arr, (function (i) {
-                  return $$Number.Uint32.fromFloatExn(i);
+                  return fromFloatExn(i);
                 }));
           t.deepEqual($$Number.Uint32.sum(arr$1), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
@@ -1029,8 +1025,8 @@ Ava("test " + name + " sum", (function (t) {
 
 Ava("test " + name + " increase and decrease", (function (t) {
         var testIncInRange = function (f) {
-          var result = $$Number.Uint32.fromFloatExn(f + 1.0);
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var result = fromFloatExn(f + 1.0);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.inc(n), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.incExn(n), result, undefined);
           t.deepEqual($$Number.Uint32.incUnsafe(n), result, undefined);
@@ -1049,8 +1045,8 @@ Ava("test " + name + " increase and decrease", (function (t) {
                 return $$Number.Uint32.incExn($$Number.Uint32.maxValue);
               }));
         var testDecInRange = function (f) {
-          var result = $$Number.Uint32.fromFloatExn(f - 1.0);
-          var n = $$Number.Uint32.fromFloatExn(f);
+          var result = fromFloatExn(f - 1.0);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Uint32.dec(n), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.decExn(n), result, undefined);
           t.deepEqual($$Number.Uint32.decUnsafe(n), result, undefined);
@@ -1071,8 +1067,8 @@ Ava("test " + name + " increase and decrease", (function (t) {
 
 Ava("test " + name + " bitwise", (function (t) {
         var assertNot1 = function (a, b) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Uint32.lnot(a$1), b$1, undefined);
           t.deepEqual($$Number.Uint32.lnot(b$1), a$1, undefined);
         };
@@ -1080,27 +1076,20 @@ Ava("test " + name + " bitwise", (function (t) {
         assertNot1(0.0, 4294967295.0);
         assertNot1(0.0 + 1.0, 4294967295.0 - 1.0);
         var assertNot2 = function (i) {
-          var n = $$Number.Uint32.fromFloatExn(i);
+          var n = fromFloatExn(i);
           t.deepEqual($$Number.Uint32.lnot($$Number.Uint32.lnot(n)), n, undefined);
         };
-        assertNot2(0.0);
-        assertNot2(1.0);
-        assertNot2(2000000000.0);
-        assertNot2(0.0);
-        assertNot2(4294967295.0);
-        TestUtils.loop100Fn(function () {
-              assertNot2(randomValue(undefined));
-            });
+        testFn(assertNot2);
         var assertAnd = function (a, b, value) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
-          var value$1 = $$Number.Uint32.fromFloatExn(value);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
+          var value$1 = fromFloatExn(value);
           t.deepEqual($$Number.Uint32.land(a$1, a$1), a$1, undefined);
           t.deepEqual($$Number.Uint32.land(b$1, b$1), b$1, undefined);
           t.deepEqual($$Number.Uint32.land(value$1, value$1), value$1, undefined);
-          t.deepEqual($$Number.Uint32.land(a$1, $$Number.Uint32.lnot(a$1)), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.land(b$1, $$Number.Uint32.lnot(b$1)), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.land(value$1, $$Number.Uint32.lnot(value$1)), $$Number.Uint32.zero, undefined);
+          t.deepEqual($$Number.Uint32.land(a$1, $$Number.Uint32.lnot(a$1)), zero, undefined);
+          t.deepEqual($$Number.Uint32.land(b$1, $$Number.Uint32.lnot(b$1)), zero, undefined);
+          t.deepEqual($$Number.Uint32.land(value$1, $$Number.Uint32.lnot(value$1)), zero, undefined);
           t.deepEqual($$Number.Uint32.land(a$1, b$1), value$1, undefined);
           t.deepEqual($$Number.Uint32.land(b$1, a$1), value$1, undefined);
         };
@@ -1113,9 +1102,9 @@ Ava("test " + name + " bitwise", (function (t) {
               assertAnd(value, value, value);
             });
         var assertOr = function (a, b, value) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
-          var value$1 = $$Number.Uint32.fromFloatExn(value);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
+          var value$1 = fromFloatExn(value);
           var oneBits = $$Number.Uint32.maxValue;
           t.deepEqual($$Number.Uint32.lor(a$1, a$1), a$1, undefined);
           t.deepEqual($$Number.Uint32.lor(b$1, b$1), b$1, undefined);
@@ -1135,13 +1124,13 @@ Ava("test " + name + " bitwise", (function (t) {
               assertOr(value, value, value);
             });
         var assertXor = function (a, b, value) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromFloatExn(b);
-          var value$1 = $$Number.Uint32.fromFloatExn(value);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
+          var value$1 = fromFloatExn(value);
           var oneBits = $$Number.Uint32.maxValue;
-          t.deepEqual($$Number.Uint32.lxor(a$1, a$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.lxor(b$1, b$1), $$Number.Uint32.zero, undefined);
-          t.deepEqual($$Number.Uint32.lxor(value$1, value$1), $$Number.Uint32.zero, undefined);
+          t.deepEqual($$Number.Uint32.lxor(a$1, a$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.lxor(b$1, b$1), zero, undefined);
+          t.deepEqual($$Number.Uint32.lxor(value$1, value$1), zero, undefined);
           t.deepEqual($$Number.Uint32.lxor(a$1, $$Number.Uint32.lnot(a$1)), oneBits, undefined);
           t.deepEqual($$Number.Uint32.lxor(b$1, $$Number.Uint32.lnot(b$1)), oneBits, undefined);
           t.deepEqual($$Number.Uint32.lxor(value$1, $$Number.Uint32.lnot(value$1)), oneBits, undefined);
@@ -1159,14 +1148,14 @@ Ava("test " + name + " bitwise", (function (t) {
         var modBits = function (i) {
           return ((i >>> 0) % bits);
         };
-        var value = $$Number.Uint32.fromFloatExn(2000000000.0);
+        var value = fromFloatExn(2000000000.0);
         for(var i = -32; i <= 64; ++i){
-          t.deepEqual($$Number.Uint32.lsl(value, i), $$Number.Uint32.fromFloatExn(Belt_Array.getExn(valueShiftLeft, modBits(i))), undefined);
+          t.deepEqual($$Number.Uint32.lsl(value, i), fromFloatExn(Belt_Array.getExn(valueShiftLeft, modBits(i))), undefined);
         }
         var testUnsignedShiftRight = function (value) {
-          var n = $$Number.Uint32.fromFloatExn(value);
+          var n = fromFloatExn(value);
           for(var i = -32; i <= 64; ++i){
-            t.deepEqual($$Number.Uint32.lsr(n, i), $$Number.Uint32.fromFloatExn(toUint32(((value | 0) >>> i) | 0)), undefined);
+            t.deepEqual($$Number.Uint32.lsr(n, i), fromFloatExn(toUint32(((value | 0) >>> i) | 0)), undefined);
           }
         };
         testUnsignedShiftRight(2000000000.0);
@@ -1175,9 +1164,9 @@ Ava("test " + name + " bitwise", (function (t) {
               testUnsignedShiftRight(randomValue(undefined));
             });
         var testShiftRight = function (value) {
-          var n = $$Number.Uint32.fromFloatExn(value);
+          var n = fromFloatExn(value);
           for(var i = -32; i <= 64; ++i){
-            t.deepEqual($$Number.Uint32.asr(n, i), $$Number.Uint32.fromFloatExn(Math.floor(value / Math.pow(2.0, modBits(i)))), undefined);
+            t.deepEqual($$Number.Uint32.asr(n, i), fromFloatExn(Math.floor(value / Math.pow(2.0, modBits(i)))), undefined);
           }
         };
         testShiftRight(2000000000.0);
@@ -1185,12 +1174,12 @@ Ava("test " + name + " bitwise", (function (t) {
         TestUtils.loop100Fn(function () {
               testShiftRight(randomValue(undefined));
             });
-        var value$1 = $$Number.Uint32.fromFloatExn(2000000000.0);
+        var value$1 = fromFloatExn(2000000000.0);
         for(var i$1 = -32; i$1 <= 64; ++i$1){
-          t.deepEqual($$Number.Uint32.rsl(value$1, i$1), $$Number.Uint32.fromFloatExn(Belt_Array.getExn(valueRotateShiftLeft, modBits(i$1))), undefined);
+          t.deepEqual($$Number.Uint32.rsl(value$1, i$1), fromFloatExn(Belt_Array.getExn(valueRotateShiftLeft, modBits(i$1))), undefined);
         }
         var testRotateShiftLeft = function (value) {
-          var n = $$Number.Uint32.fromFloatExn(value);
+          var n = fromFloatExn(value);
           for(var i = -32; i <= 64; ++i){
             t.deepEqual($$Number.Uint32.lnot($$Number.Uint32.rsl(n, i)), $$Number.Uint32.rsl($$Number.Uint32.lnot(n), i), undefined);
           }
@@ -1201,7 +1190,7 @@ Ava("test " + name + " bitwise", (function (t) {
               testRotateShiftLeft(randomValue(undefined));
             });
         var testRotateShiftRight = function (value) {
-          var n = $$Number.Uint32.fromFloatExn(value);
+          var n = fromFloatExn(value);
           for(var i = -32; i <= 64; ++i){
             t.deepEqual($$Number.Uint32.rsl(n, i), $$Number.Uint32.rsr(n, 32 - i | 0), undefined);
             t.deepEqual($$Number.Uint32.lnot($$Number.Uint32.rsr(n, i)), $$Number.Uint32.rsr($$Number.Uint32.lnot(n), i), undefined);
@@ -1218,45 +1207,45 @@ Ava("test " + name + " integer math", (function (t) {
         var testClz = function (n, result) {
           t.deepEqual($$Number.Uint32.clz(n), result, undefined);
         };
-        testClz($$Number.Uint32.zero, 32);
+        testClz(zero, 32);
         testClz($$Number.Uint32.minValue, 32);
         testClz($$Number.Uint32.maxValue, 0);
         for(var i = 0; i <= 31; ++i){
-          testClz($$Number.Uint32.lsl($$Number.Uint32.one, i), (32 - i | 0) - 1 | 0);
+          testClz($$Number.Uint32.lsl(one, i), (32 - i | 0) - 1 | 0);
         }
-        t.deepEqual($$Number.Uint32.imul($$Number.Uint32.fromFloatExn(27852.0), $$Number.Uint32.fromFloatExn(56331.0)), $$Number.Uint32.fromFloatExn(27852.0 * 56331.0), undefined);
+        t.deepEqual($$Number.Uint32.imul(fromFloatExn(27852.0), fromFloatExn(56331.0)), fromFloatExn(27852.0 * 56331.0), undefined);
         var j = Math.pow(2.0, 32);
         TestUtils.loop100Fn(function () {
               var a = TestUtils.randomInt(0.0, 1000000.0);
               var b = TestUtils.randomInt(0.0, 1000000.0);
               var m = a * b % j;
-              t.deepEqual($$Number.Uint32.imul($$Number.Uint32.fromIntExn(a), $$Number.Uint32.fromIntExn(b)), $$Number.Uint32.fromFloatExn(m), undefined);
-              t.deepEqual($$Number.Uint32.imul($$Number.Uint32.fromIntExn(b), $$Number.Uint32.fromIntExn(a)), $$Number.Uint32.fromFloatExn(m), undefined);
+              t.deepEqual($$Number.Uint32.imul(fromIntExn(a), fromIntExn(b)), fromFloatExn(m), undefined);
+              t.deepEqual($$Number.Uint32.imul(fromIntExn(b), fromIntExn(a)), fromFloatExn(m), undefined);
             });
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
-              t.deepEqual($$Number.Uint32.imul($$Number.Uint32.fromFloatExn(a), $$Number.Uint32.fromFloatExn(b)), $$Number.Uint32.imul($$Number.Uint32.fromFloatExn(b), $$Number.Uint32.fromFloatExn(a)), undefined);
+              t.deepEqual($$Number.Uint32.imul(fromFloatExn(a), fromFloatExn(b)), $$Number.Uint32.imul(fromFloatExn(b), fromFloatExn(a)), undefined);
             });
         var testPowInRange = function (a, b) {
-          var result = $$Number.Uint32.fromFloatExn(Math.pow(a, b));
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromIntExn(b);
+          var result = fromFloatExn(Math.pow(a, b));
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromIntExn(b);
           t.deepEqual($$Number.Uint32.pow(a$1, b$1), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Uint32.powExn(a$1, b$1), result, undefined);
           t.deepEqual($$Number.Uint32.powUnsafe(a$1, b$1), result, undefined);
-          t.deepEqual($$Number.Uint32.pow(a$1, $$Number.Uint32.zero), Caml_option.some($$Number.Uint32.one), undefined);
-          t.deepEqual($$Number.Uint32.powExn(a$1, $$Number.Uint32.zero), $$Number.Uint32.one, undefined);
-          t.deepEqual($$Number.Uint32.powUnsafe(a$1, $$Number.Uint32.zero), $$Number.Uint32.one, undefined);
-          t.deepEqual($$Number.Uint32.pow(b$1, $$Number.Uint32.zero), Caml_option.some($$Number.Uint32.one), undefined);
-          t.deepEqual($$Number.Uint32.powExn(b$1, $$Number.Uint32.zero), $$Number.Uint32.one, undefined);
-          t.deepEqual($$Number.Uint32.powUnsafe(b$1, $$Number.Uint32.zero), $$Number.Uint32.one, undefined);
-          t.deepEqual($$Number.Uint32.pow(a$1, $$Number.Uint32.one), Caml_option.some(a$1), undefined);
-          t.deepEqual($$Number.Uint32.powExn(a$1, $$Number.Uint32.one), a$1, undefined);
-          t.deepEqual($$Number.Uint32.powUnsafe(a$1, $$Number.Uint32.one), a$1, undefined);
-          t.deepEqual($$Number.Uint32.pow(b$1, $$Number.Uint32.one), Caml_option.some(b$1), undefined);
-          t.deepEqual($$Number.Uint32.powExn(b$1, $$Number.Uint32.one), b$1, undefined);
-          t.deepEqual($$Number.Uint32.powUnsafe(b$1, $$Number.Uint32.one), b$1, undefined);
+          t.deepEqual($$Number.Uint32.pow(a$1, zero), Caml_option.some(one), undefined);
+          t.deepEqual($$Number.Uint32.powExn(a$1, zero), one, undefined);
+          t.deepEqual($$Number.Uint32.powUnsafe(a$1, zero), one, undefined);
+          t.deepEqual($$Number.Uint32.pow(b$1, zero), Caml_option.some(one), undefined);
+          t.deepEqual($$Number.Uint32.powExn(b$1, zero), one, undefined);
+          t.deepEqual($$Number.Uint32.powUnsafe(b$1, zero), one, undefined);
+          t.deepEqual($$Number.Uint32.pow(a$1, one), Caml_option.some(a$1), undefined);
+          t.deepEqual($$Number.Uint32.powExn(a$1, one), a$1, undefined);
+          t.deepEqual($$Number.Uint32.powUnsafe(a$1, one), a$1, undefined);
+          t.deepEqual($$Number.Uint32.pow(b$1, one), Caml_option.some(b$1), undefined);
+          t.deepEqual($$Number.Uint32.powExn(b$1, one), b$1, undefined);
+          t.deepEqual($$Number.Uint32.powUnsafe(b$1, one), b$1, undefined);
         };
         testPowInRange(0.0, 1);
         testPowInRange(1.0, 0);
@@ -1265,8 +1254,8 @@ Ava("test " + name + " integer math", (function (t) {
         testPowInRange(0.0, 2000000000);
         testPowInRange(4294967295.0, 1);
         var testPowOutOfRange = function (a, b) {
-          var a$1 = $$Number.Uint32.fromFloatExn(a);
-          var b$1 = $$Number.Uint32.fromIntExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromIntExn(b);
           t.deepEqual($$Number.Uint32.pow(a$1, b$1), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
                   return $$Number.Uint32.powExn(a$1, b$1);
@@ -1286,8 +1275,8 @@ Ava("test " + name + " integer math", (function (t) {
         TestUtils.loop100Fn(function () {
               var m = randomValue(undefined);
               var n = randomValue(undefined);
-              var min = $$Number.Uint32.fromFloatExn(m < n ? m : n);
-              var max = $$Number.Uint32.fromFloatExn(m > n ? m : n);
+              var min = fromFloatExn(m < n ? m : n);
+              var max = fromFloatExn(m > n ? m : n);
               if (min !== max) {
                 return TestUtils.loopFn((function () {
                               var i = $$Number.Uint32.random(min, max);
@@ -1343,10 +1332,16 @@ export {
   lessGreaterAnd ,
   lessGreaterOr ,
   lessGreaterXor ,
+  negZero ,
+  zero ,
+  one ,
   minInt ,
   maxInt ,
+  fromIntExn ,
+  fromFloatExn ,
   toUint32 ,
   randomValue ,
   randomLargerFloat ,
+  testFn ,
 }
 /*  Not a pure module */

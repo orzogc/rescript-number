@@ -7,8 +7,21 @@ import * as TestUtils from "./TestUtils.bs.mjs";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
+import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 
 var name = "Float64";
+
+var fromIntExn = $$Number.Float64.fromIntExn;
+
+var fromFloatExn = $$Number.Float64.fromFloatExn;
+
+var zero = $$Number.Float64.zero;
+
+var negZero = fromFloatExn(-0.0);
+
+var one = $$Number.Float64.one;
+
+var negOne = fromIntExn(-1);
 
 function randomValue() {
   return TestUtils.randomFloat(Js_int.min * 2.0, Js_int.max * 2.0);
@@ -30,11 +43,38 @@ function randomFloatInInt32Range() {
   return TestUtils.randomFloat(Js_int.min, Js_int.max);
 }
 
+function testFn(fn) {
+  fn(0.0);
+  fn(-0.0);
+  fn(1.0);
+  fn(-1.0);
+  fn(12345678.9);
+  fn(-56248.7954);
+  fn(87934.1968);
+  fn(Js_int.min);
+  fn(Js_int.max);
+  fn(PervasivesU.neg_infinity);
+  fn(PervasivesU.infinity);
+  TestUtils.loop100Fn(function () {
+        fn(randomValue(undefined));
+      });
+}
+
+function clampFloatToInt(f) {
+  if (f < Js_int.min) {
+    return Js_int.min;
+  } else if (f > Js_int.max) {
+    return Js_int.max;
+  } else {
+    return f | 0;
+  }
+}
+
 Ava("test " + name + " from int", (function (t) {
         var testFromInt = function (i) {
-          var n = $$Number.Float64.fromIntExn(i);
+          var n = fromIntExn(i);
           t.deepEqual($$Number.Float64.fromInt(i), Caml_option.some(n), undefined);
-          t.deepEqual($$Number.Float64.fromIntExn(i), n, undefined);
+          t.deepEqual(fromIntExn(i), n, undefined);
           t.deepEqual($$Number.Float64.fromIntClamped(i), n, undefined);
           t.deepEqual($$Number.Float64.fromIntUnsafe(i), n, undefined);
         };
@@ -51,7 +91,7 @@ Ava("test " + name + " from int", (function (t) {
 
 Ava("test " + name + " to int", (function (t) {
         var testInRange = function (i) {
-          var n = $$Number.Float64.fromIntExn(i);
+          var n = fromIntExn(i);
           t.deepEqual($$Number.Float64.toInt(n), i, undefined);
           t.deepEqual($$Number.Float64.toIntExn(n), i, undefined);
           t.deepEqual($$Number.Float64.toIntClamped(n), i, undefined);
@@ -67,7 +107,7 @@ Ava("test " + name + " to int", (function (t) {
               testInRange(TestUtils.randomInt(Js_int.min, Js_int.max));
             });
         var testOutOfRange = function (f, value) {
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.toInt(n), undefined, undefined);
           TestUtils.assertOverflow(t, (function () {
                   return $$Number.Float64.toIntExn(n);
@@ -83,7 +123,7 @@ Ava("test " + name + " to int", (function (t) {
               testOutOfRange(randomLargerInt(undefined), Js_int.max);
             });
         var testIsNotInteger = function (f, value) {
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.toInt(n), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Float64.toIntExn(n);
@@ -110,51 +150,31 @@ Ava("test " + name + " to int", (function (t) {
 
 Ava("test " + name + " from float", (function (t) {
         var testNotNaN = function (f) {
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.fromFloat(f), Caml_option.some(n), undefined);
-          t.deepEqual($$Number.Float64.fromFloatExn(f), n, undefined);
+          t.deepEqual(fromFloatExn(f), n, undefined);
           t.deepEqual($$Number.Float64.fromFloatClamped(f), n, undefined);
           t.deepEqual($$Number.Float64.fromFloatUnsafe(f), n, undefined);
         };
-        testNotNaN(0.0);
-        testNotNaN(-0.0);
-        testNotNaN(1.0);
-        testNotNaN(12345678.9);
-        testNotNaN(Js_int.min);
-        testNotNaN(Js_int.max);
-        testNotNaN(PervasivesU.neg_infinity);
-        testNotNaN(PervasivesU.infinity);
-        TestUtils.loop100Fn(function () {
-              testNotNaN(randomValue(undefined));
-            });
+        testFn(testNotNaN);
         t.deepEqual($$Number.Float64.fromFloat(Number.NaN), undefined, undefined);
         TestUtils.assertInvalidArgument(t, (function () {
-                return $$Number.Float64.fromFloatExn(Number.NaN);
+                return fromFloatExn(Number.NaN);
               }));
-        t.deepEqual($$Number.Float64.fromFloatClamped(Number.NaN), $$Number.Float64.zero, undefined);
+        t.deepEqual($$Number.Float64.fromFloatClamped(Number.NaN), zero, undefined);
       }));
 
 Ava("test " + name + " to float", (function (t) {
         var testToFloat = function (f) {
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.toFloat(n), f, undefined);
         };
-        testToFloat(0.0);
-        testToFloat(-0.0);
-        testToFloat(1.0);
-        testToFloat(12345678.9);
-        testToFloat(Js_int.min);
-        testToFloat(Js_int.max);
-        testToFloat(PervasivesU.neg_infinity);
-        testToFloat(PervasivesU.infinity);
-        TestUtils.loop100Fn(function () {
-              testToFloat(randomValue(undefined));
-            });
+        testFn(testToFloat);
       }));
 
 Ava("test " + name + " from string", (function (t) {
         var testNotNaN = function (f, s) {
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.fromString(s), Caml_option.some(n), undefined);
           t.deepEqual($$Number.Float64.fromStringExn(s), n, undefined);
         };
@@ -182,27 +202,14 @@ Ava("test " + name + " from string", (function (t) {
       }));
 
 Ava("test " + name + " to string", (function (t) {
-        var testFn = function (fn) {
-          fn(0.0);
-          fn(-0.0);
-          fn(1.0);
-          fn(12345678.9);
-          fn(Js_int.min);
-          fn(Js_int.max);
-          fn(PervasivesU.neg_infinity);
-          fn(PervasivesU.infinity);
-          TestUtils.loop100Fn(function () {
-                fn(randomValue(undefined));
-              });
-        };
         var testToString = function (f) {
           var s = String(f);
-          t.deepEqual($$Number.Float64.toString($$Number.Float64.fromFloatExn(f)), s, undefined);
+          t.deepEqual($$Number.Float64.toString(fromFloatExn(f)), s, undefined);
         };
         testFn(testToString);
         var testToExponential = function (f) {
           var s = f.toExponential();
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.toExponential(n), s, undefined);
           for(var digits = 0; digits <= 100; ++digits){
             var s$1 = f.toExponential(digits);
@@ -222,7 +229,7 @@ Ava("test " + name + " to string", (function (t) {
         testFn(testToExponential);
         var testToPrecision = function (f) {
           var s = f.toPrecision();
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.toPrecision(n), s, undefined);
           for(var digits = 1; digits <= 100; ++digits){
             var s$1 = f.toPrecision(digits);
@@ -242,7 +249,7 @@ Ava("test " + name + " to string", (function (t) {
         testFn(testToPrecision);
         var testToFixed = function (f) {
           var s = f.toFixed();
-          var n = $$Number.Float64.fromFloatExn(f);
+          var n = fromFloatExn(f);
           t.deepEqual($$Number.Float64.toFixed(n), s, undefined);
           for(var digits = 0; digits <= 100; ++digits){
             var s$1 = f.toFixed(digits);
@@ -259,29 +266,29 @@ Ava("test " + name + " to string", (function (t) {
       }));
 
 Ava("test " + name + " zero", (function (t) {
-        t.deepEqual($$Number.Float64.zero, $$Number.Float64.fromIntExn(0), undefined);
-        t.deepEqual($$Number.Float64.zero, $$Number.Float64.fromFloatExn(0.0), undefined);
-        t.notDeepEqual($$Number.Float64.zero, $$Number.Float64.fromFloatExn(-0.0), undefined);
-        t.true($$Number.Float64.eq($$Number.Float64.zero, $$Number.Float64.fromFloatExn(0.0)), undefined);
+        t.deepEqual(zero, fromIntExn(0), undefined);
+        t.deepEqual(zero, fromFloatExn(0.0), undefined);
+        t.notDeepEqual(zero, fromFloatExn(-0.0), undefined);
+        t.true($$Number.Float64.eq(zero, fromFloatExn(0.0)), undefined);
       }));
 
 Ava("test " + name + " one", (function (t) {
-        t.deepEqual($$Number.Float64.one, $$Number.Float64.fromIntExn(1), undefined);
-        t.deepEqual($$Number.Float64.one, $$Number.Float64.fromFloatExn(1.0), undefined);
+        t.deepEqual(one, fromIntExn(1), undefined);
+        t.deepEqual(one, fromFloatExn(1.0), undefined);
       }));
 
 Ava("test " + name + " range", (function (t) {
-        t.deepEqual($$Number.Float64.minValue, $$Number.Float64.fromFloatExn(PervasivesU.neg_infinity), undefined);
-        t.deepEqual($$Number.Float64.maxValue, $$Number.Float64.fromFloatExn(PervasivesU.infinity), undefined);
+        t.deepEqual($$Number.Float64.minValue, fromFloatExn(PervasivesU.neg_infinity), undefined);
+        t.deepEqual($$Number.Float64.maxValue, fromFloatExn(PervasivesU.infinity), undefined);
       }));
 
 Ava("test " + name + " comparison", (function (t) {
         var testCompare = function (less, greater) {
-          var less$1 = $$Number.Float64.fromFloatExn(less);
-          var greater$1 = $$Number.Float64.fromFloatExn(greater);
-          var value = $$Number.Float64.fromFloatExn(12345678.9);
-          var minValue = $$Number.Float64.fromFloatExn(PervasivesU.neg_infinity);
-          var maxValue = $$Number.Float64.fromFloatExn(PervasivesU.infinity);
+          var less$1 = fromFloatExn(less);
+          var greater$1 = fromFloatExn(greater);
+          var value = fromFloatExn(12345678.9);
+          var minValue = fromFloatExn(PervasivesU.neg_infinity);
+          var maxValue = fromFloatExn(PervasivesU.infinity);
           t.deepEqual($$Number.Float64.compare(less$1, greater$1), -1, undefined);
           t.deepEqual($$Number.Float64.compare(greater$1, less$1), 1, undefined);
           t.deepEqual($$Number.Float64.compare(less$1, less$1), 0, undefined);
@@ -425,8 +432,6 @@ Ava("test " + name + " comparison", (function (t) {
               var greater = TestUtils.randomFloat(less + 1.0, Js_int.max * 3.0);
               testCompare(less, greater);
             });
-        var zero = $$Number.Float64.fromFloatExn(0.0);
-        var negZero = $$Number.Float64.fromFloatExn(-0.0);
         t.true($$Number.Float64.eq(zero, negZero), undefined);
         t.true($$Number.Float64.le(zero, negZero), undefined);
         t.true($$Number.Float64.ge(zero, negZero), undefined);
@@ -445,32 +450,32 @@ Ava("test " + name + " comparison", (function (t) {
 Ava("test " + name + " addition", (function (t) {
         var testNotNaN = function (a, b) {
           if (TestUtils.$$isFinite(a)) {
-            var negA = $$Number.Float64.fromFloatExn(- a);
-            var a$1 = $$Number.Float64.fromFloatExn(a);
-            t.deepEqual($$Number.Float64.add(a$1, negA), Caml_option.some($$Number.Float64.zero), undefined);
+            var negA = fromFloatExn(- a);
+            var a$1 = fromFloatExn(a);
+            t.deepEqual($$Number.Float64.add(a$1, negA), Caml_option.some(zero), undefined);
             t.deepEqual($$Number.Float64.add(a$1, negA), $$Number.Float64.add(negA, a$1), undefined);
-            t.deepEqual($$Number.Float64.addExn(a$1, negA), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.addExn(a$1, negA), zero, undefined);
             t.deepEqual($$Number.Float64.addExn(a$1, negA), $$Number.Float64.addExn(negA, a$1), undefined);
-            t.deepEqual($$Number.Float64.addClamped(a$1, negA), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.addClamped(a$1, negA), zero, undefined);
             t.deepEqual($$Number.Float64.addClamped(a$1, negA), $$Number.Float64.addClamped(negA, a$1), undefined);
-            t.deepEqual($$Number.Float64.addUnsafe(a$1, negA), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.addUnsafe(a$1, negA), zero, undefined);
             t.deepEqual($$Number.Float64.addUnsafe(a$1, negA), $$Number.Float64.addUnsafe(negA, a$1), undefined);
           }
           if (TestUtils.$$isFinite(b)) {
-            var negB = $$Number.Float64.fromFloatExn(- b);
-            var b$1 = $$Number.Float64.fromFloatExn(b);
-            t.deepEqual($$Number.Float64.add(b$1, negB), Caml_option.some($$Number.Float64.zero), undefined);
+            var negB = fromFloatExn(- b);
+            var b$1 = fromFloatExn(b);
+            t.deepEqual($$Number.Float64.add(b$1, negB), Caml_option.some(zero), undefined);
             t.deepEqual($$Number.Float64.add(b$1, negB), $$Number.Float64.add(negB, b$1), undefined);
-            t.deepEqual($$Number.Float64.addExn(b$1, negB), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.addExn(b$1, negB), zero, undefined);
             t.deepEqual($$Number.Float64.addExn(b$1, negB), $$Number.Float64.addExn(negB, b$1), undefined);
-            t.deepEqual($$Number.Float64.addClamped(b$1, negB), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.addClamped(b$1, negB), zero, undefined);
             t.deepEqual($$Number.Float64.addClamped(b$1, negB), $$Number.Float64.addClamped(negB, b$1), undefined);
-            t.deepEqual($$Number.Float64.addUnsafe(b$1, negB), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.addUnsafe(b$1, negB), zero, undefined);
             t.deepEqual($$Number.Float64.addUnsafe(b$1, negB), $$Number.Float64.addUnsafe(negB, b$1), undefined);
           }
-          var result = $$Number.Float64.fromFloatExn(a + b);
-          var a$2 = $$Number.Float64.fromFloatExn(a);
-          var b$2 = $$Number.Float64.fromFloatExn(b);
+          var result = fromFloatExn(a + b);
+          var a$2 = fromFloatExn(a);
+          var b$2 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.add(a$2, b$2), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Float64.add(a$2, b$2), $$Number.Float64.add(b$2, a$2), undefined);
           t.deepEqual($$Number.Float64.addExn(a$2, b$2), result, undefined);
@@ -479,24 +484,24 @@ Ava("test " + name + " addition", (function (t) {
           t.deepEqual($$Number.Float64.addClamped(a$2, b$2), $$Number.Float64.addClamped(b$2, a$2), undefined);
           t.deepEqual($$Number.Float64.addUnsafe(a$2, b$2), result, undefined);
           t.deepEqual($$Number.Float64.addUnsafe(a$2, b$2), $$Number.Float64.addUnsafe(b$2, a$2), undefined);
-          var result$1 = $$Number.Float64.fromFloatExn($$Number.Float64.toFloat(a$2) + 0.0);
-          t.deepEqual($$Number.Float64.add(a$2, $$Number.Float64.zero), Caml_option.some(result$1), undefined);
-          t.deepEqual($$Number.Float64.add(a$2, $$Number.Float64.zero), $$Number.Float64.add($$Number.Float64.zero, a$2), undefined);
-          t.deepEqual($$Number.Float64.addExn(a$2, $$Number.Float64.zero), result$1, undefined);
-          t.deepEqual($$Number.Float64.addExn(a$2, $$Number.Float64.zero), $$Number.Float64.addExn($$Number.Float64.zero, a$2), undefined);
-          t.deepEqual($$Number.Float64.addClamped(a$2, $$Number.Float64.zero), result$1, undefined);
-          t.deepEqual($$Number.Float64.addClamped(a$2, $$Number.Float64.zero), $$Number.Float64.addClamped($$Number.Float64.zero, a$2), undefined);
-          t.deepEqual($$Number.Float64.addUnsafe(a$2, $$Number.Float64.zero), result$1, undefined);
-          t.deepEqual($$Number.Float64.addUnsafe(a$2, $$Number.Float64.zero), $$Number.Float64.addUnsafe($$Number.Float64.zero, a$2), undefined);
-          var result$2 = $$Number.Float64.fromFloatExn($$Number.Float64.toFloat(b$2) + 0.0);
-          t.deepEqual($$Number.Float64.add(b$2, $$Number.Float64.zero), Caml_option.some(result$2), undefined);
-          t.deepEqual($$Number.Float64.add(b$2, $$Number.Float64.zero), $$Number.Float64.add($$Number.Float64.zero, b$2), undefined);
-          t.deepEqual($$Number.Float64.addExn(b$2, $$Number.Float64.zero), result$2, undefined);
-          t.deepEqual($$Number.Float64.addExn(b$2, $$Number.Float64.zero), $$Number.Float64.addExn($$Number.Float64.zero, b$2), undefined);
-          t.deepEqual($$Number.Float64.addClamped(b$2, $$Number.Float64.zero), result$2, undefined);
-          t.deepEqual($$Number.Float64.addClamped(b$2, $$Number.Float64.zero), $$Number.Float64.addClamped($$Number.Float64.zero, b$2), undefined);
-          t.deepEqual($$Number.Float64.addUnsafe(b$2, $$Number.Float64.zero), result$2, undefined);
-          t.deepEqual($$Number.Float64.addUnsafe(b$2, $$Number.Float64.zero), $$Number.Float64.addUnsafe($$Number.Float64.zero, b$2), undefined);
+          var result$1 = fromFloatExn($$Number.Float64.toFloat(a$2) + 0.0);
+          t.deepEqual($$Number.Float64.add(a$2, zero), Caml_option.some(result$1), undefined);
+          t.deepEqual($$Number.Float64.add(a$2, zero), $$Number.Float64.add(zero, a$2), undefined);
+          t.deepEqual($$Number.Float64.addExn(a$2, zero), result$1, undefined);
+          t.deepEqual($$Number.Float64.addExn(a$2, zero), $$Number.Float64.addExn(zero, a$2), undefined);
+          t.deepEqual($$Number.Float64.addClamped(a$2, zero), result$1, undefined);
+          t.deepEqual($$Number.Float64.addClamped(a$2, zero), $$Number.Float64.addClamped(zero, a$2), undefined);
+          t.deepEqual($$Number.Float64.addUnsafe(a$2, zero), result$1, undefined);
+          t.deepEqual($$Number.Float64.addUnsafe(a$2, zero), $$Number.Float64.addUnsafe(zero, a$2), undefined);
+          var result$2 = fromFloatExn($$Number.Float64.toFloat(b$2) + 0.0);
+          t.deepEqual($$Number.Float64.add(b$2, zero), Caml_option.some(result$2), undefined);
+          t.deepEqual($$Number.Float64.add(b$2, zero), $$Number.Float64.add(zero, b$2), undefined);
+          t.deepEqual($$Number.Float64.addExn(b$2, zero), result$2, undefined);
+          t.deepEqual($$Number.Float64.addExn(b$2, zero), $$Number.Float64.addExn(zero, b$2), undefined);
+          t.deepEqual($$Number.Float64.addClamped(b$2, zero), result$2, undefined);
+          t.deepEqual($$Number.Float64.addClamped(b$2, zero), $$Number.Float64.addClamped(zero, b$2), undefined);
+          t.deepEqual($$Number.Float64.addUnsafe(b$2, zero), result$2, undefined);
+          t.deepEqual($$Number.Float64.addUnsafe(b$2, zero), $$Number.Float64.addUnsafe(zero, b$2), undefined);
         };
         testNotNaN(0.0, -0.0);
         testNotNaN(-56248.7954, 87934.1968);
@@ -519,8 +524,8 @@ Ava("test " + name + " addition", (function (t) {
             });
         var a = PervasivesU.infinity;
         var b = PervasivesU.neg_infinity;
-        var a$1 = $$Number.Float64.fromFloatExn(a);
-        var b$1 = $$Number.Float64.fromFloatExn(b);
+        var a$1 = fromFloatExn(a);
+        var b$1 = fromFloatExn(b);
         t.deepEqual($$Number.Float64.add(a$1, b$1), undefined, undefined);
         t.deepEqual($$Number.Float64.add(b$1, a$1), undefined, undefined);
         TestUtils.assertInvalidArgument(t, (function () {
@@ -529,41 +534,41 @@ Ava("test " + name + " addition", (function (t) {
         TestUtils.assertInvalidArgument(t, (function () {
                 return $$Number.Float64.addExn(b$1, a$1);
               }));
-        t.deepEqual($$Number.Float64.addClamped(a$1, b$1), $$Number.Float64.zero, undefined);
-        t.deepEqual($$Number.Float64.addClamped(b$1, a$1), $$Number.Float64.zero, undefined);
+        t.deepEqual($$Number.Float64.addClamped(a$1, b$1), zero, undefined);
+        t.deepEqual($$Number.Float64.addClamped(b$1, a$1), zero, undefined);
       }));
 
 Ava("test " + name + " subtraction", (function (t) {
         var testNotNaN = function (a, b) {
           if (TestUtils.$$isFinite(a)) {
-            var a$1 = $$Number.Float64.fromFloatExn(a);
-            t.deepEqual($$Number.Float64.sub(a$1, a$1), Caml_option.some($$Number.Float64.zero), undefined);
-            t.deepEqual($$Number.Float64.subExn(a$1, a$1), $$Number.Float64.zero, undefined);
-            t.deepEqual($$Number.Float64.subClamped(a$1, a$1), $$Number.Float64.zero, undefined);
-            t.deepEqual($$Number.Float64.subUnsafe(a$1, a$1), $$Number.Float64.zero, undefined);
+            var a$1 = fromFloatExn(a);
+            t.deepEqual($$Number.Float64.sub(a$1, a$1), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Float64.subExn(a$1, a$1), zero, undefined);
+            t.deepEqual($$Number.Float64.subClamped(a$1, a$1), zero, undefined);
+            t.deepEqual($$Number.Float64.subUnsafe(a$1, a$1), zero, undefined);
           }
           if (TestUtils.$$isFinite(b)) {
-            var b$1 = $$Number.Float64.fromFloatExn(b);
-            t.deepEqual($$Number.Float64.sub(b$1, b$1), Caml_option.some($$Number.Float64.zero), undefined);
-            t.deepEqual($$Number.Float64.subExn(b$1, b$1), $$Number.Float64.zero, undefined);
-            t.deepEqual($$Number.Float64.subClamped(b$1, b$1), $$Number.Float64.zero, undefined);
-            t.deepEqual($$Number.Float64.subUnsafe(b$1, b$1), $$Number.Float64.zero, undefined);
+            var b$1 = fromFloatExn(b);
+            t.deepEqual($$Number.Float64.sub(b$1, b$1), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Float64.subExn(b$1, b$1), zero, undefined);
+            t.deepEqual($$Number.Float64.subClamped(b$1, b$1), zero, undefined);
+            t.deepEqual($$Number.Float64.subUnsafe(b$1, b$1), zero, undefined);
           }
-          var result = $$Number.Float64.fromFloatExn(a - b);
-          var a$2 = $$Number.Float64.fromFloatExn(a);
-          var b$2 = $$Number.Float64.fromFloatExn(b);
+          var result = fromFloatExn(a - b);
+          var a$2 = fromFloatExn(a);
+          var b$2 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.sub(a$2, b$2), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Float64.subExn(a$2, b$2), result, undefined);
           t.deepEqual($$Number.Float64.subClamped(a$2, b$2), result, undefined);
           t.deepEqual($$Number.Float64.subUnsafe(a$2, b$2), result, undefined);
-          t.deepEqual($$Number.Float64.sub(a$2, $$Number.Float64.zero), Caml_option.some(a$2), undefined);
-          t.deepEqual($$Number.Float64.subExn(a$2, $$Number.Float64.zero), a$2, undefined);
-          t.deepEqual($$Number.Float64.subClamped(a$2, $$Number.Float64.zero), a$2, undefined);
-          t.deepEqual($$Number.Float64.subUnsafe(a$2, $$Number.Float64.zero), a$2, undefined);
-          t.deepEqual($$Number.Float64.sub(b$2, $$Number.Float64.zero), Caml_option.some(b$2), undefined);
-          t.deepEqual($$Number.Float64.subExn(b$2, $$Number.Float64.zero), b$2, undefined);
-          t.deepEqual($$Number.Float64.subClamped(b$2, $$Number.Float64.zero), b$2, undefined);
-          t.deepEqual($$Number.Float64.subUnsafe(b$2, $$Number.Float64.zero), b$2, undefined);
+          t.deepEqual($$Number.Float64.sub(a$2, zero), Caml_option.some(a$2), undefined);
+          t.deepEqual($$Number.Float64.subExn(a$2, zero), a$2, undefined);
+          t.deepEqual($$Number.Float64.subClamped(a$2, zero), a$2, undefined);
+          t.deepEqual($$Number.Float64.subUnsafe(a$2, zero), a$2, undefined);
+          t.deepEqual($$Number.Float64.sub(b$2, zero), Caml_option.some(b$2), undefined);
+          t.deepEqual($$Number.Float64.subExn(b$2, zero), b$2, undefined);
+          t.deepEqual($$Number.Float64.subClamped(b$2, zero), b$2, undefined);
+          t.deepEqual($$Number.Float64.subUnsafe(b$2, zero), b$2, undefined);
         };
         testNotNaN(0.0, -0.0);
         testNotNaN(-56248.7954, 87934.1968);
@@ -598,13 +603,13 @@ Ava("test " + name + " subtraction", (function (t) {
               testNotNaN(a, b);
             });
         var testNaN = function (a, b) {
-          var a$1 = $$Number.Float64.fromFloatExn(a);
-          var b$1 = $$Number.Float64.fromFloatExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.sub(a$1, b$1), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Float64.subExn(a$1, b$1);
                 }));
-          t.deepEqual($$Number.Float64.subClamped(a$1, b$1), $$Number.Float64.zero, undefined);
+          t.deepEqual($$Number.Float64.subClamped(a$1, b$1), zero, undefined);
         };
         testNaN(PervasivesU.neg_infinity, PervasivesU.neg_infinity);
         testNaN(PervasivesU.infinity, PervasivesU.infinity);
@@ -613,32 +618,32 @@ Ava("test " + name + " subtraction", (function (t) {
 Ava("test " + name + " multiplication", (function (t) {
         var testNotNaN = function (a, b) {
           if (TestUtils.$$isFinite(a)) {
-            var result = $$Number.Float64.fromFloatExn(a * 0.0);
-            var a$1 = $$Number.Float64.fromFloatExn(a);
-            t.deepEqual($$Number.Float64.mul(a$1, $$Number.Float64.zero), Caml_option.some(result), undefined);
-            t.deepEqual($$Number.Float64.mul(a$1, $$Number.Float64.zero), $$Number.Float64.mul($$Number.Float64.zero, a$1), undefined);
-            t.deepEqual($$Number.Float64.mulExn(a$1, $$Number.Float64.zero), result, undefined);
-            t.deepEqual($$Number.Float64.mulExn(a$1, $$Number.Float64.zero), $$Number.Float64.mulExn($$Number.Float64.zero, a$1), undefined);
-            t.deepEqual($$Number.Float64.mulClamped(a$1, $$Number.Float64.zero), result, undefined);
-            t.deepEqual($$Number.Float64.mulClamped(a$1, $$Number.Float64.zero), $$Number.Float64.mulClamped($$Number.Float64.zero, a$1), undefined);
-            t.deepEqual($$Number.Float64.mulUnsafe(a$1, $$Number.Float64.zero), result, undefined);
-            t.deepEqual($$Number.Float64.mulUnsafe(a$1, $$Number.Float64.zero), $$Number.Float64.mulUnsafe($$Number.Float64.zero, a$1), undefined);
+            var result = fromFloatExn(a * 0.0);
+            var a$1 = fromFloatExn(a);
+            t.deepEqual($$Number.Float64.mul(a$1, zero), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.mul(a$1, zero), $$Number.Float64.mul(zero, a$1), undefined);
+            t.deepEqual($$Number.Float64.mulExn(a$1, zero), result, undefined);
+            t.deepEqual($$Number.Float64.mulExn(a$1, zero), $$Number.Float64.mulExn(zero, a$1), undefined);
+            t.deepEqual($$Number.Float64.mulClamped(a$1, zero), result, undefined);
+            t.deepEqual($$Number.Float64.mulClamped(a$1, zero), $$Number.Float64.mulClamped(zero, a$1), undefined);
+            t.deepEqual($$Number.Float64.mulUnsafe(a$1, zero), result, undefined);
+            t.deepEqual($$Number.Float64.mulUnsafe(a$1, zero), $$Number.Float64.mulUnsafe(zero, a$1), undefined);
           }
           if (TestUtils.$$isFinite(b)) {
-            var result$1 = $$Number.Float64.fromFloatExn(b * 0.0);
-            var b$1 = $$Number.Float64.fromFloatExn(b);
-            t.deepEqual($$Number.Float64.mul(b$1, $$Number.Float64.zero), Caml_option.some(result$1), undefined);
-            t.deepEqual($$Number.Float64.mul(b$1, $$Number.Float64.zero), $$Number.Float64.mul($$Number.Float64.zero, b$1), undefined);
-            t.deepEqual($$Number.Float64.mulExn(b$1, $$Number.Float64.zero), result$1, undefined);
-            t.deepEqual($$Number.Float64.mulExn(b$1, $$Number.Float64.zero), $$Number.Float64.mulExn($$Number.Float64.zero, b$1), undefined);
-            t.deepEqual($$Number.Float64.mulClamped(b$1, $$Number.Float64.zero), result$1, undefined);
-            t.deepEqual($$Number.Float64.mulClamped(b$1, $$Number.Float64.zero), $$Number.Float64.mulClamped($$Number.Float64.zero, b$1), undefined);
-            t.deepEqual($$Number.Float64.mulUnsafe(b$1, $$Number.Float64.zero), result$1, undefined);
-            t.deepEqual($$Number.Float64.mulUnsafe(b$1, $$Number.Float64.zero), $$Number.Float64.mulUnsafe($$Number.Float64.zero, b$1), undefined);
+            var result$1 = fromFloatExn(b * 0.0);
+            var b$1 = fromFloatExn(b);
+            t.deepEqual($$Number.Float64.mul(b$1, zero), Caml_option.some(result$1), undefined);
+            t.deepEqual($$Number.Float64.mul(b$1, zero), $$Number.Float64.mul(zero, b$1), undefined);
+            t.deepEqual($$Number.Float64.mulExn(b$1, zero), result$1, undefined);
+            t.deepEqual($$Number.Float64.mulExn(b$1, zero), $$Number.Float64.mulExn(zero, b$1), undefined);
+            t.deepEqual($$Number.Float64.mulClamped(b$1, zero), result$1, undefined);
+            t.deepEqual($$Number.Float64.mulClamped(b$1, zero), $$Number.Float64.mulClamped(zero, b$1), undefined);
+            t.deepEqual($$Number.Float64.mulUnsafe(b$1, zero), result$1, undefined);
+            t.deepEqual($$Number.Float64.mulUnsafe(b$1, zero), $$Number.Float64.mulUnsafe(zero, b$1), undefined);
           }
-          var result$2 = $$Number.Float64.fromFloatExn(a * b);
-          var a$2 = $$Number.Float64.fromFloatExn(a);
-          var b$2 = $$Number.Float64.fromFloatExn(b);
+          var result$2 = fromFloatExn(a * b);
+          var a$2 = fromFloatExn(a);
+          var b$2 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.mul(a$2, b$2), Caml_option.some(result$2), undefined);
           t.deepEqual($$Number.Float64.mul(a$2, b$2), $$Number.Float64.mul(b$2, a$2), undefined);
           t.deepEqual($$Number.Float64.mulExn(a$2, b$2), result$2, undefined);
@@ -647,22 +652,22 @@ Ava("test " + name + " multiplication", (function (t) {
           t.deepEqual($$Number.Float64.mulClamped(a$2, b$2), $$Number.Float64.mulClamped(b$2, a$2), undefined);
           t.deepEqual($$Number.Float64.mulUnsafe(a$2, b$2), result$2, undefined);
           t.deepEqual($$Number.Float64.mulUnsafe(a$2, b$2), $$Number.Float64.mulUnsafe(b$2, a$2), undefined);
-          t.deepEqual($$Number.Float64.mul(a$2, $$Number.Float64.one), Caml_option.some(a$2), undefined);
-          t.deepEqual($$Number.Float64.mul(a$2, $$Number.Float64.one), $$Number.Float64.mul($$Number.Float64.one, a$2), undefined);
-          t.deepEqual($$Number.Float64.mulExn(a$2, $$Number.Float64.one), a$2, undefined);
-          t.deepEqual($$Number.Float64.mulExn(a$2, $$Number.Float64.one), $$Number.Float64.mulExn($$Number.Float64.one, a$2), undefined);
-          t.deepEqual($$Number.Float64.mulClamped(a$2, $$Number.Float64.one), a$2, undefined);
-          t.deepEqual($$Number.Float64.mulClamped(a$2, $$Number.Float64.one), $$Number.Float64.mulClamped($$Number.Float64.one, a$2), undefined);
-          t.deepEqual($$Number.Float64.mulUnsafe(a$2, $$Number.Float64.one), a$2, undefined);
-          t.deepEqual($$Number.Float64.mulUnsafe(a$2, $$Number.Float64.one), $$Number.Float64.mulUnsafe($$Number.Float64.one, a$2), undefined);
-          t.deepEqual($$Number.Float64.mul(b$2, $$Number.Float64.one), Caml_option.some(b$2), undefined);
-          t.deepEqual($$Number.Float64.mul(b$2, $$Number.Float64.one), $$Number.Float64.mul($$Number.Float64.one, b$2), undefined);
-          t.deepEqual($$Number.Float64.mulExn(b$2, $$Number.Float64.one), b$2, undefined);
-          t.deepEqual($$Number.Float64.mulExn(b$2, $$Number.Float64.one), $$Number.Float64.mulExn($$Number.Float64.one, b$2), undefined);
-          t.deepEqual($$Number.Float64.mulClamped(b$2, $$Number.Float64.one), b$2, undefined);
-          t.deepEqual($$Number.Float64.mulClamped(b$2, $$Number.Float64.one), $$Number.Float64.mulClamped($$Number.Float64.one, b$2), undefined);
-          t.deepEqual($$Number.Float64.mulUnsafe(b$2, $$Number.Float64.one), b$2, undefined);
-          t.deepEqual($$Number.Float64.mulUnsafe(b$2, $$Number.Float64.one), $$Number.Float64.mulUnsafe($$Number.Float64.one, b$2), undefined);
+          t.deepEqual($$Number.Float64.mul(a$2, one), Caml_option.some(a$2), undefined);
+          t.deepEqual($$Number.Float64.mul(a$2, one), $$Number.Float64.mul(one, a$2), undefined);
+          t.deepEqual($$Number.Float64.mulExn(a$2, one), a$2, undefined);
+          t.deepEqual($$Number.Float64.mulExn(a$2, one), $$Number.Float64.mulExn(one, a$2), undefined);
+          t.deepEqual($$Number.Float64.mulClamped(a$2, one), a$2, undefined);
+          t.deepEqual($$Number.Float64.mulClamped(a$2, one), $$Number.Float64.mulClamped(one, a$2), undefined);
+          t.deepEqual($$Number.Float64.mulUnsafe(a$2, one), a$2, undefined);
+          t.deepEqual($$Number.Float64.mulUnsafe(a$2, one), $$Number.Float64.mulUnsafe(one, a$2), undefined);
+          t.deepEqual($$Number.Float64.mul(b$2, one), Caml_option.some(b$2), undefined);
+          t.deepEqual($$Number.Float64.mul(b$2, one), $$Number.Float64.mul(one, b$2), undefined);
+          t.deepEqual($$Number.Float64.mulExn(b$2, one), b$2, undefined);
+          t.deepEqual($$Number.Float64.mulExn(b$2, one), $$Number.Float64.mulExn(one, b$2), undefined);
+          t.deepEqual($$Number.Float64.mulClamped(b$2, one), b$2, undefined);
+          t.deepEqual($$Number.Float64.mulClamped(b$2, one), $$Number.Float64.mulClamped(one, b$2), undefined);
+          t.deepEqual($$Number.Float64.mulUnsafe(b$2, one), b$2, undefined);
+          t.deepEqual($$Number.Float64.mulUnsafe(b$2, one), $$Number.Float64.mulUnsafe(one, b$2), undefined);
         };
         testNotNaN(0.0, -1.0);
         testNotNaN(-0.0, 1.0);
@@ -680,8 +685,8 @@ Ava("test " + name + " multiplication", (function (t) {
               testNotNaN(a, b);
             });
         var testNaN = function (a, b) {
-          var a$1 = $$Number.Float64.fromFloatExn(a);
-          var b$1 = $$Number.Float64.fromFloatExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.mul(a$1, b$1), undefined, undefined);
           t.deepEqual($$Number.Float64.mul(b$1, a$1), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
@@ -690,8 +695,8 @@ Ava("test " + name + " multiplication", (function (t) {
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Float64.mulExn(b$1, a$1);
                 }));
-          t.deepEqual($$Number.Float64.mulClamped(a$1, b$1), $$Number.Float64.zero, undefined);
-          t.deepEqual($$Number.Float64.mulClamped(b$1, a$1), $$Number.Float64.zero, undefined);
+          t.deepEqual($$Number.Float64.mulClamped(a$1, b$1), zero, undefined);
+          t.deepEqual($$Number.Float64.mulClamped(b$1, a$1), zero, undefined);
         };
         testNaN(PervasivesU.neg_infinity, 0.0);
         testNaN(PervasivesU.infinity, 0.0);
@@ -700,40 +705,73 @@ Ava("test " + name + " multiplication", (function (t) {
 Ava("test " + name + " division", (function (t) {
         var testNotNaN = function (a, b) {
           if (a !== 0.0) {
-            var result = $$Number.Float64.fromFloatExn(b / a);
-            var a$1 = $$Number.Float64.fromFloatExn(a);
-            var b$1 = $$Number.Float64.fromFloatExn(b);
+            var result = fromFloatExn(b / a);
+            var a$1 = fromFloatExn(a);
+            var b$1 = fromFloatExn(b);
             t.deepEqual($$Number.Float64.div(b$1, a$1), Caml_option.some(result), undefined);
             t.deepEqual($$Number.Float64.divExn(b$1, a$1), result, undefined);
             t.deepEqual($$Number.Float64.divUnsafe(b$1, a$1), result, undefined);
-            var result$1 = $$Number.Float64.fromFloatExn(0.0 / $$Number.Float64.toFloat(a$1));
-            t.deepEqual($$Number.Float64.div($$Number.Float64.zero, a$1), Caml_option.some(result$1), undefined);
-            t.deepEqual($$Number.Float64.divExn($$Number.Float64.zero, a$1), result$1, undefined);
-            t.deepEqual($$Number.Float64.divUnsafe($$Number.Float64.zero, a$1), result$1, undefined);
+            if ($$Number.Float64.$$isFinite(a$1)) {
+              t.deepEqual($$Number.Float64.div(a$1, a$1), Caml_option.some(one), undefined);
+              t.deepEqual($$Number.Float64.divExn(a$1, a$1), one, undefined);
+              t.deepEqual($$Number.Float64.divUnsafe(a$1, a$1), one, undefined);
+            }
+            var result$1 = fromFloatExn(0.0 / $$Number.Float64.toFloat(a$1));
+            t.deepEqual($$Number.Float64.div(zero, a$1), Caml_option.some(result$1), undefined);
+            t.deepEqual($$Number.Float64.divExn(zero, a$1), result$1, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(zero, a$1), result$1, undefined);
+            var result$2 = fromFloatExn(-0.0 / $$Number.Float64.toFloat(a$1));
+            t.deepEqual($$Number.Float64.div(negZero, a$1), Caml_option.some(result$2), undefined);
+            t.deepEqual($$Number.Float64.divExn(negZero, a$1), result$2, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(negZero, a$1), result$2, undefined);
+            var result$3 = fromFloatExn($$Number.Float64.toFloat(a$1) / 0.0);
+            t.deepEqual($$Number.Float64.div(a$1, zero), Caml_option.some(result$3), undefined);
+            t.deepEqual($$Number.Float64.divExn(a$1, zero), result$3, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(a$1, zero), result$3, undefined);
+            var result$4 = fromFloatExn($$Number.Float64.toFloat(a$1) / -0.0);
+            t.deepEqual($$Number.Float64.div(a$1, negZero), Caml_option.some(result$4), undefined);
+            t.deepEqual($$Number.Float64.divExn(a$1, negZero), result$4, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(a$1, negZero), result$4, undefined);
           }
           if (b !== 0.0) {
-            var result$2 = $$Number.Float64.fromFloatExn(a / b);
-            var a$2 = $$Number.Float64.fromFloatExn(a);
-            var b$2 = $$Number.Float64.fromFloatExn(b);
-            t.deepEqual($$Number.Float64.div(a$2, b$2), Caml_option.some(result$2), undefined);
-            t.deepEqual($$Number.Float64.divExn(a$2, b$2), result$2, undefined);
-            t.deepEqual($$Number.Float64.divUnsafe(a$2, b$2), result$2, undefined);
-            var result$3 = $$Number.Float64.fromFloatExn(0.0 / $$Number.Float64.toFloat(b$2));
-            t.deepEqual($$Number.Float64.div($$Number.Float64.zero, b$2), Caml_option.some(result$3), undefined);
-            t.deepEqual($$Number.Float64.divExn($$Number.Float64.zero, b$2), result$3, undefined);
-            t.deepEqual($$Number.Float64.divUnsafe($$Number.Float64.zero, b$2), result$3, undefined);
+            var result$5 = fromFloatExn(a / b);
+            var a$2 = fromFloatExn(a);
+            var b$2 = fromFloatExn(b);
+            t.deepEqual($$Number.Float64.div(a$2, b$2), Caml_option.some(result$5), undefined);
+            t.deepEqual($$Number.Float64.divExn(a$2, b$2), result$5, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(a$2, b$2), result$5, undefined);
+            if ($$Number.Float64.$$isFinite(b$2)) {
+              t.deepEqual($$Number.Float64.div(b$2, b$2), Caml_option.some(one), undefined);
+              t.deepEqual($$Number.Float64.divExn(b$2, b$2), one, undefined);
+              t.deepEqual($$Number.Float64.divUnsafe(b$2, b$2), one, undefined);
+            }
+            var result$6 = fromFloatExn(0.0 / $$Number.Float64.toFloat(b$2));
+            t.deepEqual($$Number.Float64.div(zero, b$2), Caml_option.some(result$6), undefined);
+            t.deepEqual($$Number.Float64.divExn(zero, b$2), result$6, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(zero, b$2), result$6, undefined);
+            var result$7 = fromFloatExn(-0.0 / $$Number.Float64.toFloat(b$2));
+            t.deepEqual($$Number.Float64.div(negZero, b$2), Caml_option.some(result$7), undefined);
+            t.deepEqual($$Number.Float64.divExn(negZero, b$2), result$7, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(negZero, b$2), result$7, undefined);
+            var result$8 = fromFloatExn($$Number.Float64.toFloat(b$2) / 0.0);
+            t.deepEqual($$Number.Float64.div(b$2, zero), Caml_option.some(result$8), undefined);
+            t.deepEqual($$Number.Float64.divExn(b$2, zero), result$8, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(b$2, zero), result$8, undefined);
+            var result$9 = fromFloatExn($$Number.Float64.toFloat(b$2) / -0.0);
+            t.deepEqual($$Number.Float64.div(b$2, negZero), Caml_option.some(result$9), undefined);
+            t.deepEqual($$Number.Float64.divExn(b$2, negZero), result$9, undefined);
+            t.deepEqual($$Number.Float64.divUnsafe(b$2, negZero), result$9, undefined);
           }
-          var negA = $$Number.Float64.fromFloatExn(- a);
-          var negB = $$Number.Float64.fromFloatExn(- b);
-          var a$3 = $$Number.Float64.fromFloatExn(a);
-          var b$3 = $$Number.Float64.fromFloatExn(b);
-          t.deepEqual($$Number.Float64.div(a$3, $$Number.Float64.one), Caml_option.some(a$3), undefined);
-          t.deepEqual($$Number.Float64.divExn(a$3, $$Number.Float64.one), a$3, undefined);
-          t.deepEqual($$Number.Float64.divUnsafe(a$3, $$Number.Float64.one), a$3, undefined);
-          t.deepEqual($$Number.Float64.div(b$3, $$Number.Float64.one), Caml_option.some(b$3), undefined);
-          t.deepEqual($$Number.Float64.divExn(b$3, $$Number.Float64.one), b$3, undefined);
-          t.deepEqual($$Number.Float64.divUnsafe(b$3, $$Number.Float64.one), b$3, undefined);
-          var negOne = $$Number.Float64.fromIntExn(-1);
+          var negA = fromFloatExn(- a);
+          var negB = fromFloatExn(- b);
+          var a$3 = fromFloatExn(a);
+          var b$3 = fromFloatExn(b);
+          t.deepEqual($$Number.Float64.div(a$3, one), Caml_option.some(a$3), undefined);
+          t.deepEqual($$Number.Float64.divExn(a$3, one), a$3, undefined);
+          t.deepEqual($$Number.Float64.divUnsafe(a$3, one), a$3, undefined);
+          t.deepEqual($$Number.Float64.div(b$3, one), Caml_option.some(b$3), undefined);
+          t.deepEqual($$Number.Float64.divExn(b$3, one), b$3, undefined);
+          t.deepEqual($$Number.Float64.divUnsafe(b$3, one), b$3, undefined);
           t.deepEqual($$Number.Float64.div(a$3, negOne), Caml_option.some(negA), undefined);
           t.deepEqual($$Number.Float64.divExn(a$3, negOne), negA, undefined);
           t.deepEqual($$Number.Float64.divUnsafe(a$3, negOne), negA, undefined);
@@ -749,99 +787,71 @@ Ava("test " + name + " division", (function (t) {
         testNotNaN(PervasivesU.neg_infinity, 87934.1968);
         testNotNaN(PervasivesU.infinity, -56248.7954);
         testNotNaN(PervasivesU.infinity, 87934.1968);
-        var testDividedByZero = function (f) {
-          var a = $$Number.Float64.fromFloatExn(f);
-          t.deepEqual($$Number.Float64.div(a, $$Number.Float64.zero), undefined, undefined);
-          TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Float64.divExn(a, $$Number.Float64.zero);
-                }));
-          var negZero = $$Number.Float64.fromFloatExn(-0.0);
-          t.deepEqual($$Number.Float64.div(a, negZero), undefined, undefined);
-          TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Float64.divExn(a, negZero);
-                }));
-        };
-        testDividedByZero(0.0);
-        testDividedByZero(-0.0);
-        testDividedByZero(1.0);
-        testDividedByZero(-56248.7954);
-        testDividedByZero(87934.1968);
-        testDividedByZero(12345678.9);
-        testDividedByZero(Js_int.min);
-        testDividedByZero(Js_int.max);
-        testDividedByZero(PervasivesU.neg_infinity);
-        testDividedByZero(PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
               testNotNaN(a, b);
-              testDividedByZero(a);
-              testDividedByZero(b);
             });
         var testNaN = function (a, b) {
-          var a$1 = $$Number.Float64.fromFloatExn(a);
-          var b$1 = $$Number.Float64.fromFloatExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.div(a$1, b$1), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Float64.divExn(a$1, b$1);
                 }));
         };
+        testNaN(PervasivesU.neg_infinity, PervasivesU.neg_infinity);
         testNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
+        testNaN(PervasivesU.infinity, PervasivesU.infinity);
         testNaN(PervasivesU.infinity, PervasivesU.neg_infinity);
+        testNaN(0.0, 0.0);
+        testNaN(0.0, -0.0);
+        testNaN(-0.0, 0.0);
+        testNaN(-0.0, -0.0);
       }));
 
 Ava("test " + name + " remainder", (function (t) {
         var testNotNaN = function (a, b) {
           if (a !== 0.0) {
-            var result = $$Number.Float64.fromFloatExn(b % a);
-            var a$1 = $$Number.Float64.fromFloatExn(a);
-            var b$1 = $$Number.Float64.fromFloatExn(b);
+            var result = fromFloatExn(b % a);
+            var a$1 = fromFloatExn(a);
+            var b$1 = fromFloatExn(b);
             t.deepEqual($$Number.Float64.rem(b$1, a$1), Caml_option.some(result), undefined);
             t.deepEqual($$Number.Float64.remExn(b$1, a$1), result, undefined);
             t.deepEqual($$Number.Float64.remUnsafe(b$1, a$1), result, undefined);
-            t.deepEqual($$Number.Float64.rem($$Number.Float64.zero, a$1), Caml_option.some($$Number.Float64.zero), undefined);
-            t.deepEqual($$Number.Float64.remExn($$Number.Float64.zero, a$1), $$Number.Float64.zero, undefined);
-            t.deepEqual($$Number.Float64.remUnsafe($$Number.Float64.zero, a$1), $$Number.Float64.zero, undefined);
+            t.deepEqual($$Number.Float64.rem(zero, a$1), Caml_option.some(zero), undefined);
+            t.deepEqual($$Number.Float64.remExn(zero, a$1), zero, undefined);
+            t.deepEqual($$Number.Float64.remUnsafe(zero, a$1), zero, undefined);
           }
           if (b === 0.0) {
             return ;
           }
-          var result$1 = $$Number.Float64.fromFloatExn(a % b);
-          var a$2 = $$Number.Float64.fromFloatExn(a);
-          var b$2 = $$Number.Float64.fromFloatExn(b);
+          var result$1 = fromFloatExn(a % b);
+          var a$2 = fromFloatExn(a);
+          var b$2 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.rem(a$2, b$2), Caml_option.some(result$1), undefined);
           t.deepEqual($$Number.Float64.remExn(a$2, b$2), result$1, undefined);
           t.deepEqual($$Number.Float64.remUnsafe(a$2, b$2), result$1, undefined);
-          t.deepEqual($$Number.Float64.rem($$Number.Float64.zero, b$2), Caml_option.some($$Number.Float64.zero), undefined);
-          t.deepEqual($$Number.Float64.remExn($$Number.Float64.zero, b$2), $$Number.Float64.zero, undefined);
-          t.deepEqual($$Number.Float64.remUnsafe($$Number.Float64.zero, b$2), $$Number.Float64.zero, undefined);
+          t.deepEqual($$Number.Float64.rem(zero, b$2), Caml_option.some(zero), undefined);
+          t.deepEqual($$Number.Float64.remExn(zero, b$2), zero, undefined);
+          t.deepEqual($$Number.Float64.remUnsafe(zero, b$2), zero, undefined);
         };
         testNotNaN(-56248.7954, 87934.1968);
         testNotNaN(Js_int.min, Js_int.max);
         testNotNaN(Js_int.min, -56248.7954);
         testNotNaN(Js_int.max, 87934.1968);
         var testModByZero = function (f) {
-          var a = $$Number.Float64.fromFloatExn(f);
-          t.deepEqual($$Number.Float64.rem(a, $$Number.Float64.zero), undefined, undefined);
+          var a = fromFloatExn(f);
+          t.deepEqual($$Number.Float64.rem(a, zero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
-                  return $$Number.Float64.remExn(a, $$Number.Float64.zero);
+                  return $$Number.Float64.remExn(a, zero);
                 }));
-          var negZero = $$Number.Float64.fromFloatExn(-0.0);
           t.deepEqual($$Number.Float64.rem(a, negZero), undefined, undefined);
           TestUtils.assertDivisionByZero(t, (function () {
                   return $$Number.Float64.remExn(a, negZero);
                 }));
         };
-        testModByZero(0.0);
-        testModByZero(-0.0);
-        testModByZero(1.0);
-        testModByZero(-56248.7954);
-        testModByZero(87934.1968);
-        testModByZero(12345678.9);
-        testModByZero(Js_int.min);
-        testModByZero(Js_int.max);
-        testModByZero(PervasivesU.neg_infinity);
-        testModByZero(PervasivesU.infinity);
+        testFn(testModByZero);
         TestUtils.loop100Fn(function () {
               var a = randomValue(undefined);
               var b = randomValue(undefined);
@@ -850,8 +860,8 @@ Ava("test " + name + " remainder", (function (t) {
               testModByZero(b);
             });
         var testNaN = function (a, b) {
-          var a$1 = $$Number.Float64.fromFloatExn(a);
-          var b$1 = $$Number.Float64.fromFloatExn(b);
+          var a$1 = fromFloatExn(a);
+          var b$1 = fromFloatExn(b);
           t.deepEqual($$Number.Float64.rem(a$1, b$1), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
                   return $$Number.Float64.remExn(a$1, b$1);
@@ -871,11 +881,11 @@ Ava("test " + name + " remainder", (function (t) {
 
 Ava("test " + name + " sum", (function (t) {
         var testNotNaN = function (arr) {
-          var result = $$Number.Float64.fromFloatExn(Belt_Array.reduce(arr, 0.0, (function (acc, v) {
+          var result = fromFloatExn(Belt_Array.reduce(arr, 0.0, (function (acc, v) {
                       return acc + v;
                     })));
           var arr$1 = Belt_Array.mapU(arr, (function (f) {
-                  return $$Number.Float64.fromFloatExn(f);
+                  return fromFloatExn(f);
                 }));
           t.deepEqual($$Number.Float64.sum(arr$1), Caml_option.some(result), undefined);
           t.deepEqual($$Number.Float64.sumExn(arr$1), result, undefined);
@@ -928,7 +938,7 @@ Ava("test " + name + " sum", (function (t) {
             });
         var testNaN = function (arr) {
           var arr$1 = Belt_Array.mapU(arr, (function (i) {
-                  return $$Number.Float64.fromFloatExn(i);
+                  return fromFloatExn(i);
                 }));
           t.deepEqual($$Number.Float64.sum(arr$1), undefined, undefined);
           TestUtils.assertInvalidArgument(t, (function () {
@@ -957,8 +967,8 @@ Ava("test " + name + " sum", (function (t) {
 
 Ava("test " + name + " signed math", (function (t) {
         var testNeg = function (f) {
-          var a = $$Number.Float64.fromFloatExn(f);
-          var b = $$Number.Float64.fromFloatExn(- f);
+          var a = fromFloatExn(f);
+          var b = fromFloatExn(- f);
           t.deepEqual($$Number.Float64.neg(a), Caml_option.some(b), undefined);
           t.deepEqual($$Number.Float64.negExn(a), b, undefined);
           t.deepEqual($$Number.Float64.negUnsafe(a), b, undefined);
@@ -966,20 +976,10 @@ Ava("test " + name + " signed math", (function (t) {
           t.deepEqual($$Number.Float64.negExn(b), a, undefined);
           t.deepEqual($$Number.Float64.negUnsafe(b), a, undefined);
         };
-        testNeg(0.0);
-        testNeg(-0.0);
-        testNeg(1.0);
-        testNeg(12345678.9);
-        testNeg(Js_int.min);
-        testNeg(Js_int.max);
-        testNeg(PervasivesU.neg_infinity);
-        testNeg(PervasivesU.infinity);
-        TestUtils.loop100Fn(function () {
-              testNeg(randomValue(undefined));
-            });
+        testFn(testNeg);
         var testAbs = function (f) {
-          var a = $$Number.Float64.fromFloatExn(f);
-          var b = $$Number.Float64.fromFloatExn(Math.abs(f));
+          var a = fromFloatExn(f);
+          var b = fromFloatExn(Math.abs(f));
           t.deepEqual($$Number.Float64.abs(a), Caml_option.some(b), undefined);
           t.deepEqual($$Number.Float64.absExn(a), b, undefined);
           t.deepEqual($$Number.Float64.absUnsafe(a), b, undefined);
@@ -987,20 +987,12 @@ Ava("test " + name + " signed math", (function (t) {
           t.deepEqual($$Number.Float64.absExn(b), b, undefined);
           t.deepEqual($$Number.Float64.absUnsafe(b), b, undefined);
         };
-        testAbs(0.0);
-        testAbs(-0.0);
-        testAbs(-1.0);
+        testFn(testAbs);
         testAbs(- 12345678.9);
-        testAbs(Js_int.min);
         testAbs(- Js_int.max);
-        testAbs(PervasivesU.neg_infinity);
-        testAbs(PervasivesU.infinity);
-        TestUtils.loop100Fn(function () {
-              testAbs(randomValue(undefined));
-            });
         var testSign = function (f) {
           var test_ = function (f) {
-            var n = $$Number.Float64.fromFloatExn(f);
+            var n = fromFloatExn(f);
             var result = f < 0.0 ? -1 : (
                 f > 0.0 ? 1 : 0
               );
@@ -1012,24 +1004,593 @@ Ava("test " + name + " signed math", (function (t) {
           test_(f);
           test_(- f);
         };
-        testSign(0.0);
-        testSign(-0.0);
-        testSign(1.0);
-        testSign(12345678.9);
-        testSign(PervasivesU.neg_infinity);
-        testSign(PervasivesU.infinity);
+        testFn(testSign);
+      }));
+
+Ava("test " + name + " float math", (function (t) {
+        var testAcos = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= -1.0 && f <= 1.0) {
+            var result = fromFloatExn(Math.acos(f));
+            t.deepEqual($$Number.Float64.acos(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.acosExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.acosUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.acos(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.acosExn(n);
+                }));
+        };
+        testFn(testAcos);
         TestUtils.loop100Fn(function () {
-              testSign(randomValue(undefined));
+              testAcos(TestUtils.randomFloat(-1.0, 1.0));
+            });
+        var testAcosh = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= 1.0) {
+            var result = fromFloatExn(Math.acosh(f));
+            t.deepEqual($$Number.Float64.acosh(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.acoshExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.acoshUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.acosh(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.acoshExn(n);
+                }));
+        };
+        testFn(testAcosh);
+        TestUtils.loop100Fn(function () {
+              testAcosh(TestUtils.randomFloat(1.0, Js_int.max * 2.0));
+            });
+        var testAsin = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= -1.0 && f <= 1.0) {
+            var result = fromFloatExn(Math.asin(f));
+            t.deepEqual($$Number.Float64.asin(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.asinExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.asinUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.asin(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.asinExn(n);
+                }));
+        };
+        testFn(testAsin);
+        TestUtils.loop100Fn(function () {
+              testAsin(TestUtils.randomFloat(-1.0, 1.0));
+            });
+        var testAsinh = function (f) {
+          t.deepEqual($$Number.Float64.asinh(fromFloatExn(f)), fromFloatExn(Math.asinh(f)), undefined);
+          t.deepEqual($$Number.Float64.asinh(fromFloatExn(- f)), fromFloatExn(Math.asinh(- f)), undefined);
+        };
+        testFn(testAsinh);
+        var testAtan = function (f) {
+          t.deepEqual($$Number.Float64.atan(fromFloatExn(f)), fromFloatExn(Math.atan(f)), undefined);
+          t.deepEqual($$Number.Float64.atan(fromFloatExn(- f)), fromFloatExn(Math.atan(- f)), undefined);
+        };
+        testFn(testAtan);
+        var testAtan2 = function (y, x) {
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(y), fromFloatExn(x)), fromFloatExn(Math.atan2(y, x)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(- y), fromFloatExn(x)), fromFloatExn(Math.atan2(- y, x)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(y), fromFloatExn(- x)), fromFloatExn(Math.atan2(y, - x)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(- y), fromFloatExn(- x)), fromFloatExn(Math.atan2(- y, - x)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(x), fromFloatExn(y)), fromFloatExn(Math.atan2(x, y)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(- x), fromFloatExn(y)), fromFloatExn(Math.atan2(- x, y)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(x), fromFloatExn(- y)), fromFloatExn(Math.atan2(x, - y)), undefined);
+          t.deepEqual($$Number.Float64.atan2(fromFloatExn(- x), fromFloatExn(- y)), fromFloatExn(Math.atan2(- x, - y)), undefined);
+        };
+        testAtan2(0.0, -0.0);
+        testAtan2(0.0, 12345678.9);
+        testAtan2(0.0, PervasivesU.neg_infinity);
+        testAtan2(0.0, PervasivesU.infinity);
+        testAtan2(-56248.7954, 87934.1968);
+        testAtan2(12345678.9, PervasivesU.neg_infinity);
+        testAtan2(12345678.9, PervasivesU.infinity);
+        testAtan2(PervasivesU.neg_infinity, PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testAtan2(randomValue(undefined), randomValue(undefined));
+            });
+        var testAtanh = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= -1.0 && f <= 1.0) {
+            var result = fromFloatExn(Math.atanh(f));
+            t.deepEqual($$Number.Float64.atanh(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.atanhExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.atanhUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.atanh(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.atanhExn(n);
+                }));
+        };
+        testFn(testAtanh);
+        TestUtils.loop100Fn(function () {
+              testAtanh(TestUtils.randomFloat(-1.0, 1.0));
+            });
+        var testCbrt = function (f) {
+          t.deepEqual($$Number.Float64.cbrt(fromFloatExn(f)), fromFloatExn(Math.cbrt(f)), undefined);
+          t.deepEqual($$Number.Float64.cbrt(fromFloatExn(- f)), fromFloatExn(Math.cbrt(- f)), undefined);
+        };
+        testFn(testCbrt);
+        var testCeil = function (f) {
+          var test_ = function (f) {
+            var n = fromFloatExn(f);
+            var result = Math.ceil(f);
+            t.deepEqual($$Number.Float64.ceil(n), fromFloatExn(result), undefined);
+            if (f > Js_int.min - 1.0 && f <= Js_int.max) {
+              var result$1 = result | 0;
+              t.deepEqual($$Number.Float64.ceilInt(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.ceilIntExn(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.ceilIntClamped(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.ceilIntUnsafe(n), result$1, undefined);
+              return ;
+            }
+            t.deepEqual($$Number.Float64.ceilInt(n), undefined, undefined);
+            TestUtils.assertOverflow(t, (function () {
+                    return $$Number.Float64.ceilIntExn(n);
+                  }));
+            t.deepEqual($$Number.Float64.ceilIntClamped(n), clampFloatToInt(f), undefined);
+          };
+          test_(f);
+          test_(- f);
+        };
+        testFn(testCeil);
+        testCeil(Js_int.min - 0.1);
+        testCeil(Js_int.min - 0.9);
+        testCeil(Js_int.min - 1.0);
+        TestUtils.loop100Fn(function () {
+              testCeil(TestUtils.randomFloat(Js_int.min, Js_int.max));
+            });
+        var testCos = function (f) {
+          var n = fromFloatExn(f);
+          if (TestUtils.$$isFinite(f)) {
+            var result = fromFloatExn(Math.cos(f));
+            t.deepEqual($$Number.Float64.cos(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.cosExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.cosUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.cos(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.cosExn(n);
+                }));
+        };
+        testFn(testCos);
+        var testCosh = function (f) {
+          t.deepEqual($$Number.Float64.cosh(fromFloatExn(f)), fromFloatExn(Math.cosh(f)), undefined);
+          t.deepEqual($$Number.Float64.cosh(fromFloatExn(- f)), fromFloatExn(Math.cosh(- f)), undefined);
+        };
+        testFn(testCosh);
+        var testExp = function (f) {
+          t.deepEqual($$Number.Float64.exp(fromFloatExn(f)), fromFloatExn(Math.exp(f)), undefined);
+          t.deepEqual($$Number.Float64.exp(fromFloatExn(- f)), fromFloatExn(Math.exp(- f)), undefined);
+        };
+        testFn(testExp);
+        var testExpm1 = function (f) {
+          t.deepEqual($$Number.Float64.expm1(fromFloatExn(f)), fromFloatExn(Math.expm1(f)), undefined);
+          t.deepEqual($$Number.Float64.expm1(fromFloatExn(- f)), fromFloatExn(Math.expm1(- f)), undefined);
+        };
+        testFn(testExpm1);
+        var testFloor = function (f) {
+          var test_ = function (f) {
+            var n = fromFloatExn(f);
+            var result = Math.floor(f);
+            t.deepEqual($$Number.Float64.floor(n), fromFloatExn(result), undefined);
+            if (f >= Js_int.min && f < Js_int.max + 1.0) {
+              var result$1 = result | 0;
+              t.deepEqual($$Number.Float64.floorInt(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.floorIntExn(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.floorIntClamped(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.floorIntUnsafe(n), result$1, undefined);
+              return ;
+            }
+            t.deepEqual($$Number.Float64.floorInt(n), undefined, undefined);
+            TestUtils.assertOverflow(t, (function () {
+                    return $$Number.Float64.floorIntExn(n);
+                  }));
+            t.deepEqual($$Number.Float64.floorIntClamped(n), clampFloatToInt(f), undefined);
+          };
+          test_(f);
+          test_(- f);
+        };
+        testFn(testFloor);
+        testFloor(Js_int.max + 0.1);
+        testFloor(Js_int.max + 0.9);
+        testFloor(Js_int.max + 1.0);
+        TestUtils.loop100Fn(function () {
+              testFloor(TestUtils.randomFloat(Js_int.min, Js_int.max));
+            });
+        var testFround = function (f) {
+          t.deepEqual($$Number.Float64.fround(fromFloatExn(f)), fromFloatExn(Math.fround(f)), undefined);
+          t.deepEqual($$Number.Float64.fround(fromFloatExn(- f)), fromFloatExn(Math.fround(- f)), undefined);
+        };
+        testFn(testFround);
+        var testHypot = function (a, b) {
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(a), fromFloatExn(b)), fromFloatExn(Math.hypot(a, b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(- a), fromFloatExn(b)), fromFloatExn(Math.hypot(- a, b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(a), fromFloatExn(- b)), fromFloatExn(Math.hypot(a, - b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(- a), fromFloatExn(- b)), fromFloatExn(Math.hypot(- a, - b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(b), fromFloatExn(a)), $$Number.Float64.hypot(fromFloatExn(a), fromFloatExn(b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(- b), fromFloatExn(a)), $$Number.Float64.hypot(fromFloatExn(a), fromFloatExn(- b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(b), fromFloatExn(- a)), $$Number.Float64.hypot(fromFloatExn(- a), fromFloatExn(b)), undefined);
+          t.deepEqual($$Number.Float64.hypot(fromFloatExn(- b), fromFloatExn(- a)), $$Number.Float64.hypot(fromFloatExn(- a), fromFloatExn(- b)), undefined);
+        };
+        testHypot(0.0, -0.0);
+        testHypot(0.0, 12345678.9);
+        testHypot(0.0, PervasivesU.neg_infinity);
+        testHypot(0.0, PervasivesU.infinity);
+        testHypot(-56248.7954, 87934.1968);
+        testHypot(12345678.9, PervasivesU.neg_infinity);
+        testHypot(12345678.9, PervasivesU.infinity);
+        testHypot(PervasivesU.neg_infinity, PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testHypot(randomValue(undefined), randomValue(undefined));
+            });
+        var testHypotMany = function (arr) {
+          t.deepEqual($$Number.Float64.hypotMany(Belt_Array.mapU(arr, (function (f) {
+                          return fromFloatExn(f);
+                        }))), fromFloatExn(Caml_splice_call.spliceApply(Math.hypot, [arr])), undefined);
+        };
+        testHypotMany([]);
+        testHypotMany([0.0]);
+        testHypotMany([-0.0]);
+        testHypotMany([1.0]);
+        testHypotMany([-1.0]);
+        testHypotMany([12345678.9]);
+        testHypotMany([-56248.7954]);
+        testHypotMany([87934.1968]);
+        testHypotMany([Js_int.min]);
+        testHypotMany([Js_int.max]);
+        testHypotMany([PervasivesU.neg_infinity]);
+        testHypotMany([PervasivesU.infinity]);
+        testHypotMany([
+              87934.1968,
+              -56248.7954
+            ]);
+        testHypotMany([
+              12345678.9,
+              -56248.7954,
+              87934.1968
+            ]);
+        testHypotMany([
+              12345678.9,
+              PervasivesU.neg_infinity,
+              Js_int.max
+            ]);
+        testHypotMany([
+              12345678.9,
+              PervasivesU.infinity,
+              Js_int.min
+            ]);
+        testHypotMany([
+              12345678.9,
+              -56248.7954,
+              87934.1968,
+              -1.0,
+              0.0,
+              -0.0,
+              1.0
+            ]);
+        TestUtils.loop100Fn(function () {
+              testHypotMany([
+                    randomValue(undefined),
+                    randomValue(undefined),
+                    randomValue(undefined),
+                    randomValue(undefined),
+                    randomValue(undefined)
+                  ]);
+            });
+        var testLog = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= 0.0) {
+            var result = fromFloatExn(Math.log(f));
+            t.deepEqual($$Number.Float64.log(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.logExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.logUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.log(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.logExn(n);
+                }));
+        };
+        testFn(testLog);
+        TestUtils.loop100Fn(function () {
+              testLog(TestUtils.randomFloat(0.0, Js_int.max * 2.0));
+            });
+        var testLog10 = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= 0.0) {
+            var result = fromFloatExn(Math.log10(f));
+            t.deepEqual($$Number.Float64.log10(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.log10Exn(n), result, undefined);
+            t.deepEqual($$Number.Float64.log10Unsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.log10(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.log10Exn(n);
+                }));
+        };
+        testFn(testLog10);
+        TestUtils.loop100Fn(function () {
+              testLog10(TestUtils.randomFloat(0.0, Js_int.max * 2.0));
+            });
+        var testLog1p = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= -1.0) {
+            var result = fromFloatExn(Math.log1p(f));
+            t.deepEqual($$Number.Float64.log1p(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.log1pExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.log1pUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.log1p(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.log1pExn(n);
+                }));
+        };
+        testFn(testLog1p);
+        TestUtils.loop100Fn(function () {
+              testLog1p(TestUtils.randomFloat(-1.0, Js_int.max * 2.0));
+            });
+        var testLog2 = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= 0.0) {
+            var result = fromFloatExn(Math.log2(f));
+            t.deepEqual($$Number.Float64.log2(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.log2Exn(n), result, undefined);
+            t.deepEqual($$Number.Float64.log2Unsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.log2(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.log2Exn(n);
+                }));
+        };
+        testFn(testLog2);
+        TestUtils.loop100Fn(function () {
+              testLog2(TestUtils.randomFloat(0.0, Js_int.max * 2.0));
+            });
+        var testPowNotNaN = function (a, b) {
+          if (a >= 0.0 || TestUtils.isInteger(b)) {
+            var result = fromFloatExn(Math.pow(a, b));
+            var base = fromFloatExn(a);
+            var exp = fromFloatExn(b);
+            t.deepEqual($$Number.Float64.pow(base, exp), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.powExn(base, exp), result, undefined);
+            t.deepEqual($$Number.Float64.powUnsafe(base, exp), result, undefined);
+          }
+          if (b >= 0.0 || TestUtils.isInteger(a)) {
+            var result$1 = fromFloatExn(Math.pow(b, a));
+            var base$1 = fromFloatExn(b);
+            var exp$1 = fromFloatExn(a);
+            t.deepEqual($$Number.Float64.pow(base$1, exp$1), Caml_option.some(result$1), undefined);
+            t.deepEqual($$Number.Float64.powExn(base$1, exp$1), result$1, undefined);
+            t.deepEqual($$Number.Float64.powUnsafe(base$1, exp$1), result$1, undefined);
+          }
+          var base$2 = fromFloatExn(a);
+          t.deepEqual($$Number.Float64.pow(base$2, zero), Caml_option.some(one), undefined);
+          t.deepEqual($$Number.Float64.powExn(base$2, zero), one, undefined);
+          t.deepEqual($$Number.Float64.powUnsafe(base$2, zero), one, undefined);
+          t.deepEqual($$Number.Float64.pow(base$2, one), Caml_option.some(base$2), undefined);
+          t.deepEqual($$Number.Float64.powExn(base$2, one), base$2, undefined);
+          t.deepEqual($$Number.Float64.powUnsafe(base$2, one), base$2, undefined);
+          var result$2 = fromFloatExn(1.0 / a);
+          t.deepEqual($$Number.Float64.pow(base$2, negOne), Caml_option.some(result$2), undefined);
+          t.deepEqual($$Number.Float64.powExn(base$2, negOne), result$2, undefined);
+          t.deepEqual($$Number.Float64.powUnsafe(base$2, negOne), result$2, undefined);
+          var base$3 = fromFloatExn(b);
+          t.deepEqual($$Number.Float64.pow(base$3, zero), Caml_option.some(one), undefined);
+          t.deepEqual($$Number.Float64.powExn(base$3, zero), one, undefined);
+          t.deepEqual($$Number.Float64.powUnsafe(base$3, zero), one, undefined);
+          t.deepEqual($$Number.Float64.pow(base$3, one), Caml_option.some(base$3), undefined);
+          t.deepEqual($$Number.Float64.powExn(base$3, one), base$3, undefined);
+          t.deepEqual($$Number.Float64.powUnsafe(base$3, one), base$3, undefined);
+          var result$3 = fromFloatExn(1.0 / b);
+          t.deepEqual($$Number.Float64.pow(base$3, negOne), Caml_option.some(result$3), undefined);
+          t.deepEqual($$Number.Float64.powExn(base$3, negOne), result$3, undefined);
+          t.deepEqual($$Number.Float64.powUnsafe(base$3, negOne), result$3, undefined);
+        };
+        testPowNotNaN(0.0, -0.0);
+        testPowNotNaN(1.0, -1.0);
+        testPowNotNaN(0.0, 12345678.9);
+        testPowNotNaN(1.0, 12345678.9);
+        testPowNotNaN(12345678.9, Js_int.min);
+        testPowNotNaN(12345678.9, Js_int.max);
+        testPowNotNaN(12345678.9, PervasivesU.neg_infinity);
+        testPowNotNaN(12345678.9, PervasivesU.infinity);
+        testPowNotNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
+        TestUtils.loop100Fn(function () {
+              testPowNotNaN(randomValue(undefined), randomValue(undefined));
+            });
+        var testPowNaN = function (base, exp) {
+          t.deepEqual($$Number.Float64.pow(base, exp), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.powExn(base, exp);
+                }));
+        };
+        TestUtils.loop100Fn(function () {
+              testPowNaN(fromFloatExn(randomValue(undefined)), $$Number.Float64.fromFloatUnsafe(Number.NaN));
+            });
+        TestUtils.loop100Fn(function () {
+              var exp = randomValue(undefined);
+              if (exp !== 0.0) {
+                return testPowNaN($$Number.Float64.fromFloatUnsafe(Number.NaN), fromFloatExn(exp));
+              }
+              
+            });
+        testPowNaN(one, $$Number.Float64.minValue);
+        testPowNaN(one, $$Number.Float64.maxValue);
+        testPowNaN(negOne, $$Number.Float64.minValue);
+        testPowNaN(negOne, $$Number.Float64.maxValue);
+        TestUtils.loop100Fn(function () {
+              var exp = randomValue(undefined);
+              if (!TestUtils.isInteger(exp)) {
+                return testPowNaN(fromFloatExn(TestUtils.randomFloat(Js_int.min * 2.0, 0.0)), fromFloatExn(exp));
+              }
+              
+            });
+        var testRandom = function () {
+          var value = $$Number.Float64.random(undefined);
+          t.true($$Number.Float64.ge(value, zero), undefined);
+          t.true($$Number.Float64.lt(value, one), undefined);
+          var m = randomValue(undefined);
+          var n = randomValue(undefined);
+          var min = fromFloatExn(m < n ? m : n);
+          var max = fromFloatExn(m > n ? m : n);
+          if (min !== max) {
+            return TestUtils.loopFn((function () {
+                          var i = $$Number.Float64.randomRange(min, max);
+                          t.true($$Number.Float64.ge(i, min), undefined);
+                          t.true($$Number.Float64.lt(i, max), undefined);
+                        }), 10);
+          }
+          
+        };
+        TestUtils.loop100Fn(function () {
+              testRandom(undefined);
+            });
+        var testRound = function (f) {
+          var test_ = function (f) {
+            var n = fromFloatExn(f);
+            var result = Math.round(f);
+            t.deepEqual($$Number.Float64.round(n), fromFloatExn(result), undefined);
+            if (f >= Js_int.min - 0.5 && f < Js_int.max + 0.5) {
+              var result$1 = result | 0;
+              t.deepEqual($$Number.Float64.roundInt(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.roundIntExn(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.roundIntClamped(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.roundIntUnsafe(n), result$1, undefined);
+              return ;
+            }
+            t.deepEqual($$Number.Float64.roundInt(n), undefined, undefined);
+            TestUtils.assertOverflow(t, (function () {
+                    return $$Number.Float64.roundIntExn(n);
+                  }));
+            t.deepEqual($$Number.Float64.roundIntClamped(n), clampFloatToInt(f), undefined);
+          };
+          test_(f);
+          test_(- f);
+        };
+        testFn(testRound);
+        testRound(Js_int.min - 0.1);
+        testRound(Js_int.min - 0.5);
+        testRound(Js_int.min - 0.6);
+        testRound(Js_int.max + 0.1);
+        testRound(Js_int.max + 0.5);
+        testRound(Js_int.max + 0.6);
+        TestUtils.loop100Fn(function () {
+              testRound(TestUtils.randomFloat(Js_int.min, Js_int.max));
+            });
+        var testSin = function (f) {
+          var n = fromFloatExn(f);
+          if (TestUtils.$$isFinite(f)) {
+            var result = fromFloatExn(Math.sin(f));
+            t.deepEqual($$Number.Float64.sin(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.sinExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.sinUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.sin(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.sinExn(n);
+                }));
+        };
+        testFn(testSin);
+        var testSinh = function (f) {
+          t.deepEqual($$Number.Float64.sinh(fromFloatExn(f)), fromFloatExn(Math.sinh(f)), undefined);
+          t.deepEqual($$Number.Float64.sinh(fromFloatExn(- f)), fromFloatExn(Math.sinh(- f)), undefined);
+        };
+        testFn(testSinh);
+        var testSqrt = function (f) {
+          var n = fromFloatExn(f);
+          if (f >= 0.0) {
+            var result = fromFloatExn(Math.sqrt(f));
+            t.deepEqual($$Number.Float64.sqrt(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.sqrtExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.sqrtUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.sqrt(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.sqrtExn(n);
+                }));
+        };
+        testFn(testSqrt);
+        TestUtils.loop100Fn(function () {
+              testSqrt(TestUtils.randomFloat(0.0, Js_int.max * 2.0));
+            });
+        var testTan = function (f) {
+          var n = fromFloatExn(f);
+          if (TestUtils.$$isFinite(f)) {
+            var result = fromFloatExn(Math.tan(f));
+            t.deepEqual($$Number.Float64.tan(n), Caml_option.some(result), undefined);
+            t.deepEqual($$Number.Float64.tanExn(n), result, undefined);
+            t.deepEqual($$Number.Float64.tanUnsafe(n), result, undefined);
+            return ;
+          }
+          t.deepEqual($$Number.Float64.tan(n), undefined, undefined);
+          TestUtils.assertInvalidArgument(t, (function () {
+                  return $$Number.Float64.tanExn(n);
+                }));
+        };
+        testFn(testTan);
+        var testTanh = function (f) {
+          t.deepEqual($$Number.Float64.tanh(fromFloatExn(f)), fromFloatExn(Math.tanh(f)), undefined);
+          t.deepEqual($$Number.Float64.tanh(fromFloatExn(- f)), fromFloatExn(Math.tanh(- f)), undefined);
+        };
+        testFn(testTanh);
+        var testTrunc = function (f) {
+          var test_ = function (f) {
+            var n = fromFloatExn(f);
+            var result = Math.trunc(f);
+            t.deepEqual($$Number.Float64.trunc(n), fromFloatExn(result), undefined);
+            if (f > Js_int.min - 1.0 && f < Js_int.max + 1.0) {
+              var result$1 = result | 0;
+              t.deepEqual($$Number.Float64.truncInt(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.truncIntExn(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.truncIntClamped(n), result$1, undefined);
+              t.deepEqual($$Number.Float64.truncIntUnsafe(n), result$1, undefined);
+              return ;
+            }
+            t.deepEqual($$Number.Float64.truncInt(n), undefined, undefined);
+            TestUtils.assertOverflow(t, (function () {
+                    return $$Number.Float64.truncIntExn(n);
+                  }));
+            t.deepEqual($$Number.Float64.truncIntClamped(n), clampFloatToInt(f), undefined);
+          };
+          test_(f);
+          test_(- f);
+        };
+        testFn(testTrunc);
+        testTrunc(Js_int.min - 0.1);
+        testTrunc(Js_int.min - 0.5);
+        testTrunc(Js_int.min - 0.9);
+        testTrunc(Js_int.min - 1.0);
+        testTrunc(Js_int.max + 0.1);
+        testTrunc(Js_int.max + 0.5);
+        testTrunc(Js_int.max + 0.9);
+        testTrunc(Js_int.max + 1.0);
+        TestUtils.loop100Fn(function () {
+              testTrunc(TestUtils.randomFloat(Js_int.min, Js_int.max));
             });
       }));
 
 Ava("test " + name + " float extra", (function (t) {
         var testIsFinite = function (f, result) {
-          t.deepEqual($$Number.Float64.$$isFinite($$Number.Float64.fromFloatExn(f)), result, undefined);
+          t.deepEqual($$Number.Float64.$$isFinite(fromFloatExn(f)), result, undefined);
         };
         testIsFinite(0.0, true);
         testIsFinite(-0.0, true);
         testIsFinite(1.0, true);
+        testIsFinite(-1.0, true);
+        testIsFinite(1e55, true);
+        testIsFinite(-1e55, true);
         testIsFinite(12345678.9, true);
         testIsFinite(Js_int.min, true);
         testIsFinite(Js_int.max, true);
@@ -1040,12 +1601,14 @@ Ava("test " + name + " float extra", (function (t) {
             });
         t.deepEqual($$Number.Float64.$$isFinite($$Number.Float64.fromFloatUnsafe(Number.NaN)), false, undefined);
         var testIsInteger = function (f, result) {
-          t.deepEqual($$Number.Float64.isInteger($$Number.Float64.fromFloatExn(f)), result, undefined);
+          t.deepEqual($$Number.Float64.isInteger(fromFloatExn(f)), result, undefined);
         };
         testIsInteger(0.0, true);
         testIsInteger(-0.0, true);
         testIsInteger(1.0, true);
+        testIsInteger(-1.0, true);
         testIsInteger(1e55, true);
+        testIsInteger(-1e55, true);
         testIsInteger(12345678.9, false);
         testIsInteger(Js_int.min, true);
         testIsInteger(Js_int.max, true);
@@ -1061,27 +1624,19 @@ Ava("test " + name + " float extra", (function (t) {
               testIsInteger(randomLargerInt(undefined), true);
             });
         var testIsNotNaN = function (f) {
-          t.deepEqual($$Number.Float64.$$isNaN($$Number.Float64.fromFloatExn(f)), false, undefined);
+          t.deepEqual($$Number.Float64.$$isNaN(fromFloatExn(f)), false, undefined);
         };
-        testIsNotNaN(0.0);
-        testIsNotNaN(-0.0);
-        testIsNotNaN(1.0);
-        testIsNotNaN(12345678.9);
-        testIsNotNaN(Js_int.min);
-        testIsNotNaN(Js_int.max);
-        testIsNotNaN(PervasivesU.neg_infinity);
-        testIsNotNaN(PervasivesU.infinity);
-        TestUtils.loop100Fn(function () {
-              testIsNotNaN(randomValue(undefined));
-            });
+        testFn(testIsNotNaN);
         t.deepEqual($$Number.Float64.$$isNaN($$Number.Float64.fromFloatUnsafe(Number.NaN)), true, undefined);
         var testIsSafeInteger = function (f, result) {
-          t.deepEqual($$Number.Float64.isSafeInteger($$Number.Float64.fromFloatExn(f)), result, undefined);
+          t.deepEqual($$Number.Float64.isSafeInteger(fromFloatExn(f)), result, undefined);
         };
         testIsSafeInteger(0.0, true);
         testIsSafeInteger(-0.0, true);
         testIsSafeInteger(1.0, true);
+        testIsSafeInteger(-1.0, true);
         testIsSafeInteger(1e55, false);
+        testIsSafeInteger(-1e55, false);
         testIsSafeInteger(12345678.9, false);
         testIsSafeInteger(Js_int.min, true);
         testIsSafeInteger(Js_int.max, true);
@@ -1124,10 +1679,18 @@ export {
   maxInt ,
   minIntFloat ,
   maxIntFloat ,
+  fromIntExn ,
+  fromFloatExn ,
+  zero ,
+  negZero ,
+  one ,
+  negOne ,
   randomValue ,
   randomInt32 ,
   randomLargerInt ,
   randomSmallerInt ,
   randomFloatInInt32Range ,
+  testFn ,
+  clampFloatToInt ,
 }
-/*  Not a pure module */
+/* negZero Not a pure module */

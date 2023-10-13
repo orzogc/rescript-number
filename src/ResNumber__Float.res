@@ -219,9 +219,9 @@ module Float64: Float with type t = float = {
 
   let divUnsafe = (a, b) => a /. b
 
-  let div = (a, b) => b !== zero ? a->divUnsafe(b)->fromFloat : None
+  let div = (a, b) => a->divUnsafe(b)->fromFloat
 
-  let divExn = (a, b) => b !== zero ? a->divUnsafe(b)->fromFloatExn : raise(Division_by_zero)
+  let divExn = (a, b) => a->divUnsafe(b)->fromFloatExn
 
   let remUnsafe = (a, b) => a->mod_float(b)
 

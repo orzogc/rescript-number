@@ -280,20 +280,11 @@ function divUnsafe(a, b) {
 }
 
 function div(a, b) {
-  if (b !== 0.0) {
-    return fromFloat(a / b);
-  }
-  
+  return fromFloat(a / b);
 }
 
 function divExn(a, b) {
-  if (b !== 0.0) {
-    return fromFloatExn(a / b);
-  }
-  throw {
-        RE_EXN_ID: "Division_by_zero",
-        Error: new Error()
-      };
+  return fromFloatExn(a / b);
 }
 
 function remUnsafe(a, b) {

@@ -37,7 +37,7 @@ let assertDivisionByZero = (t, f) =>
 
 let loopFn = (f, n) =>
   for _ in 0 to n - 1 {
-    f()->ignore
+    f()
   }
 
 let loop100Fn = f => loopFn(f, 100)

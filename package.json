@@ -3,7 +3,14 @@
   "version": "0.1.0",
   "keywords": [
     "rescript",
-    "number"
+    "number",
+    "int8",
+    "uint8",
+    "int16",
+    "uint16",
+    "int32",
+    "uint32",
+    "float64"
   ],
   "license": "MIT",
   "author": "orzogc",
@@ -16,11 +23,11 @@
   "type": "module",
   "ava": {
     "files": [
-      "tests/**/*Test.bs.mjs"
+      "tests/**/*Test.res.mjs"
     ]
   },
   "dependencies": {
-    "rescript": "^11.0.0-rc.4"
+    "rescript": "^11.0.0-rc.6"
   },
   "devDependencies": {
     "@dzakh/rescript-ava": "^2.3.0",

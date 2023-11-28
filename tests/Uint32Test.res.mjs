@@ -2,8 +2,8 @@
 
 import Ava from "ava";
 import * as Js_int from "rescript/lib/es6/js_int.js";
-import * as $$Number from "../src/Number.bs.mjs";
-import * as TestUtils from "./TestUtils.bs.mjs";
+import * as $$Number from "../src/Number.res.mjs";
+import * as TestUtils from "./TestUtils.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
@@ -114,7 +114,7 @@ function testFn(fn) {
   fn(4294967295.0);
   fn(4294967295.0 - 1.0);
   TestUtils.loop100Fn(function () {
-        fn(randomValue(undefined));
+        fn(randomValue());
       });
 }
 
@@ -141,7 +141,7 @@ Ava("test " + name + " from int", (function (t) {
         testInRange(Js_int.max);
         testInRange(Js_int.max - 1 | 0);
         TestUtils.loop100Fn(function () {
-              testInRange(TestUtils.randomPositiveInt(undefined));
+              testInRange(TestUtils.randomPositiveInt());
             });
         var testOutOfRange = function (i) {
           t.deepEqual($$Number.Uint32.fromInt(i), undefined, undefined);
@@ -155,7 +155,7 @@ Ava("test " + name + " from int", (function (t) {
         testOutOfRange(Js_int.min);
         testOutOfRange(Js_int.min + 1 | 0);
         TestUtils.loop100Fn(function () {
-              testOutOfRange(TestUtils.randomNegativeInt(undefined));
+              testOutOfRange(TestUtils.randomNegativeInt());
             });
       }));
 
@@ -173,7 +173,7 @@ Ava("test " + name + " to int", (function (t) {
         testInRange(Js_int.max);
         testInRange(Js_int.max - 1 | 0);
         TestUtils.loop100Fn(function () {
-              testInRange(TestUtils.randomPositiveInt(undefined));
+              testInRange(TestUtils.randomPositiveInt());
             });
         var testOutOfRange = function (f) {
           var n = fromFloatExn(f);
@@ -186,7 +186,7 @@ Ava("test " + name + " to int", (function (t) {
         testOutOfRange(Js_int.max + 1.0);
         testOutOfRange(4294967295.0);
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomLargerFloat(undefined));
+              testOutOfRange(randomLargerFloat());
             });
       }));
 
@@ -241,7 +241,7 @@ Ava("test " + name + " to float", (function (t) {
         };
         testToFloat(2000000000.0);
         TestUtils.loop100Fn(function () {
-              testToFloat(randomValue(undefined));
+              testToFloat(randomValue());
             });
       }));
 
@@ -272,7 +272,7 @@ Ava("test " + name + " from string", (function (t) {
         testInRange(0.0 + 1.0, String(0.0 + 1.0));
         testInRange(4294967295.0 - 1.0, String(4294967295.0 - 1.0));
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = randomValue();
               testInRange(value, String(value));
             });
         var testOutOfRange = function (f) {
@@ -302,7 +302,7 @@ Ava("test " + name + " from string", (function (t) {
         testOutOfRange(0.0 - 2000000000.0);
         testOutOfRange(4294967295.0 + 2000000000.0);
         TestUtils.loop100Fn(function () {
-              testOutOfRange(TestUtils.randomNegativeInt(undefined));
+              testOutOfRange(TestUtils.randomNegativeInt());
             });
         var testIsNotInteger = function (s) {
           t.deepEqual($$Number.Uint32.fromString(s), undefined, undefined);
@@ -545,7 +545,7 @@ Ava("test " + name + " comparison", (function (t) {
         };
         testCompare(27852.0, 56331.0);
         TestUtils.loop100Fn(function () {
-              var less = randomValue(undefined);
+              var less = randomValue();
               var greater = Math.floor(TestUtils.randomFloat(less + 1.0, 4294967295.0 + 1.0));
               testCompare(less, greater);
             });
@@ -618,8 +618,8 @@ Ava("test " + name + " addition", (function (t) {
         testOutOfRange(4294967295.0, 1.0, 4294967295.0);
         testOutOfRange(4294967295.0, 2000000000.0, 4294967295.0);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               var result = a + b;
               if (result < 0.0) {
                 testOutOfRange(a, b, 0.0);
@@ -679,8 +679,8 @@ Ava("test " + name + " subtraction", (function (t) {
         testOutOfRange(0.0, 1.0, 0.0);
         testOutOfRange(0.0, 2000000000.0, 0.0);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               var result = a - b;
               if (result < 0.0) {
                 testOutOfRange(a, b, 0.0);
@@ -771,8 +771,8 @@ Ava("test " + name + " multiplication", (function (t) {
         testOutOfRange(4294967295.0, 2.0, 4294967295.0);
         testOutOfRange(4294967295.0, 2000000000.0, 4294967295.0);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               var result = a * b;
               if (result < 0.0) {
                 return testOutOfRange(a, b, 0.0);
@@ -850,8 +850,8 @@ Ava("test " + name + " division", (function (t) {
         };
         testFn(testDividedByZero);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotDividedByZero(a, b);
               testDividedByZero(a);
               testDividedByZero(b);
@@ -916,8 +916,8 @@ Ava("test " + name + " remainder", (function (t) {
         };
         testFn(testModByZero);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotModByZero(a, b);
               testModByZero(a);
               testModByZero(b);
@@ -996,8 +996,8 @@ Ava("test " + name + " sum", (function (t) {
               2000000000.0
             ]);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testInRange([a]);
               testInRange([b]);
               var result = a + b;
@@ -1038,7 +1038,7 @@ Ava("test " + name + " increase and decrease", (function (t) {
         testIncInRange(0.0 + 1.0);
         testIncInRange(4294967295.0 - 1.0);
         TestUtils.loop100Fn(function () {
-              testIncInRange(randomValue(undefined));
+              testIncInRange(randomValue());
             });
         t.deepEqual($$Number.Uint32.inc($$Number.Uint32.maxValue), undefined, undefined);
         TestUtils.assertOverflow(t, (function () {
@@ -1098,7 +1098,7 @@ Ava("test " + name + " bitwise", (function (t) {
         assertAnd(0.0 + 1.0, 4294967295.0 - 1.0, 0.0);
         assertAnd(27852.0, 56331.0, 19464.0);
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = randomValue();
               assertAnd(value, value, value);
             });
         var assertOr = function (a, b, value) {
@@ -1120,7 +1120,7 @@ Ava("test " + name + " bitwise", (function (t) {
         assertOr(0.0, 4294967295.0, 4294967295.0);
         assertOr(0.0 + 1.0, 4294967295.0 - 1.0, 4294967295.0);
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = randomValue();
               assertOr(value, value, value);
             });
         var assertXor = function (a, b, value) {
@@ -1142,7 +1142,7 @@ Ava("test " + name + " bitwise", (function (t) {
         assertXor(0.0, 4294967295.0, 4294967295.0);
         assertXor(0.0 + 1.0, 4294967295.0 - 1.0, 4294967295.0);
         TestUtils.loop100Fn(function () {
-              var value = randomValue(undefined);
+              var value = randomValue();
               assertXor(value, value, 0.0);
             });
         var modBits = function (i) {
@@ -1161,7 +1161,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testUnsignedShiftRight(2000000000.0);
         testUnsignedShiftRight(2294967295.0);
         TestUtils.loop100Fn(function () {
-              testUnsignedShiftRight(randomValue(undefined));
+              testUnsignedShiftRight(randomValue());
             });
         var testShiftRight = function (value) {
           var n = fromFloatExn(value);
@@ -1172,7 +1172,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testShiftRight(2000000000.0);
         testShiftRight(2294967295.0);
         TestUtils.loop100Fn(function () {
-              testShiftRight(randomValue(undefined));
+              testShiftRight(randomValue());
             });
         var value$1 = fromFloatExn(2000000000.0);
         for(var i$1 = -32; i$1 <= 64; ++i$1){
@@ -1187,7 +1187,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testRotateShiftLeft(2000000000.0);
         testRotateShiftLeft(2294967295.0);
         TestUtils.loop100Fn(function () {
-              testRotateShiftLeft(randomValue(undefined));
+              testRotateShiftLeft(randomValue());
             });
         var testRotateShiftRight = function (value) {
           var n = fromFloatExn(value);
@@ -1199,7 +1199,7 @@ Ava("test " + name + " bitwise", (function (t) {
         testRotateShiftRight(2000000000.0);
         testRotateShiftRight(2294967295.0);
         TestUtils.loop100Fn(function () {
-              testRotateShiftRight(randomValue(undefined));
+              testRotateShiftRight(randomValue());
             });
       }));
 
@@ -1223,8 +1223,8 @@ Ava("test " + name + " integer math", (function (t) {
               t.deepEqual($$Number.Uint32.imul(fromIntExn(b), fromIntExn(a)), fromFloatExn(m), undefined);
             });
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               t.deepEqual($$Number.Uint32.imul(fromFloatExn(a), fromFloatExn(b)), $$Number.Uint32.imul(fromFloatExn(b), fromFloatExn(a)), undefined);
             });
         var testPowInRange = function (a, b) {
@@ -1263,8 +1263,8 @@ Ava("test " + name + " integer math", (function (t) {
         };
         testPowOutOfRange(4294967295.0, 2);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = TestUtils.randomPositiveSmallInt(undefined);
+              var a = randomValue();
+              var b = TestUtils.randomPositiveSmallInt();
               var result = Math.pow(a, b);
               if (result >= 0.0 && result <= 4294967295.0) {
                 return testPowInRange(a, b);
@@ -1273,8 +1273,8 @@ Ava("test " + name + " integer math", (function (t) {
               }
             });
         TestUtils.loop100Fn(function () {
-              var m = randomValue(undefined);
-              var n = randomValue(undefined);
+              var m = randomValue();
+              var n = randomValue();
               var min = fromFloatExn(m < n ? m : n);
               var max = fromFloatExn(m > n ? m : n);
               if (min !== max) {

@@ -4,8 +4,8 @@ import * as Js_int from "rescript/lib/es6/js_int.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
 import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
-import * as ResNumber__Utils from "./ResNumber__Utils.bs.mjs";
-import * as ResNumber__Operation from "./ResNumber__Operation.bs.mjs";
+import * as ResNumber__Utils from "./ResNumber__Utils.res.mjs";
+import * as ResNumber__Operation from "./ResNumber__Operation.res.mjs";
 
 function toUint32(i) {
   return (i >>> 0);
@@ -404,7 +404,7 @@ function MakeInteger(IntModule) {
         return Caml_splice_call.spliceApply(Math.min, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var minManyUnsafe = function (arr) {
@@ -433,7 +433,7 @@ function MakeInteger(IntModule) {
         return Caml_splice_call.spliceApply(Math.max, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var maxManyUnsafe = function (arr) {
@@ -947,7 +947,7 @@ function MakeFixedBitsInt(IntRange) {
         return Caml_splice_call.spliceApply(Math.min, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var minManyUnsafe = function (arr) {
@@ -976,7 +976,7 @@ function MakeFixedBitsInt(IntRange) {
         return Caml_splice_call.spliceApply(Math.max, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var maxManyUnsafe = function (arr) {
@@ -1410,7 +1410,7 @@ function MakeFixedBitsInteger(M) {
         return Caml_splice_call.spliceApply(Math.min, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var minManyUnsafe = function (arr) {
@@ -1439,7 +1439,7 @@ function MakeFixedBitsInteger(M) {
         return Caml_splice_call.spliceApply(Math.max, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var maxManyUnsafe = function (arr) {
@@ -2010,7 +2010,7 @@ function MakeSignedInteger(M) {
         return Caml_splice_call.spliceApply(Math.min, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var minManyUnsafe = function (arr) {
@@ -2039,7 +2039,7 @@ function MakeSignedInteger(M) {
         return Caml_splice_call.spliceApply(Math.max, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var maxManyUnsafe = function (arr) {
@@ -2656,7 +2656,7 @@ function MakeUnsignedInteger(M) {
         return Caml_splice_call.spliceApply(Math.min, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var minManyUnsafe = function (arr) {
@@ -2685,7 +2685,7 @@ function MakeUnsignedInteger(M) {
         return Caml_splice_call.spliceApply(Math.max, [arr]);
       }
     } else {
-      return ResNumber__Utils.raiseEmptyArray(undefined);
+      return ResNumber__Utils.raiseEmptyArray();
     }
   };
   var maxManyUnsafe = function (arr) {
@@ -3235,7 +3235,7 @@ function minManyExn(arr) {
       return Caml_splice_call.spliceApply(Math.min, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -3268,7 +3268,7 @@ function maxManyExn(arr) {
       return Caml_splice_call.spliceApply(Math.max, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -3976,7 +3976,7 @@ function minManyExn$1(arr) {
       return Caml_splice_call.spliceApply(Math.min, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -4009,7 +4009,7 @@ function maxManyExn$1(arr) {
       return Caml_splice_call.spliceApply(Math.max, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -4610,7 +4610,7 @@ function minManyExn$2(arr) {
       return Caml_splice_call.spliceApply(Math.min, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -4643,7 +4643,7 @@ function maxManyExn$2(arr) {
       return Caml_splice_call.spliceApply(Math.max, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -5351,7 +5351,7 @@ function minManyExn$3(arr) {
       return Caml_splice_call.spliceApply(Math.min, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -5384,7 +5384,7 @@ function maxManyExn$3(arr) {
       return Caml_splice_call.spliceApply(Math.max, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -5993,7 +5993,7 @@ function minManyExn$4(arr) {
       return Caml_splice_call.spliceApply(Math.min, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -6026,7 +6026,7 @@ function maxManyExn$4(arr) {
       return Caml_splice_call.spliceApply(Math.max, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -6772,7 +6772,7 @@ function minManyExn$5(arr) {
       return Caml_splice_call.spliceApply(Math.min, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 
@@ -6805,7 +6805,7 @@ function maxManyExn$5(arr) {
       return Caml_splice_call.spliceApply(Math.max, [arr]);
     }
   } else {
-    return ResNumber__Utils.raiseEmptyArray(undefined);
+    return ResNumber__Utils.raiseEmptyArray();
   }
 }
 

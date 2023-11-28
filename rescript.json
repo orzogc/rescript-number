@@ -4,7 +4,12 @@
     {
       "dir": "src",
       "subdirs": true,
-      "public": ["Number", "NumberModules"]
+      "public": [
+        "Number",
+        "NumberModules",
+        "ResNumber__Integer",
+        "ResNumber__Operation"
+      ]
     },
     {
       "dir": "tests",
@@ -16,6 +21,8 @@
     "module": "es6",
     "in-source": true
   },
-  "suffix": ".bs.mjs",
-  "bs-dev-dependencies": ["@dzakh/rescript-ava"]
+  "suffix": ".res.mjs",
+  "bs-dev-dependencies": [
+    "@dzakh/rescript-ava"
+  ]
 }

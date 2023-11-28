@@ -10,12 +10,6 @@ module type UnsignedInteger = ResNumber__Integer.UnsignedInteger
 
 module type Float = ResNumber__Float.Float
 
-module MakeInteger = ResNumber__Integer.MakeInteger
-
-module MakeSignedInteger = ResNumber__Integer.MakeSignedInteger
-
-module MakeUnsignedInteger = ResNumber__Integer.MakeUnsignedInteger
-
 module Int8: SignedInteger = ResNumber__Integer.Int8
 
 module Uint8: UnsignedInteger = ResNumber__Integer.Uint8
@@ -29,13 +23,3 @@ module Int32: SignedInteger = ResNumber__Integer.Int32
 module Uint32: UnsignedInteger = ResNumber__Integer.Uint32
 
 module Float64: Float = ResNumber__Float.Float64
-
-type number = module(Number)
-
-type integer = module(Integer)
-
-type signedInteger = module(SignedInteger)
-
-type unsignedInteger = module(UnsignedInteger)
-
-type floatNumber = module(Float)

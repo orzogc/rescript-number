@@ -2,8 +2,8 @@
 
 import Ava from "ava";
 import * as Js_int from "rescript/lib/es6/js_int.js";
-import * as $$Number from "../src/Number.bs.mjs";
-import * as TestUtils from "./TestUtils.bs.mjs";
+import * as $$Number from "../src/Number.res.mjs";
+import * as TestUtils from "./TestUtils.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
@@ -56,7 +56,7 @@ function testFn(fn) {
   fn(PervasivesU.neg_infinity);
   fn(PervasivesU.infinity);
   TestUtils.loop100Fn(function () {
-        fn(randomValue(undefined));
+        fn(randomValue());
       });
 }
 
@@ -117,10 +117,10 @@ Ava("test " + name + " to int", (function (t) {
         testOutOfRange(Js_int.min - 1.0, Js_int.min);
         testOutOfRange(Js_int.max + 1.0, Js_int.max);
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomSmallerInt(undefined), Js_int.min);
+              testOutOfRange(randomSmallerInt(), Js_int.min);
             });
         TestUtils.loop100Fn(function () {
-              testOutOfRange(randomLargerInt(undefined), Js_int.max);
+              testOutOfRange(randomLargerInt(), Js_int.max);
             });
         var testIsNotInteger = function (f, value) {
           var n = fromFloatExn(f);
@@ -187,7 +187,7 @@ Ava("test " + name + " from string", (function (t) {
         testNotNaN(PervasivesU.neg_infinity, String(PervasivesU.neg_infinity));
         testNotNaN(PervasivesU.infinity, String(PervasivesU.infinity));
         TestUtils.loop100Fn(function () {
-              var n = randomValue(undefined);
+              var n = randomValue();
               testNotNaN(n, String(n));
             });
         var testIsNotFloat = function (s) {
@@ -428,7 +428,7 @@ Ava("test " + name + " comparison", (function (t) {
         };
         testCompare(-56248.7954, 87934.1968);
         TestUtils.loop100Fn(function () {
-              var less = randomValue(undefined);
+              var less = randomValue();
               var greater = TestUtils.randomFloat(less + 1.0, Js_int.max * 3.0);
               testCompare(less, greater);
             });
@@ -518,8 +518,8 @@ Ava("test " + name + " addition", (function (t) {
         testNotNaN(PervasivesU.infinity, -1.0);
         testNotNaN(PervasivesU.infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotNaN(a, b);
             });
         var a = PervasivesU.infinity;
@@ -598,8 +598,8 @@ Ava("test " + name + " subtraction", (function (t) {
         testNotNaN(-1.0, PervasivesU.infinity);
         testNotNaN(12345678.9, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotNaN(a, b);
             });
         var testNaN = function (a, b) {
@@ -680,8 +680,8 @@ Ava("test " + name + " multiplication", (function (t) {
         testNotNaN(PervasivesU.infinity, - 12345678.9);
         testNotNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotNaN(a, b);
             });
         var testNaN = function (a, b) {
@@ -788,8 +788,8 @@ Ava("test " + name + " division", (function (t) {
         testNotNaN(PervasivesU.infinity, -56248.7954);
         testNotNaN(PervasivesU.infinity, 87934.1968);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotNaN(a, b);
             });
         var testNaN = function (a, b) {
@@ -853,8 +853,8 @@ Ava("test " + name + " remainder", (function (t) {
         };
         testFn(testModByZero);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotNaN(a, b);
               testModByZero(a);
               testModByZero(b);
@@ -916,8 +916,8 @@ Ava("test " + name + " sum", (function (t) {
               -0.0
             ]);
         TestUtils.loop100Fn(function () {
-              var a = randomValue(undefined);
-              var b = randomValue(undefined);
+              var a = randomValue();
+              var b = randomValue();
               testNotNaN([a]);
               testNotNaN([b]);
               testNotNaN([
@@ -1091,7 +1091,7 @@ Ava("test " + name + " float math", (function (t) {
         testAtan2(12345678.9, PervasivesU.infinity);
         testAtan2(PervasivesU.neg_infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              testAtan2(randomValue(undefined), randomValue(undefined));
+              testAtan2(randomValue(), randomValue());
             });
         var testAtanh = function (f) {
           var n = fromFloatExn(f);
@@ -1228,7 +1228,7 @@ Ava("test " + name + " float math", (function (t) {
         testHypot(12345678.9, PervasivesU.infinity);
         testHypot(PervasivesU.neg_infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              testHypot(randomValue(undefined), randomValue(undefined));
+              testHypot(randomValue(), randomValue());
             });
         var testHypotMany = function (arr) {
           t.deepEqual($$Number.Float64.hypotMany(Belt_Array.mapU(arr, (function (f) {
@@ -1277,11 +1277,11 @@ Ava("test " + name + " float math", (function (t) {
             ]);
         TestUtils.loop100Fn(function () {
               testHypotMany([
-                    randomValue(undefined),
-                    randomValue(undefined),
-                    randomValue(undefined),
-                    randomValue(undefined),
-                    randomValue(undefined)
+                    randomValue(),
+                    randomValue(),
+                    randomValue(),
+                    randomValue(),
+                    randomValue()
                   ]);
             });
         var testLog = function (f) {
@@ -1406,7 +1406,7 @@ Ava("test " + name + " float math", (function (t) {
         testPowNotNaN(12345678.9, PervasivesU.infinity);
         testPowNotNaN(PervasivesU.neg_infinity, PervasivesU.infinity);
         TestUtils.loop100Fn(function () {
-              testPowNotNaN(randomValue(undefined), randomValue(undefined));
+              testPowNotNaN(randomValue(), randomValue());
             });
         var testPowNaN = function (base, exp) {
           t.deepEqual($$Number.Float64.pow(base, exp), undefined, undefined);
@@ -1415,10 +1415,10 @@ Ava("test " + name + " float math", (function (t) {
                 }));
         };
         TestUtils.loop100Fn(function () {
-              testPowNaN(fromFloatExn(randomValue(undefined)), $$Number.Float64.fromFloatUnsafe(Number.NaN));
+              testPowNaN(fromFloatExn(randomValue()), $$Number.Float64.fromFloatUnsafe(Number.NaN));
             });
         TestUtils.loop100Fn(function () {
-              var exp = randomValue(undefined);
+              var exp = randomValue();
               if (exp !== 0.0) {
                 return testPowNaN($$Number.Float64.fromFloatUnsafe(Number.NaN), fromFloatExn(exp));
               }
@@ -1429,18 +1429,18 @@ Ava("test " + name + " float math", (function (t) {
         testPowNaN(negOne, $$Number.Float64.minValue);
         testPowNaN(negOne, $$Number.Float64.maxValue);
         TestUtils.loop100Fn(function () {
-              var exp = randomValue(undefined);
+              var exp = randomValue();
               if (!TestUtils.isInteger(exp)) {
                 return testPowNaN(fromFloatExn(TestUtils.randomFloat(Js_int.min * 2.0, 0.0)), fromFloatExn(exp));
               }
               
             });
         var testRandom = function () {
-          var value = $$Number.Float64.random(undefined);
+          var value = $$Number.Float64.random();
           t.true($$Number.Float64.ge(value, zero), undefined);
           t.true($$Number.Float64.lt(value, one), undefined);
-          var m = randomValue(undefined);
-          var n = randomValue(undefined);
+          var m = randomValue();
+          var n = randomValue();
           var min = fromFloatExn(m < n ? m : n);
           var max = fromFloatExn(m > n ? m : n);
           if (min !== max) {
@@ -1453,7 +1453,7 @@ Ava("test " + name + " float math", (function (t) {
           
         };
         TestUtils.loop100Fn(function () {
-              testRandom(undefined);
+              testRandom();
             });
         var testRound = function (f) {
           var test_ = function (f) {
@@ -1597,7 +1597,7 @@ Ava("test " + name + " float extra", (function (t) {
         testIsFinite(PervasivesU.neg_infinity, false);
         testIsFinite(PervasivesU.infinity, false);
         TestUtils.loop100Fn(function () {
-              testIsFinite(randomValue(undefined), true);
+              testIsFinite(randomValue(), true);
             });
         t.deepEqual($$Number.Float64.$$isFinite($$Number.Float64.fromFloatUnsafe(Number.NaN)), false, undefined);
         var testIsInteger = function (f, result) {
@@ -1618,10 +1618,10 @@ Ava("test " + name + " float extra", (function (t) {
               testIsInteger(TestUtils.randomInt(Js_int.min, Js_int.max), true);
             });
         TestUtils.loop100Fn(function () {
-              testIsInteger(randomSmallerInt(undefined), true);
+              testIsInteger(randomSmallerInt(), true);
             });
         TestUtils.loop100Fn(function () {
-              testIsInteger(randomLargerInt(undefined), true);
+              testIsInteger(randomLargerInt(), true);
             });
         var testIsNotNaN = function (f) {
           t.deepEqual($$Number.Float64.$$isNaN(fromFloatExn(f)), false, undefined);

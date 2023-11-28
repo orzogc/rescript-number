@@ -2,7 +2,7 @@
 
 import * as Js_int from "rescript/lib/es6/js_int.js";
 import * as PervasivesU from "rescript/lib/es6/pervasivesU.js";
-import * as ResNumber__Others from "./ResNumber__Others.bs.mjs";
+import * as ResNumber__Others from "./ResNumber__Others.res.mjs";
 
 var Int32Range = {
   minValue: Js_int.min,

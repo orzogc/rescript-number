@@ -2,8 +2,8 @@
 
 import Ava from "ava";
 import * as Js_int from "rescript/lib/es6/js_int.js";
-import * as $$Number from "../src/Number.bs.mjs";
-import * as TestUtils from "./TestUtils.bs.mjs";
+import * as $$Number from "../src/Number.res.mjs";
+import * as TestUtils from "./TestUtils.res.mjs";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as Caml_option from "rescript/lib/es6/caml_option.js";
@@ -1370,7 +1370,7 @@ Ava("test " + name + " integer math", (function (t) {
         testPowOutOfRange(Js_int.min, 2);
         TestUtils.loop100Fn(function () {
               var a = TestUtils.randomInt(Js_int.min, Js_int.max);
-              var b = TestUtils.randomPositiveSmallInt(undefined);
+              var b = TestUtils.randomPositiveSmallInt();
               var result = Math.pow(a, b);
               if (result >= Js_int.min && result <= Js_int.max) {
                 return testPowInRange(a, b);
